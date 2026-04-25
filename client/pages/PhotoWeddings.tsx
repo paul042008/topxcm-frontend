@@ -2,20 +2,16 @@ import { Link } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
+import LoadingState from "../components/LoadingState";
+
 
 export default function PhotoWeddings() {
   const { data, loading } = useData();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 border-4 border-[#D4AF37]/20 border-t-[#D4AF37] rounded-full animate-spin" />
-        <p className="text-[#D4AF37] font-serif tracking-widest text-sm animate-pulse">
-          LOADING COLLECTIONS
-        </p>
-      </div>
-    );
-  }
+      return <LoadingState />;
+    }
+  
 
   // ✅ Filter weddings
   const weddings = data.filter((item) => item.category === "weddings");

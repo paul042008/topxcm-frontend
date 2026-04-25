@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
+import LoadingState from "../components/LoadingState";
 
 const aerialClips = [
   {
@@ -41,7 +42,7 @@ export default function PhotoAerials() {
   const { data, loading } = useData();
 
   if (loading) {
-    return <div className="text-white p-10">Loading...</div>;
+    return <LoadingState />;
   }
 
   const aerials = data.filter(

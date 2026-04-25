@@ -1,5 +1,7 @@
 import FashionMenu from "../components/FashionMenu";
 import BackButton from "../components/BackButton";
+import LoadingState from "../components/LoadingState";
+import useData from "@/hooks/useData";
 
 /* ✅ TYPE FIX */
 type Item = {
@@ -23,6 +25,12 @@ const agbadaItems: Item[] = [
 
 export default function FashionAgbada() {
   const phone = "2348061587993";
+
+  const { data, loading } = useData();
+  
+    if (loading) {
+      return <LoadingState />;
+    }
 
   return (
     <div className="bg-black text-white min-h-screen">

@@ -1,14 +1,16 @@
 import FashionMenu from "../components/FashionMenu";
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
+import LoadingState from "../components/LoadingState";
 
 export default function FashionNatives() {
   const phone = "2348061587993";
   const { data, loading } = useData();
 
   if (loading) {
-    return <div className="text-white p-10">Loading...</div>;
+    return <LoadingState />;
   }
+
 
   const natives = data.filter((item) => item.category === "natives");
 

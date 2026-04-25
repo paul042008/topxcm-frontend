@@ -2,12 +2,13 @@ import { Link } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
+import LoadingState from "../components/LoadingState";
 
 export default function PhotoPortraits() {
   const { data, loading } = useData();
 
   if (loading) {
-    return <div className="text-white p-10">Loading...</div>;
+    return <LoadingState />;
   }
 
   const portraits = data.filter((item) => item.category === "portraits");
@@ -82,8 +83,7 @@ export default function PhotoPortraits() {
               <div
                 className="relative h-[320px] w-full overflow-hidden bg-cover bg-center transition duration-500 group-hover:scale-105"
                 style={{
-                  backgroundImage: `url('https://topxcm-backend.onrender.com${item.image}')`,
-                  animation: `fadeIn 0.9s ease-out ${index * 0.08}s both`,
+                  backgroundImage: item.image ? `url('${item.image}')` : "none",
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
@@ -105,17 +105,7 @@ export default function PhotoPortraits() {
         </div>
       </section>
 
-       
       <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
         @keyframes fadeUp {
           from {
             opacity: 0;
@@ -130,4 +120,3 @@ export default function PhotoPortraits() {
     </div>
   );
 }
-

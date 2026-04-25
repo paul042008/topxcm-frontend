@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
-import useData from "../hooks/useData"; // ✅ added
+import useData from "../hooks/useData"; // ✅ added 
+import LoadingState from "../components/LoadingState";
 
 export default function PhotoCanvas() {
 
   const { data, loading } = useData(); // ✅ added
 
   if (loading) {
-    return <div className="text-white p-10">Loading...</div>;
+    return <LoadingState />;
   }
 
   // ✅ filter canvas products from backend

@@ -1,6 +1,7 @@
 import FashionMenu from "../components/FashionMenu";
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
+import LoadingState from "../components/LoadingState";
 
 const suits = [
   {
@@ -27,7 +28,7 @@ export default function FashionSuits() {
   const { data, loading } = useData();
 
   if (loading) {
-    return <div className="text-white p-10">Loading...</div>;
+    return <LoadingState />;
   }
 
   const suitItems = data.filter(

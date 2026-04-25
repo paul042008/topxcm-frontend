@@ -1,6 +1,7 @@
 import FashionMenu from "../components/FashionMenu";
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
+import LoadingState from "../components/LoadingState";
 
 const casualItems = [
   {
@@ -22,7 +23,7 @@ export default function FashionCasuals() {
   const { data, loading } = useData();
 
   if (loading) {
-    return <div className="text-white p-10">Loading...</div>;
+    return <LoadingState />;
   }
 
   const casuals = data.filter(

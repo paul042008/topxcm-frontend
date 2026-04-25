@@ -1,5 +1,6 @@
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
+import LoadingState from "../components/LoadingState";
 
 export default function RealEstate() {
   const { data, loading } = useData();
@@ -7,7 +8,7 @@ export default function RealEstate() {
   const phone = "2348061587993";
 
   if (loading) {
-    return <div className="text-white p-10">Loading...</div>;
+    return <LoadingState />;
   }
 
   const properties = data.filter((item) => item.category === "realestate");
@@ -49,16 +50,15 @@ export default function RealEstate() {
             key={item.id}
             className="bg-white/5 rounded-2xl overflow-hidden group"
           >
-            {/* IMAGE */}
             <img
-              src={
-                item.image.startsWith("http")
-                  ? item.image
-                  : `https://topxcm-backend.onrender.com${item.image}`
-              }
-              alt={item.title}
-              className="w-full h-[220px] object-cover group-hover:scale-110 transition duration-500"
-            />
+  src={
+    item.image?.startsWith("http")
+      ? item.image
+      : `https://topxcm-backend.onrender.com${item.image}`
+  }
+  alt={item.title}
+  className="w-full h-[220px] object-cover group-hover:scale-110 transition duration-500"
+/>
 
             {/* CONTENT */}
             <div className="p-4">
