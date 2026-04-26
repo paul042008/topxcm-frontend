@@ -1,73 +1,73 @@
 import FashionMenu from "../components/FashionMenu";
 import BackButton from "../components/BackButton";
 import LoadingState from "../components/LoadingState";
-import useData from "@/hooks/useData";
-
-/* ✅ TYPE FIX */
-type Item = {
-  name: string;
-  price: string;
-  image: string;
-};
-
-const agbadaItems: Item[] = [
-  {
-    name: "Royal White Agbada",
-    price: "₦120,000",
-    image: "/images/agbada-1.jpg",
-  },
-  {
-    name: "Classic Navy Agbada",
-    price: "₦110,000",
-    image: "/images/agbada-2.jpg",
-  },
-];
+import useData from "../hooks/useData";
 
 export default function FashionAgbada() {
-  const phone = "2348061587993";
-
   const { data, loading } = useData();
-  
-    if (loading) {
-      return <LoadingState />;
-    }
+
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  // ✅ FIX: Pull agbada items from backend instead of hardcoded array
+  const agbadaItems = data.filter((item) => item.category === "agbada");
 
   return (
     <div className="bg-black text-white min-h-screen">
       <header className="flex items-center justify-between p-5 border-b border-white/10">
-        {/* LEFT SIDE */}
         <BackButton />
-
-        {/* CENTER TITLE */}
         <h1 className="text-[#D4AF37] font-serif text-lg">
           Agbada Collection
         </h1>
-
-        {/* RIGHT SIDE */}
         <FashionMenu />
       </header>
 
-      <div className="grid md:grid-cols-3 gap-5 p-5">
-        {agbadaItems.map((item: Item) => (
-          <div key={item.name} className="bg-white/5 p-4 rounded-2xl">
-            <img src={item.image} className="rounded-xl" />
-            <h3 className="mt-3">{item.name}</h3>
-            <p className="text-[#D4AF37]">{item.price}</p>
+      {/* Empty state */}
+      {agbadaItems.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-[40vh] text-center">
+          <p className="text-white/60 text-lg">No Agbada items uploaded yet.</p>
+          <p className="text-white/30 text-sm mt-2">Add items from your admin panel.</p>
+        </div>
+      )}
 
-            <a
-              href={`https://wa.me/2348061587993?text=${encodeURIComponent(
-                `Hello, I want to order this: ${item.name}`
-              )}`}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-block bg-[#D4AF37] text-black px-4 py-2 rounded-full"
-            >
-              Order Now
-            </a>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 p-3 md:p-5">
+        {agbadaItems.map((item) => (
+          <div
+            key={item.id}
+            className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 hover:border-[#D4AF37]/40 transition duration-300"
+          >
+            <div className="overflow-hidden">
+              {/* ✅ FIX: Use item.image directly — Cloudinary returns full URL */}
+              <img
+                src={item.image}
+                alt={item.title}
+                className="w-full h-44 md:h-64 object-cover transition duration-500 hover:scale-110"
+                onContextMenu={(e) => e.preventDefault()}
+                draggable={false}
+              />
+            </div>
+
+            <div className="p-3 md:p-4">
+              <h3 className="mt-1 text-sm md:text-lg font-medium">{item.title}</h3>
+              <p className="text-[#D4AF37] mt-1 text-sm md:text-base font-semibold">
+                {item.price ? item.price : "Price on request"}
+              </p>
+
+              <a
+                href={`https://wa.me/2348061587993?text=${encodeURIComponent(
+                  `Hello, I want to order this: ${item.title}${item.price ? ` — ${item.price}` : ""}`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-block w-full text-center bg-[#D4AF37] text-black px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition"
+              >
+                Order Now
+              </a>
+            </div>
           </div>
         ))}
       </div>
     </div>
   );
 }
-

@@ -4,14 +4,12 @@ import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
 import LoadingState from "../components/LoadingState";
 
-
 export default function PhotoWeddings() {
   const { data, loading } = useData();
 
   if (loading) {
-      return <LoadingState />;
-    }
-  
+    return <LoadingState />;
+  }
 
   // ✅ Filter weddings
   const weddings = data.filter((item) => item.category === "weddings");
@@ -28,27 +26,26 @@ export default function PhotoWeddings() {
         <PhotoMenu />
       </header>
 
-      {/* 💎 HERO SECTION */}
+      {/* HERO SECTION */}
       <section className="relative h-[60vh] flex items-center justify-center text-center overflow-hidden">
-        {/* BACKGROUND IMAGE */}
         <div className="absolute inset-0">
           <img
             src="/images/wedding-hero.jpg"
+            alt="Wedding hero"
             className="w-full h-full object-cover scale-105"
+            onContextMenu={(e) => e.preventDefault()}
+            draggable={false}
           />
           <div className="absolute inset-0 bg-black/70" />
         </div>
 
-        {/* CONTENT */}
         <div className="relative z-10 max-w-3xl px-5">
           <p className="text-[#D4AF37] uppercase tracking-[0.3em] text-xl font-medium mb-4">
-  Weddings & Events
-</p>
-
+            Weddings & Events
+          </p>
           <h2 className="text-3xl md:text-5xl font-serif leading-tight">
             Timeless Stories <br /> Captured With Elegance
           </h2>
-
           <p className="mt-5 text-white/70 text-sm md:text-base">
             Every wedding is a story. Explore beautifully curated albums
             capturing love, emotion, and unforgettable moments.
@@ -62,24 +59,28 @@ export default function PhotoWeddings() {
         {/* EMPTY STATE */}
         {weddings.length === 0 && (
           <div className="flex flex-col items-center justify-center h-[40vh] text-center">
-            <p className="text-white/60 text-lg">
-              No weddings uploaded yet.
-            </p>
+            <p className="text-white/60 text-lg">No weddings uploaded yet.</p>
+            <p className="text-white/30 text-sm mt-2">Upload wedding albums from your admin panel.</p>
           </div>
         )}
 
         {/* GRID */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {weddings.map((item) => (
+          {weddings.map((item, index) => (
             <div
               key={item.id}
               className="relative rounded-2xl overflow-hidden group border border-white/5 hover:border-[#D4AF37]/40 transition duration-500"
+              style={{
+                animation: `fadeUp 0.6s ease-out ${index * 0.1}s both`,
+              }}
             >
-              {/* ✅ USE COVER IMAGE */}
+              {/* ✅ FIX: Use item.cover or item.image directly — Cloudinary returns full URL */}
               <img
-                src={`https://topxcm-backend.onrender.com${item.cover || item.image}`}
-                alt={item.title}
+                src={item.cover || item.image}
+                alt={item.couple || item.title}
                 className="w-full h-80 object-cover transition duration-700 group-hover:scale-105"
+                onContextMenu={(e) => e.preventDefault()}
+                draggable={false}
               />
 
               {/* OVERLAY */}
@@ -92,12 +93,9 @@ export default function PhotoWeddings() {
                 </h3>
 
                 {item.date && (
-                  <p className="text-sm text-white/60">
-                    {item.date}
-                  </p>
+                  <p className="text-sm text-white/60 mt-1">{item.date}</p>
                 )}
 
-                {/* BUTTON */}
                 <Link
                   to={`/wedding/${item.id}`}
                   className="inline-flex items-center gap-2 mt-3 bg-[#D4AF37] text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-white transition"
@@ -109,7 +107,13 @@ export default function PhotoWeddings() {
           ))}
         </section>
       </main>
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
-

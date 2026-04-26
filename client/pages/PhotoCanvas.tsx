@@ -1,21 +1,18 @@
 import { Link } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
-import useData from "../hooks/useData"; // ✅ added 
+import useData from "../hooks/useData";
 import LoadingState from "../components/LoadingState";
 
 export default function PhotoCanvas() {
-
-  const { data, loading } = useData(); // ✅ added
+  const { data, loading } = useData();
 
   if (loading) {
     return <LoadingState />;
   }
 
-  // ✅ filter canvas products from backend
-  const canvasProducts = data.filter(
-    (item) => item.category === "canvas"
-  );
+  // ✅ Filter canvas products
+  const canvasProducts = data.filter((item) => item.category === "canvas");
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -75,18 +72,30 @@ export default function PhotoCanvas() {
           </div>
         </div>
 
+        {/* Empty state */}
+        {canvasProducts.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-[40vh] text-center">
+            <p className="text-white/60 text-lg">No canvas products uploaded yet.</p>
+          </div>
+        )}
+
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {canvasProducts.map((item) => (
+          {canvasProducts.map((item, index) => (
             <article
               key={item.id}
               className="group overflow-hidden rounded-[1.8rem] border border-white/10 bg-white/5 transition hover:-translate-y-1 hover:border-[#D4AF37]/30"
+              style={{
+                animation: `fadeUp 0.6s ease-out ${index * 0.08}s both`,
+              }}
             >
-              <div className="relative aspect-[4/5] overflow-hidden">
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-110"
-                  style={{
-                    backgroundImage: `url('https://topxcm-backend.onrender.com${item.image}')`,
-                  }}
+              <div className="relative aspect-[4/5] overflow-hidden rounded-t-[1.8rem]">
+                {/* ✅ FIX: Use item.image directly — Cloudinary already returns full URL */}
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-110"
+                  onContextMenu={(e) => e.preventDefault()}
+                  draggable={false}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
@@ -98,15 +107,12 @@ export default function PhotoCanvas() {
               <div className="p-5">
                 <h3 className="text-xl font-semibold font-serif">{item.title}</h3>
 
-                {/* optional fields if you add them in admin */}
                 {item.size && (
-                  <p className="mt-2 text-sm text-white/65">
-                    Size: {item.size}
-                  </p>
+                  <p className="mt-2 text-sm text-white/65">Size: {item.size}</p>
                 )}
 
                 {item.price && (
-                  <p className="mt-1 text-sm text-[#D4AF37]">
+                  <p className="mt-1 text-sm font-semibold text-[#D4AF37]">
                     {item.price}
                   </p>
                 )}
@@ -116,7 +122,7 @@ export default function PhotoCanvas() {
                     href="https://wa.me/2348061587993"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white transition hover:scale-105"
+                    className="inline-flex rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#D4AF37] hover:text-black hover:border-[#D4AF37]"
                   >
                     Order Now
                   </a>
@@ -127,8 +133,12 @@ export default function PhotoCanvas() {
         </div>
       </section>
 
-     
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
-

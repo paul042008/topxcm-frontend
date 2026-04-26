@@ -4,13 +4,11 @@ import useData from "../hooks/useData";
 import LoadingState from "../components/LoadingState";
 
 export default function FashionNatives() {
-  const phone = "2348061587993";
   const { data, loading } = useData();
 
   if (loading) {
     return <LoadingState />;
   }
-
 
   const natives = data.filter((item) => item.category === "natives");
 
@@ -24,34 +22,40 @@ export default function FashionNatives() {
         <FashionMenu />
       </header>
 
+      {/* Empty state */}
+      {natives.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-[40vh] text-center">
+          <p className="text-white/60 text-lg">No native items uploaded yet.</p>
+          <p className="text-white/30 text-sm mt-2">Add items from your admin panel.</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 p-3 md:p-5">
         {natives.map((item) => (
           <div
             key={item.id}
-            className="bg-white/5 rounded-2xl overflow-hidden border border-white/10"
+            className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 hover:border-[#D4AF37]/40 transition duration-300"
           >
             <div className="overflow-hidden">
+              {/* ✅ FIX: Use item.image directly — Cloudinary returns full URL */}
               <img
-                src={`https://topxcm-backend.onrender.com${item.image}`}
+                src={item.image}
                 alt={item.title}
                 className="w-full h-44 md:h-64 object-cover transition duration-500 hover:scale-110"
+                onContextMenu={(e) => e.preventDefault()}
+                draggable={false}
               />
             </div>
 
             <div className="p-3 md:p-4">
-              <h3 className="mt-1 text-sm md:text-lg font-medium">
-                {item.title}
-              </h3>
-
+              <h3 className="mt-1 text-sm md:text-lg font-medium">{item.title}</h3>
               <p className="text-[#D4AF37] mt-1 text-sm md:text-base font-semibold">
                 {item.price ? item.price : "Price on request"}
               </p>
 
               <a
                 href={`https://wa.me/2348061587993?text=${encodeURIComponent(
-                  `Hello, I want to order this: ${item.title}${
-                    item.price ? ` — ${item.price}` : ""
-                  }`
+                  `Hello, I want to order this: ${item.title}${item.price ? ` — ${item.price}` : ""}`
                 )}`}
                 target="_blank"
                 rel="noreferrer"
@@ -66,4 +70,3 @@ export default function FashionNatives() {
     </div>
   );
 }
-
