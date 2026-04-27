@@ -1,118 +1,298 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
 import LoadingState from "../components/LoadingState";
 
-export default function PhotoWeddings() {
-  const { data, loading } = useData();
+// ── FEATURED (first) album — full-width cinematic spread
+function FeaturedAlbum({ item }: { item: any }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1, ease: "easeOut" }}
+      className="relative w-full h-[85vh] overflow-hidden group"
+    >
+      <img
+        src={item.cover || item.image}
+        alt={item.couple || item.title}
+        className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105"
+        onContextMenu={(e) => e.preventDefault()}
+        draggable={false}
+      />
 
-  if (loading) {
-    return <LoadingState />;
-  }
+      {/* Cinematic dark gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
 
-  // ✅ Filter weddings
-  const weddings = data.filter((item) => item.category === "weddings");
+      {/* Gold top label */}
+      <div className="absolute top-8 left-8 md:left-16">
+        <span className="text-[#D4AF37] text-[10px] uppercase tracking-[0.5em] font-bold border border-[#D4AF37]/30 px-4 py-1.5">
+          Featured Story
+        </span>
+      </div>
+
+      {/* Bottom text block */}
+      <div className="absolute bottom-0 left-0 p-8 md:p-16 max-w-3xl">
+        <p className="text-[#D4AF37] text-xs uppercase tracking-[0.4em] mb-3 font-medium">
+          {item.date || "Wedding Collection"}
+        </p>
+        <h2 className="text-4xl md:text-6xl font-serif italic text-white leading-tight mb-4">
+          {item.couple || item.title}
+        </h2>
+        {item.location && (
+          <p className="text-white/50 text-sm tracking-widest uppercase mb-6">
+            ◈ {item.location}
+          </p>
+        )}
+        <Link
+          to={`/wedding/${item.id}`}
+          className="inline-flex items-center gap-3 group/btn"
+        >
+          <span className="text-[#D4AF37] text-xs uppercase tracking-[0.4em] font-bold border-b border-[#D4AF37]/40 pb-0.5 group-hover/btn:border-[#D4AF37] transition-colors">
+            Open Album
+          </span>
+          <span className="text-[#D4AF37] transition-transform duration-300 group-hover/btn:translate-x-2">→</span>
+        </Link>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── LARGE card — alternating left/right editorial layout
+function EditorialCard({ item, index }: { item: any; index: number }) {
+  const isEven = index % 2 === 0;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} gap-0 group border border-white/5 hover:border-[#D4AF37]/20 transition-colors duration-700`}
+    >
+      {/* Image — takes 60% */}
+      <div className="relative md:w-[60%] h-[55vw] md:h-[520px] overflow-hidden">
+        <img
+          src={item.cover || item.image}
+          alt={item.couple || item.title}
+          className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+          onContextMenu={(e) => e.preventDefault()}
+          draggable={false}
+        />
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-700" />
 
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 flex items-center justify-between p-5 border-b border-white/10 bg-black/70 backdrop-blur-md">
-        <BackButton />
-        <h1 className="text-[#D4AF37] font-serif text-xl tracking-wide">
-          WEDDING COLLECTIONS
-        </h1>
-        <PhotoMenu />
-      </header>
+        {/* Issue number watermark */}
+        <span
+          className="absolute top-5 left-5 text-[#D4AF37]/20 font-black"
+          style={{ fontSize: "clamp(60px, 10vw, 100px)", fontFamily: "Impact, sans-serif", lineHeight: 1 }}
+        >
+          {String(index + 2).padStart(2, "0")}
+        </span>
+      </div>
 
-      {/* HERO SECTION */}
-      <section className="relative h-[60vh] flex items-center justify-center text-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="/images/wedding-hero.jpg"
-            alt="Wedding hero"
-            className="w-full h-full object-cover scale-105"
-            onContextMenu={(e) => e.preventDefault()}
-            draggable={false}
-          />
-          <div className="absolute inset-0 bg-black/70" />
-        </div>
+      {/* Text — takes 40% */}
+      <div
+        className={`md:w-[40%] flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-[#0a0a0a] ${
+          isEven ? "border-l border-white/5" : "border-r border-white/5"
+        }`}
+      >
+        <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.6em] font-bold mb-6">
+          Wedding Story
+        </p>
 
-        <div className="relative z-10 max-w-3xl px-5">
-          <p className="text-[#D4AF37] uppercase tracking-[0.3em] text-xl font-medium mb-4">
-            Weddings & Events
+        <h3 className="text-2xl md:text-3xl lg:text-4xl font-serif italic text-white leading-snug mb-4 group-hover:text-[#D4AF37] transition-colors duration-500">
+          {item.couple || item.title}
+        </h3>
+
+        {item.date && (
+          <p className="text-white/30 text-xs tracking-[0.3em] uppercase mb-3">
+            {item.date}
           </p>
-          <h2 className="text-3xl md:text-5xl font-serif leading-tight">
-            Timeless Stories <br /> Captured With Elegance
-          </h2>
-          <p className="mt-5 text-white/70 text-sm md:text-base">
-            Every wedding is a story. Explore beautifully curated albums
-            capturing love, emotion, and unforgettable moments.
-          </p>
-        </div>
-      </section>
-
-      {/* MAIN */}
-      <main className="max-w-7xl mx-auto p-4 md:p-8">
-
-        {/* EMPTY STATE */}
-        {weddings.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-[40vh] text-center">
-            <p className="text-white/60 text-lg">No weddings uploaded yet.</p>
-            <p className="text-white/30 text-sm mt-2">Upload wedding albums from your admin panel.</p>
-          </div>
         )}
 
-        {/* GRID */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {weddings.map((item, index) => (
-            <div
-              key={item.id}
-              className="relative rounded-2xl overflow-hidden group border border-white/5 hover:border-[#D4AF37]/40 transition duration-500"
-              style={{
-                animation: `fadeUp 0.6s ease-out ${index * 0.1}s both`,
-              }}
+        {item.location && (
+          <p className="text-white/40 text-sm mb-6 font-light">
+            ◈ {item.location}
+          </p>
+        )}
+
+        {item.description && (
+          <p className="text-white/50 text-sm leading-relaxed mb-8 font-light line-clamp-3">
+            {item.description}
+          </p>
+        )}
+
+        {/* Divider */}
+        <div className="w-12 h-[1px] bg-[#D4AF37]/30 mb-8" />
+
+        <Link
+          to={`/wedding/${item.id}`}
+          className="self-start group/btn flex items-center gap-3 border border-[#D4AF37]/30 px-7 py-3 text-[10px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold hover:bg-[#D4AF37] hover:text-black transition-all duration-300"
+        >
+          View Album
+          <span className="transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
+        </Link>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── SMALL compact cards — bottom grid for remaining albums
+function CompactCard({ item, index }: { item: any; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: index * 0.08 }}
+      className="group relative overflow-hidden border border-white/5 hover:border-[#D4AF37]/30 transition-colors duration-500"
+    >
+      <div className="relative h-72 overflow-hidden">
+        <img
+          src={item.cover || item.image}
+          alt={item.couple || item.title}
+          className="w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-110"
+          onContextMenu={(e) => e.preventDefault()}
+          draggable={false}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+      </div>
+
+      <div className="p-6 bg-[#0d0d0d]">
+        <p className="text-[#D4AF37] text-[8px] uppercase tracking-[0.5em] mb-2 font-bold">
+          {item.date || "Wedding"}
+        </p>
+        <h4 className="text-lg font-serif italic text-white group-hover:text-[#D4AF37] transition-colors duration-300 mb-4 leading-snug">
+          {item.couple || item.title}
+        </h4>
+        <Link
+          to={`/wedding/${item.id}`}
+          className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors font-bold"
+        >
+          Open Album →
+        </Link>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── MAIN PAGE
+export default function PhotoWeddings() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { data, loading } = useData();
+
+  if (loading) return <LoadingState />;
+
+  const weddings = data.filter((item: any) => item.category === "weddings");
+
+  const featured = weddings[0];
+  const editorial = weddings.slice(1, 5);   // next 4 in alternating layout
+  const compact = weddings.slice(5);         // rest in compact grid
+
+  return (
+    <div className="min-h-screen bg-[#080808] text-white">
+
+      <PhotoMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+
+      {/* ── HEADER ── */}
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
+        <BackButton />
+
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">
+            Wedding Stories
+          </p>
+          <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">
+            TOP Photography
+          </span>
+        </div>
+
+        <button
+          onClick={() => setIsMenuOpen(true)}
+          className="flex flex-col gap-[5px] group"
+        >
+          <span className="block w-6 h-[1px] bg-[#D4AF37] transition-all group-hover:w-8" />
+          <span className="block w-4 h-[1px] bg-[#D4AF37] ml-auto transition-all group-hover:w-8" />
+          <span className="block w-6 h-[1px] bg-[#D4AF37] transition-all group-hover:w-8" />
+        </button>
+      </header>
+
+      {/* ── PAGE TITLE STRIP ── */}
+      <div className="pt-[72px]">
+        <div className="border-b border-white/5 px-6 md:px-16 py-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.7em] mb-3 font-bold">
+              The Collection
+            </p>
+            <h1
+              className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none"
+              style={{ fontFamily: "Impact, 'Arial Black', sans-serif" }}
             >
-              {/* ✅ FIX: Use item.cover or item.image directly — Cloudinary returns full URL */}
-              <img
-                src={item.cover || item.image}
-                alt={item.couple || item.title}
-                className="w-full h-80 object-cover transition duration-700 group-hover:scale-105"
-                onContextMenu={(e) => e.preventDefault()}
-                draggable={false}
-              />
+              Weddings
+            </h1>
+          </div>
+          <p className="text-white/30 text-sm font-light max-w-sm leading-relaxed">
+            Every couple. Every moment. Preserved with intention and artistry — one album at a time.
+          </p>
+        </div>
+      </div>
 
-              {/* OVERLAY */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+      {/* ── EMPTY STATE ── */}
+      {weddings.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-[50vh] text-center px-6">
+          <div className="w-12 h-[1px] bg-[#D4AF37]/30 mb-8 mx-auto" />
+          <p className="text-white/40 text-lg font-serif italic">No wedding albums yet.</p>
+          <p className="text-white/20 text-xs uppercase tracking-widest mt-3">
+            Albums will appear here once uploaded
+          </p>
+        </div>
+      )}
 
-              {/* TEXT */}
-              <div className="absolute bottom-0 left-0 p-5 w-full">
-                <h3 className="text-xl font-serif group-hover:text-[#D4AF37] transition">
-                  {item.couple || item.title}
-                </h3>
+      {/* ── FEATURED ALBUM ── */}
+      {featured && <FeaturedAlbum item={featured} />}
 
-                {item.date && (
-                  <p className="text-sm text-white/60 mt-1">{item.date}</p>
-                )}
-
-                <Link
-                  to={`/wedding/${item.id}`}
-                  className="inline-flex items-center gap-2 mt-3 bg-[#D4AF37] text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-white transition"
-                >
-                  View Album →
-                </Link>
-              </div>
-            </div>
+      {/* ── EDITORIAL ALTERNATING SECTION ── */}
+      {editorial.length > 0 && (
+        <section className="flex flex-col">
+          {editorial.map((item: any, i: number) => (
+            <EditorialCard key={item.id} item={item} index={i} />
           ))}
         </section>
-      </main>
+      )}
+
+      {/* ── COMPACT GRID (remaining) ── */}
+      {compact.length > 0 && (
+        <section className="px-6 md:px-16 py-20">
+          <div className="flex items-center gap-6 mb-12">
+            <div className="w-8 h-[1px] bg-[#D4AF37]/40" />
+            <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.6em] font-bold">
+              More Stories
+            </p>
+            <div className="flex-1 h-[1px] bg-white/5" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {compact.map((item: any, i: number) => (
+              <CompactCard key={item.id} item={item} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── FOOTER ── */}
+      <footer className="py-20 text-center border-t border-white/5">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />
+          <p className="text-[8px] tracking-[1em] text-white/15 uppercase">
+            TOP Photography Studio • Lagos
+          </p>
+        </div>
+      </footer>
 
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,500&display=swap');
       `}</style>
     </div>
   );

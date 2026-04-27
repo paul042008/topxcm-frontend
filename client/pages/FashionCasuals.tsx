@@ -39,7 +39,7 @@ export default function FashionCasuals() {
 
       <header className="relative flex items-center justify-between p-6 z-50 shrink-0">
         <BackButton />
-        <h1 className="text-[#1E3A8A] font-sans text-[15px] font-bold tracking-[0.3em] uppercase">
+        <h1 className="text-[#00AEEF] font-sans text-[15px] font-bold tracking-[0.3em] uppercase">
           Casuals Collection
         </h1>
         <FashionMenu />
@@ -47,9 +47,9 @@ export default function FashionCasuals() {
 
       {/* HERO TEXT */}
       <div className="relative z-15 text-center pt-4 shrink-0">
-        <p className="text-xs text-[#1E3A8A] italic font-serif">The Art of Elegance</p>
+        <p className="text-xs text-[#00AEEF] italic font-serif">The Art of Elegance</p>
         <div className="min-h-[25px] mt-2">
-          <p className="text-[15px] text-[#1E3A8A] font-bold uppercase tracking-[0.2em]">
+          <p className="text-[15px] text-[#00AEEF] font-bold uppercase tracking-[0.2em]">
             {displayedText}<span className="animate-pulse ml-1 text-[#D4AF37]">|</span>
           </p>
         </div>
@@ -64,13 +64,13 @@ export default function FashionCasuals() {
               {/* CLICKABLE IMAGE CARD */}
               <div 
                 onClick={() => setSelectedItem(item)}
-                className="w-full max-w-[300px] sm:max-w-[340px] aspect-[3/4] bg-white rounded-3xl overflow-hidden shadow-2xl shadow-[#1E3A8A]/30 transition-transform duration-500 scale-95 active:scale-90 cursor-pointer"
+                className="w-full max-w-[300px] sm:max-w-[340px] aspect-[3/4] bg-white rounded-3xl overflow-hidden shadow-2xl shadow-[#00AEEF]/30 transition-transform duration-500 scale-95 active:scale-90 cursor-pointer"
               >
                 <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
               </div>
 
               <div className="mt-6 flex flex-col items-center text-center w-full px-6">
-                <h3 className="text-lg font-sans font-black uppercase tracking-[0.2em] text-[#1E3A8A]">{item.title}</h3>
+                <h3 className="text-lg font-sans font-black uppercase tracking-[0.2em] text-[#00AEEF]">{item.title}</h3>
                 <p className="mt-2 text-[11px] text-slate-600 uppercase tracking-widest max-w-[280px]">{item.description}</p>
                 <p className="text-[#D4AF37] font-bold mt-3 text-base">{item.price || "Price on Request"}</p>
                 
@@ -79,7 +79,7 @@ export default function FashionCasuals() {
                   href={`https://wa.me/2348061587993?text=Hello, I want to order this piece: ${item.title}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-5 inline-block bg-[#1E3A8A] text-white px-10 py-3 rounded-full text-[12px] font-bold uppercase tracking-widest shadow-lg active:scale-95 transition-transform"
+                  className="mt-5 inline-block bg-[#00AEEF] text-white px-10 py-3 rounded-full text-[12px] font-bold uppercase tracking-widest shadow-lg active:scale-95 transition-transform"
                 >
                   Order Now
                 </a>
@@ -96,7 +96,7 @@ export default function FashionCasuals() {
             {/* Close Button */}
             <button 
               onClick={() => setSelectedItem(null)}
-              className="absolute top-5 right-5 z-50 bg-white/80 backdrop-blur-md p-2 rounded-full text-[#1E3A8A]"
+              className="absolute top-5 right-5 z-50 bg-white/80 backdrop-blur-md p-2 rounded-full text-[#00AEEF]"
             >
               <X size={24} />
             </button>
@@ -104,14 +104,14 @@ export default function FashionCasuals() {
             <img src={selectedItem.image} className="w-full aspect-[4/5] object-cover" alt="Selected" />
             
             <div className="p-8 text-center">
-              <h2 className="text-xl font-black uppercase tracking-tighter text-[#1E3A8A]">{selectedItem.title}</h2>
+              <h2 className="text-xl font-black uppercase tracking-tighter text-[#00AEEF]">{selectedItem.title}</h2>
               <p className="text-[#D4AF37] font-bold text-lg mt-1">{selectedItem.price || "Price on Request"}</p>
               
               {/* ORDER NOW ON POPUP */}
               <a
                 href={`https://wa.me/2348061587993?text=Hello, I am interested in: ${selectedItem.title}`}
                 target="_blank" rel="noreferrer"
-                className="mt-6 inline-block w-full bg-[#1E3A8A] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest"
+                className="mt-6 inline-block w-full bg-[#00AEEF] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest"
               >
                 Order on WhatsApp
               </a>

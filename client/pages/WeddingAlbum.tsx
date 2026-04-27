@@ -1,21 +1,14 @@
 import { useParams } from "react-router-dom";
 import useData from "../hooks/useData";
 import BackButton from "../components/BackButton";
+import LoadingState from "../components/LoadingState";
 
 export default function WeddingAlbum() {
   const { id } = useParams();
   const { data, loading } = useData();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 border-4 border-[#D4AF37]/20 border-t-[#D4AF37] rounded-full animate-spin" />
-        <p className="text-[#D4AF37] font-serif tracking-widest text-sm animate-pulse">
-          LOADING ALBUM
-        </p>
-      </div>
-    );
-  }
+  // Fix 6: Use LoadingState instead of manual spinner
+  if (loading) return <LoadingState />;
 
   const wedding = data.find((item) => item.id.toString() === id);
 
@@ -27,8 +20,8 @@ export default function WeddingAlbum() {
     );
   }
 
-  // fallback handling (important)
-  const galleryImages = wedding.gallery || [];
+  // Fix 3: Support both "album" and "gallery" field names
+  const galleryImages = wedding.album || wedding.gallery || [];
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -36,28 +29,43 @@ export default function WeddingAlbum() {
       {/* HEADER */}
       <header className="sticky top-0 z-50 flex items-center justify-between p-5 border-b border-white/10 bg-black/70 backdrop-blur-md">
         <BackButton />
+        {/* Fix 4: Show couple name, fall back to title */}
         <h1 className="text-[#D4AF37] font-serif text-lg md:text-xl">
-          {wedding.title}
+          {wedding.couple || wedding.title}
         </h1>
         <div />
       </header>
 
       {/* HERO / COVER */}
       <section className="relative h-[300px] md:h-[450px] overflow-hidden">
+        {/* Fix 1: Use wedding.cover, Cloudinary URLs are already full */}
         <img
-          src={`https://topxcm-backend.onrender.com${wedding.image}`}
-          alt={wedding.title}
+          src={wedding.cover || wedding.image}
+          alt={wedding.couple || wedding.title}
           className="w-full h-full object-cover scale-105"
+          onContextMenu={(e) => e.preventDefault()}
+          draggable={false}
         />
 
-        {/* overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
-        {/* text bottom */}
         <div className="absolute bottom-0 left-0 p-6 md:p-10">
+          {/* Fix 5: Show couple name in hero too */}
           <h2 className="text-2xl md:text-4xl font-serif text-white">
-            {wedding.title}
+            {wedding.couple || wedding.title}
           </h2>
+
+          {wedding.date && (
+            <p className="mt-1 text-[#D4AF37] text-xs uppercase tracking-[0.4em]">
+              {wedding.date}
+            </p>
+          )}
+
+          {wedding.location && (
+            <p className="mt-1 text-white/50 text-sm tracking-widest uppercase">
+              ◈ {wedding.location}
+            </p>
+          )}
 
           {wedding.description && (
             <p className="mt-3 text-white/70 max-w-xl leading-relaxed">
@@ -90,10 +98,13 @@ export default function WeddingAlbum() {
                 key={i}
                 className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 group"
               >
+                {/* Fix 2 & 7: Use full Cloudinary URL directly, add image protection */}
                 <img
-                  src={`https://topxcm-backend.onrender.com${img}`}
+                  src={img}
                   alt=""
                   className="w-full object-cover transition duration-500 group-hover:scale-105"
+                  onContextMenu={(e) => e.preventDefault()}
+                  draggable={false}
                 />
               </div>
             ))}
@@ -104,4 +115,3 @@ export default function WeddingAlbum() {
     </div>
   );
 }
-

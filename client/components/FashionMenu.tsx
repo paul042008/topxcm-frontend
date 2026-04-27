@@ -16,7 +16,7 @@ export default function FashionMenu({ isFashionLanding = false, initialOpen = fa
   return (
     <>
       {!open && (
-        <button onClick={() => setOpen(true)} className="text-3xl text-[#1E3A8A] p-2 relative z-50">
+        <button onClick={() => setOpen(true)} className="text-3xl text-[#00AEEF] p-2 relative z-50">
           ☰
         </button>
       )}
@@ -24,8 +24,16 @@ export default function FashionMenu({ isFashionLanding = false, initialOpen = fa
       {open && (
         <div className="fixed inset-0 z-[10000] flex flex-col bg-[#D9EAF0] w-screen h-screen overflow-hidden animate-in fade-in duration-300">
           <div className="w-full px-8 pt-12 flex justify-between items-center">
-            <span className="font-sans font-black tracking-[0.2em] text-[10px] text-[#1E3A8A]/50 uppercase">XCM</span>
-            <button onClick={handleClose} className="text-[#1E3A8A] p-2 hover:rotate-90 transition-transform">
+            {/* LOGO BOX: Curve edged box with fashionlogo.png */}
+            <div className="bg-white/40 backdrop-blur-sm p-2 rounded-xl border border-[#00AEEF]/20 shadow-sm">
+               <img 
+                 src="/images/fashionlogo.png" 
+                 alt="Logo" 
+                 className="h-8 w-auto object-contain"
+               />
+            </div>
+
+            <button onClick={handleClose} className="text-[#00AEEF] p-2 hover:rotate-90 transition-transform">
               <X size={32} strokeWidth={1.5} />
             </button>
           </div>
@@ -38,7 +46,7 @@ export default function FashionMenu({ isFashionLanding = false, initialOpen = fa
               { name: "Casuals", path: "/fashion/casuals" },
               { name: "Contact", path: "/fashion/contact" },
             ].map((link) => (
-              <Link key={link.name} to={link.path} onClick={handleClose} className="text-sm font-sans font-black uppercase tracking-[0.4em] text-[#1E3A8A] hover:text-[#D4AF37] transition-all">
+              <Link key={link.name} to={link.path} onClick={handleClose} className="text-sm font-sans font-black uppercase tracking-[0.4em] text-[#00AEEF] hover:text-[#D4AF37] transition-all">
                 {link.name}
               </Link>
             ))}
@@ -54,9 +62,9 @@ export default function FashionMenu({ isFashionLanding = false, initialOpen = fa
           </nav>
 
           <div className="w-full flex justify-center gap-10 pb-20">
-            <Facebook size={18} className="text-[#1E3A8A] hover:text-[#D4AF37]" />
-            <Instagram size={18} className="text-[#1E3A8A] hover:text-[#D4AF37]" />
-            <Twitter size={18} className="text-[#1E3A8A] hover:text-[#D4AF37]" />
+            <Facebook size={18} className="text-[#00AEEF] hover:text-[#D4AF37]" />
+            <Instagram size={18} className="text-[#00AEEF] hover:text-[#D4AF37]" />
+            <Twitter size={18} className="text-[#00AEEF] hover:text-[#D4AF37]" />
           </div>
         </div>
       )}

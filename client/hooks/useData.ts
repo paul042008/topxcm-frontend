@@ -18,6 +18,7 @@ export interface Item {
   cover?: string;
   thumbnails?: string[];
   gallery?: string[];
+  album?: string[];
 }
 
 export default function useData() {
