@@ -1,91 +1,94 @@
-import { Link } from "react-router-dom";
-import FashionMenu from "../components/FashionMenu";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+// Make sure this import path matches where you saved the FashionMenu component
+import FashionMenu from "../components/FashionMenu"; 
 
-export default function Fashion() {
-  const categories = [
-    {
-      name: "Suits",
-      link: "/fashion/suits",
-      image: "https://images.unsplash.com/photo-1593032465175-481ac7f401a0",
-    },
-    {
-      name: "Agbada",
-      link: "/fashion/agbada",
-      image: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990",
-    },
-    {
-      name: "Natives",
-      link: "/fashion/natives",
-      image: "https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03",
-    },
-    {
-      name: "Casuals",
-      link: "/fashion/casuals",
-      image: "https://images.unsplash.com/photo-1520975922284-9e0ce8277f4d",
-    },
+export default function FashionPage() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Faint background slides of work
+  const backgroundImages = [
+    "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=2000",
+    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2000",
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2000",
   ];
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % backgroundImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <div className="min-h-screen text-slate-800 bg-[#F8FBFF] relative overflow-hidden">
+    <div className="relative h-screen w-full bg-white overflow-hidden select-none">
+      
+      {/* 1. FAINT BACKGROUND SLIDESHOW (Adapted for White Background) */}
+      <div className="absolute inset-0 z-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.9 }} // Very low opacity so it remains "faint" against white
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2 }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${backgroundImages[currentSlide]})` }}
+          />
+        </AnimatePresence>
+        {/* Powder blue / White gradient overlay to soften the images */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-[#D9EAF0]/20 to-white/95" />
+      </div>
 
-      {/* BACKGROUND - Powder Blue & White Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-[#E0F2F7] to-[#B0E0E6]/20"></div>
-
-      {/* HEADER */}
-      <header className="relative flex justify-between items-center p-5 border-b border-blue-100 backdrop-blur-sm">
-        <h1 className="text-[#1E3A8A] font-serif tracking-widest font-bold">
-          TOPXCM FASHION
-        </h1>
-        {/* Pass custom colors to FashionMenu if it accepts props, otherwise it stays functional */}
+      {/* 2. TOP HEADER (Fashion Edition on Left, Menu on Right) */}
+      <header className="relative z-50 flex justify-between items-center p-6 md:p-10">
+        <div className="text-[#1E3A8A] text-xs tracking-[0.4em] font-bold uppercase opacity-60">
+          Fashion Edition
+        </div>
+        
+        {/* Your custom hamburger menu component */}
         <FashionMenu />
       </header>
 
-      {/* HERO */}
-      <section className="relative text-center py-20 px-5">
-        <h2 className="text-4xl md:text-5xl font-serif leading-tight text-slate-900">
-          Crafted Style, <span className="text-[#3B82F6]">Tailored Identity</span>
-        </h2>
-        <p className="mt-4 text-slate-600 max-w-xl mx-auto">
-          Explore premium fashion pieces designed for elegance, culture, and modern lifestyle.
-        </p>
-      </section>
+      {/* 3. CENTERED WELCOME CONTENT */}
+      <main className="relative z-10 flex flex-col items-center justify-center h-[70vh] text-center px-6">
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-[#1E3A8A]/60 text-sm md:text-lg uppercase tracking-[0.5em] mb-4 font-semibold"
+        >
+          Welcome to
+        </motion.p>
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, duration: 1.2 }}
+          className="flex flex-col items-center"
+        >
+          {/* Changed to dark blue to contrast with the white background */}
+          <h1 className="text-[#1E3A8A] text-5xl md:text-8xl font-black tracking-[0.2em] leading-tight drop-shadow-sm">
+            X C M
+          </h1>
+          <h2 className="text-[#D4AF37] text-3xl md:text-5xl font-serif italic -mt-2 md:-mt-4 drop-shadow-sm">
+            Wardrobes
+          </h2>
+        </motion.div>
 
-      {/* CATEGORY GRID */}
-      <section className="relative grid md:grid-cols-2 gap-6 px-5 pb-20">
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 1.5 }}
+          className="mt-8 text-[#1E3A8A]/50 italic font-serif text-sm md:text-xl tracking-widest"
+        >
+          "...a spice for your wardrobe"
+        </motion.p>
+      </main>
 
-        {categories.map((item) => (
-          <Link
-            key={item.name}
-            to={item.link}
-            className="relative h-[250px] rounded-2xl overflow-hidden group shadow-lg shadow-blue-900/5 border border-white"
-          >
-            {/* IMAGE */}
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
-            />
-
-            {/* BLUE TINTED OVERLAY */}
-            <div className="absolute inset-0 bg-[#1E3A8A]/40 group-hover:bg-[#1E3A8A]/50 transition duration-500"></div>
-
-            {/* TEXT */}
-            <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-4">
-              <h3 className="text-2xl font-serif tracking-wide text-white drop-shadow-md">
-                {item.name}
-              </h3>
-
-              {/* Accent line that appears on hover */}
-              <div className="w-0 h-[1px] bg-white group-hover:w-20 transition-all duration-500 mt-2"></div>
-
-              <span className="mt-4 text-sm font-medium text-sky-100 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-500">
-                Explore Collection →
-              </span>
-            </div>
-          </Link>
-        ))}
-
-      </section>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&display=swap');
+      `}</style>
     </div>
   );
 }

@@ -6,89 +6,45 @@
 @tailwind utilities;
 
 @layer base {
-  /**
-   * Tailwind CSS theme
-   * Luxury black, champagne gold, and white palette
-   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
-  */
   :root {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    /* Set a clean, neutral base so individual pages can override them */
+    --background: 0 0% 100%; /* White */
+    --foreground: 222 47% 11%; /* Dark Slate */
 
-    --card: 0 0% 5%;
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 0 0% 5%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 43 100% 65%;
-    --primary-foreground: 0 0% 0%;
+    /* Default Primary (Grayish) - Pages will override this with Blue or Gold */
+    --primary: 222 47% 11%; 
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
 
-    --muted: 0 0% 30%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 43 100% 65%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 15%;
-    --ring: 43 100% 65%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222 47% 11%;
 
-    --radius: 0.25rem;
-
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 43 100% 65%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 43 100% 65%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 43 100% 65%;
+    --radius: 0.5rem;
   }
 
+  /* Keep Dark Mode support neutral as well */
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-
-    --card: 0 0% 5%;
-    --card-foreground: 0 0% 100%;
-
-    --popover: 0 0% 5%;
-    --popover-foreground: 0 0% 100%;
-
-    --primary: 43 100% 65%;
-    --primary-foreground: 0 0% 0%;
-
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 0%;
-
-    --muted: 0 0% 30%;
-    --muted-foreground: 0 0% 70%;
-
-    --accent: 43 100% 65%;
-    --accent-foreground: 0 0% 0%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 15%;
-    --ring: 43 100% 65%;
-
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 43 100% 65%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 43 100% 65%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 43 100% 65%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
   }
 }
 
@@ -102,27 +58,18 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    /* Use the font-sans as the default */
+    @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  /* Headings use the Luxury Serif font by default */
+  h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
   }
 
   :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
     overflow-wrap: anywhere;
     word-break: break-word;
-  }
-
-  pre,
-  code {
-    overflow-x: auto;
-    white-space: pre;
   }
 }
 
