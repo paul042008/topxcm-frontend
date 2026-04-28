@@ -6,6 +6,7 @@ import LoadingState from "../components/LoadingState";
 import { X } from "lucide-react";
 
 export default function FashionNatives() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const { data, loading } = useData();
   const [displayedText, setDisplayedText] = useState("");
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -37,13 +38,25 @@ export default function FashionNatives() {
              }} />
       </div>
 
-      <header className="relative flex items-center justify-between p-6 z-50 shrink-0">
-        <BackButton />
-        <h1 className="text-[#00AEEF] font-sans text-[15px] font-bold tracking-[0.3em] uppercase">
-          Natives Collection
-        </h1>
-        <FashionMenu />
-      </header>
+      <header className="relative z-50 flex justify-between items-center p-6 md:p-10">
+  {/* 1. Left Side: Back Arrow */}
+  <button onClick={() => window.history.back()} className="relative z-10 text-[#00AEEF] opacity-70 hover:opacity-100 transition-opacity">
+    ← 
+  </button>
+
+  {/* 2. Center: The Title (SIZE INCREASED HERE) */}
+  <h1 className="absolute left-1/2 -translate-x-1/2 text-[#00AEEF] text-sm md:text-base tracking-[0.4em] font-bold uppercase opacity-80 whitespace-nowrap">
+    Natives Collection
+  </h1>
+  
+  {/* 3. Right Side: Menu */}
+  <div className="relative z-10">
+    <FashionMenu 
+      onOpenAction={() => setMenuOpen(true)} 
+      onCloseAction={() => setMenuOpen(false)} 
+    />
+  </div>
+</header>
 
       {/* HERO TEXT */}
       <div className="relative z-15 text-center pt-4 shrink-0">

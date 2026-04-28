@@ -80,7 +80,7 @@ export default function FashionMenu({
           {/* ── NAV ── */}
           <nav className="flex-grow flex flex-col items-center justify-center gap-8">
             {[
-              { name: "Home", path: "/" },
+              
               { name: "Suits", path: "/fashion/suits" },
               { name: "Agbada", path: "/fashion/agbada" },
               { name: "Natives", path: "/fashion/natives" },

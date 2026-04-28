@@ -3,119 +3,107 @@ import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 import useData from "../hooks/useData";
 import LoadingState from "../components/LoadingState";
+import { motion } from "framer-motion";
+import { useState } from "react";
 
 export default function PhotoPortraits() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const { data, loading } = useData();
 
   if (loading) {
     return <LoadingState />;
   }
 
+  // Filter for portrait works
   const portraits = data.filter((item) => item.category === "portraits");
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="flex items-center justify-between p-5 border-b border-white/10">
+    <div className="min-h-screen bg-black text-white selection:bg-[#D4AF37] selection:text-black">
+      {/* ── HEADER ── */}
+      <header className="fixed top-0 w-full z-[100] flex items-center justify-between p-6 md:p-10 mix-blend-difference">
         <BackButton />
-        <h1 className="text-[#D4AF37] font-serif text-lg">
-          THE OFFICIAL PHOTOGRAPHY
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-white/40 font-serif text-sm tracking-[0.4em] uppercase whitespace-nowrap">
+          Portraits & Studios
         </h1>
-        <PhotoMenu />
+        <PhotoMenu  
+       isOpen={menuOpen} 
+      onClose={() => setMenuOpen(false)} 
+      onCloseAction={() => setMenuOpen(false)} 
+      />
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden px-5 py-16 md:py-24">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(0,0,0,0.95),rgba(0,0,0,0.7)),url('/images/portrait-hero.jpg')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-black/25" />
-
-        <div className="relative mx-auto flex max-w-6xl flex-col items-center text-center">
-          <p className="mb-4 text-xs uppercase tracking-[0.4em] text-[#D4AF37]">
-            Portraits & Studios
-          </p>
-
-          <h1 className="max-w-4xl text-4xl font-semibold leading-tight md:text-6xl font-serif">
-            Clean portrait visuals with a refined studio feel.
-          </h1>
-
-          <p className="mt-6 max-w-2xl text-base text-white/70 md:text-lg">
-            Premium portrait sessions presented in a simple, elegant gallery layout designed to keep the focus on the subject.
-          </p>
-
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              to="/photography/weddings"
-              className="rounded-full border border-[#D4AF37] px-6 py-3 font-medium text-[#D4AF37] transition hover:scale-105"
-            >
-              Next: Weddings
-            </Link>
-            <Link
-              to="/photography/videos"
-              className="rounded-full bg-[#D4AF37] px-6 py-3 font-medium text-black transition hover:scale-105"
-            >
-              Next: Videos
-            </Link>
-          </div>
-        </div>
+      {/* ── HERO SECTION ── */}
+      <section className="relative h-[60vh] w-full overflow-hidden flex flex-col items-center justify-center text-center px-6">
+         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,black)] z-10" />
+         <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="relative z-20 space-y-4"
+         >
+           <p className="text-[#D4AF37] text-xs uppercase tracking-[0.6em]">Premium Collection</p>
+           <h2 className="text-5xl md:text-7xl font-serif italic">The Art of Portraiture</h2>
+         </motion.div>
       </section>
 
-      {/* Gallery */}
-      <section className="mx-auto max-w-6xl px-5 py-12 md:py-16">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-[#D4AF37]">
-              Gallery
-            </p>
-            <h2 className="mt-2 text-2xl md:text-3xl font-serif">
-              Portraits displayed cleanly and beautifully
-            </h2>
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {/* ── CINEMATIC HORIZONTAL ROW ── */}
+      <section className="pb-32">
+        <div className="flex overflow-x-auto gap-8 px-6 md:px-12 no-scrollbar snap-x snap-mandatory">
           {portraits.map((item, index) => (
-            <div
+            <motion.div
               key={item.id}
-              className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5"
-              style={{
-                animation: `fadeUp 0.6s ease-out ${index * 0.08}s both`,
-              }}
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              viewport={{ once: true }}
+              className="relative shrink-0 w-[85vw] md:w-[450px] aspect-[3/4] rounded-2xl overflow-hidden snap-center group shadow-2xl border border-white/5"
             >
-              <div
-                className="relative h-[320px] w-full overflow-hidden bg-cover bg-center transition duration-500 group-hover:scale-105"
-                style={{
-                  backgroundImage: item.image ? `url('${item.image}')` : "none",
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+              {/* The Image */}
+              <img
+                src={item.image}
+                alt={item.title}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
 
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-lg font-serif text-white">
-                    {item.title}
-                  </h3>
+              {/* Elegant Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
 
-                  {item.description && (
-                    <p className="mt-2 text-sm leading-6 text-white/70">
-                      {item.description}
-                    </p>
-                  )}
-                </div>
+              {/* Bottom Info Box */}
+              <div className="absolute bottom-0 left-0 w-full p-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                <p className="text-[#D4AF37] text-[10px] uppercase tracking-[0.3em] mb-2 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                   {item.category || "Studio Work"}
+                </p>
+                <h3 className="text-2xl font-serif text-white mb-2 leading-tight">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-white/60 font-light leading-relaxed max-w-[280px] line-clamp-2">
+                  {item.description}
+                </p>
               </div>
-            </div>
+              
+              {/* Cinematic Frame Border */}
+              <div className="absolute inset-4 border border-white/10 rounded-xl pointer-events-none group-hover:border-white/20 transition-colors" />
+            </motion.div>
           ))}
         </div>
+
+        {/* Scroll Progress Indicator */}
+        <div className="mt-12 flex justify-center items-center gap-4">
+           <div className="h-[1px] w-20 bg-white/10" />
+           <span className="text-[10px] uppercase tracking-[0.5em] text-white/30">Scroll to explore</span>
+           <div className="h-[1px] w-20 bg-white/10" />
+        </div>
       </section>
 
+      {/* ── FOOTER NAV ── */}
+      <footer className="py-20 flex justify-center gap-6">
+        <Link to="/photography/videos" className="text-xs uppercase tracking-widest text-white/40 hover:text-[#D4AF37] transition-colors">Next: Motion</Link>
+        <span className="text-white/10">|</span>
+        <Link to="/photography/canvas" className="text-xs uppercase tracking-widest text-white/40 hover:text-[#D4AF37] transition-colors">Next: Canvas</Link>
+      </footer>
+
       <style>{`
-        @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(18px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
