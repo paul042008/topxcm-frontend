@@ -112,14 +112,14 @@ export default function Photography() {
   ];
 
   const rowImages = [
-    "/images/photo-1.jpg",
-    "/images/photo-2.jpg",
-    "/images/photo-3.jpg",
-    "/images/photo-4.jpg",
-    "/images/photo-5.jpg",
+    "/images/photo-1.jfif",
+    "/images/photo-2.jfif",
+    "/images/photo-3.jfif",
+    "/images/photo-4.jfif",
+    "/images/photo-5.jfif",
   ];
 
-  const sloganText = "...capturing stories with light & soul";
+  const sloganText = "...your official photographers";
 
   useEffect(() => {
     const timer = setInterval(
@@ -139,10 +139,18 @@ export default function Photography() {
         selectedImg ? "h-screen overflow-hidden" : ""
       }`}
     >
-
-      
       {/* ── PHOTO MENU ── */}
       <PhotoMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+
+      {/* Page content fades when menu is open — exactly like the sample */}
+      <div
+        className="transition-all duration-500"
+        style={{
+          opacity: isMenuOpen ? 0.15 : 1,
+          filter: isMenuOpen ? "blur(2px)" : "none",
+          pointerEvents: isMenuOpen ? "none" : "auto",
+        }}
+      >
 
       {/* ── LIGHTBOX ── */}
       <AnimatePresence>
@@ -206,15 +214,32 @@ export default function Photography() {
         {/* ── HEADER ── */}
         <header className="relative z-50 flex justify-between items-center p-6 md:p-10">
           <div className="flex flex-col gap-0.5">
-            <span className="text-[#D4AF37] text-xs tracking-[0.7em] font-bold uppercase opacity-70 leading-none">
-              TOP
+            <span
+              className="font-serif italic text-white text-lg md:text-xl leading-none"
+              style={{ letterSpacing: "0.02em" }}
+            >
+              The Official
             </span>
-            <span className="text-white/30 text-[9px] tracking-[0.4em] uppercase font-light">
-              Official Photography
+            <span
+              className="text-[#D4AF37] text-[9px] tracking-[0.55em] uppercase font-light"
+            >
+              Photography
             </span>
           </div>
-        
-          
+          {/* Menu trigger — same pattern as FashionMenu button */}
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="flex items-center gap-3 group"
+          >
+            <span className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] hidden md:block opacity-0 group-hover:opacity-100 transition-opacity">
+              Menu
+            </span>
+            <div className="flex flex-col gap-[5px]">
+              <span className="block w-7 h-[1.5px] bg-[#D4AF37]" />
+              <span className="block w-5 h-[1.5px] bg-[#D4AF37] ml-auto" />
+              <span className="block w-7 h-[1.5px] bg-[#D4AF37]" />
+            </div>
+          </button>
         </header>
 
         {/* ── HERO CONTENT ── */}
@@ -253,15 +278,7 @@ export default function Photography() {
               </motion.h1>
             </div>
 
-            <motion.h2
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2, duration: 1.8 }}
-              className="text-white text-4xl md:text-6xl font-serif italic"
-              style={{ textShadow: "0 10px 20px rgba(0,0,0,0.8)" }}
-            >
-              Photography
-            </motion.h2>
+             
           </motion.div>
 
           {/* Typewriter slogan */}
@@ -444,6 +461,7 @@ export default function Photography() {
             0 12px 40px rgba(0, 0, 0, 0.8);
         }
       `}</style>
+      </div> {/* end fade wrapper */}
     </div>
   );
 }
