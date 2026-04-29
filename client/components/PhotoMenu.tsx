@@ -61,13 +61,11 @@ export default function PhotoMenu({
 
           <nav className="flex-grow flex flex-col items-center justify-center gap-8 relative z-10">
             {[
-              { name: "Portfolio", path: "/photography" },
               { name: "Weddings", path: "/photography/weddings" },
-              { name: "Portraits", path: "/photography/portraits" },
+              { name: "Studios", path: "/photography/studios" },
+              { name: "Outdoors", path: "/photography/outdoors" },
               { name: "Aerials", path: "/photography/aerials" },
-              { name: "Cinema", path: "/photography/videos" },
-              { name: "Canvas", path: "/photography/canvas" },
-              { name: "Contact", path: "/photography/contact" },
+              { name: "Video", path: "/photography/videos" },
             ].map((link) => (
               <Link
                 key={link.name}

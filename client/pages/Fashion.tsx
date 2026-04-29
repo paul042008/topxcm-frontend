@@ -211,7 +211,7 @@ export default function FashionPage() {
           <header className="relative z-50 flex justify-between items-center p-6 md:p-10">
             <div className="flex flex-col gap-0.5">
               <span className="font-serif italic text-gray-800 text-lg md:text-xl leading-none">
-                The Official
+                The XCM
               </span>
               <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light">
                 Fashion Corner

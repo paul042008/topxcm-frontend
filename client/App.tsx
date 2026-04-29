@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoadingState from './components/LoadingState';
+ 
 
 // --- LAZY LOADED COMPONENTS ---
 // This splits your code into small chunks so the site loads faster
@@ -14,10 +15,10 @@ const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Photography = lazy(() => import("./pages/Photography"));
 const PhotoWeddings = lazy(() => import("./pages/PhotoWeddings"));
-const PhotoPortraits = lazy(() => import("./pages/PhotoPortraits"));
+const PhotoStudios = lazy(() => import("./pages/PhotoStudios"));
 const PhotoVideos = lazy(() => import("./pages/PhotoVideos"));
 const PhotoAerials = lazy(() => import("./pages/PhotoAerials"));
-const PhotoCanvas = lazy(() => import("./pages/PhotoCanvas"));
+const PhotoOutdoors = lazy(() => import("./pages/PhotoOutdoors"));
 const Fashion = lazy(() => import("./pages/Fashion"));
 const FashionSuits = lazy(() => import("./pages/FashionSuits"));
 const FashionAgbada = lazy(() => import("./pages/FashionAgbada"));
@@ -44,10 +45,10 @@ const App = () => (
             {/* Photography Routes */}
             <Route path="/photography" element={<Photography />} />
             <Route path="/photography/weddings" element={<PhotoWeddings />} />
-            <Route path="/photography/portraits" element={<PhotoPortraits />} />
+            <Route path="/photography/studios" element={<PhotoStudios />} />
             <Route path="/photography/aerials" element={<PhotoAerials />} />
             <Route path="/photography/videos" element={<PhotoVideos />} />
-            <Route path="/photography/canvas" element={<PhotoCanvas />} />
+            <Route path="/photography/outdoors" element={<PhotoOutdoors />} />
             
             {/* Fashion Routes */}
             <Route path="/fashion" element={<Fashion />} />

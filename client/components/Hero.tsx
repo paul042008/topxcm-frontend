@@ -47,16 +47,20 @@ export default function Hero() {
 
       {/* Main Content */}
       <div className="relative flex flex-col items-center justify-center px-6 text-center mt-32 z-10 pointer-events-none">
-        <p className={`pointer-events-auto text-xl md:text-2xl text-[#D4AF37] italic font-serif transition-all duration-700 ${showWelcome ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}>
-          Welcome to
+        
+        {/* CHANGED: Text updated, smaller, and forced to one line */}
+        <p className={`pointer-events-auto text-sm md:text-lg text-[#D4AF37] italic font-serif whitespace-nowrap transition-all duration-700 ${showWelcome ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}>
+          Welcome to the official website of...
         </p>
 
+        {/* UNTOUCHED: Kept exactly as you requested */}
         <h1 className={`pointer-events-auto text-4xl md:text-6xl font-sans font-black tracking-[0.2em] text-white mt-3 mb-3 transition-all duration-700 ${showTitle ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
           TOPXCM
         </h1>
 
-        <div className="pointer-events-auto max-w-[260px] md:max-w-xl min-h-[40px] flex items-center justify-center">
-          <p className="text-xs md:text-sm text-white/70 uppercase tracking-[0.3em] font-sans leading-relaxed">
+        {/* CHANGED: Container widened, text made smaller and forced to one line */}
+        <div className="pointer-events-auto w-full max-w-2xl min-h-[40px] flex items-center justify-center">
+          <p className="text-[10px] md:text-sm text-white/70 uppercase tracking-[0.25em] font-sans leading-relaxed whitespace-nowrap">
             {displayedText}<span className="animate-pulse ml-1 text-[#D4AF37]">|</span>
           </p>
         </div>
@@ -64,29 +68,29 @@ export default function Hero() {
 
       {/* Navigation with Passing Light Effect */}
       <div className={`relative z-10 w-full max-w-5xl px-6 pb-24 transition-opacity duration-1000 ${showButtons ? "opacity-100" : "opacity-0"}`}>
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-8">
           
-          <div className="flex justify-between items-center px-2">
-            {/* Photography */}
-            <Link to="/photography" className="group relative overflow-hidden flex items-center justify-center p-4 animate-[slideInLeft_1s_ease-out_2s_both]">
+          <div className="flex justify-between items-center px-2 md:px-10 gap-2">
+            {/* Photography Box */}
+            <Link to="/photography" className="group relative overflow-hidden flex items-center justify-center px-4 py-3 md:px-8 border border-white/10 rounded-full animate-[slideInLeft_1s_ease-out_2s_both] backdrop-blur-sm">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:duration-500 animate-[sweep_4s_infinite] pointer-events-none" />
-              <span className="relative z-10 text-[#D4AF37] text-[10px] md:text-[12px] font-bold tracking-[0.4em] uppercase group-hover:text-white transition-colors">
+              <span className="relative z-10 text-[#D4AF37] text-[9px] md:text-[12px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase group-hover:text-white transition-colors">
                 &larr; Photography
               </span>
             </Link>
 
-            {/* Fashion */}
-            <Link to="/fashion" className="group relative overflow-hidden flex items-center justify-center p-4 animate-[slideInRight_1s_ease-out_2s_both]">
+            {/* Fashion Box */}
+            <Link to="/fashion" className="group relative overflow-hidden flex items-center justify-center px-4 py-3 md:px-8 border border-white/10 rounded-full animate-[slideInRight_1s_ease-out_2s_both] backdrop-blur-sm">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[sweep_4s_infinite_1s] pointer-events-none" />
-              <span className="relative z-10 text-[#3b82f6] text-[10px] md:text-[12px] font-bold tracking-[0.4em] uppercase group-hover:text-white transition-colors">
+              <span className="relative z-10 text-[#3b82f6] text-[9px] md:text-[12px] font-bold tracking-[0.3em] md:tracking-[0.4em] uppercase group-hover:text-white transition-colors">
                 Fashion &rarr;
               </span>
             </Link>
           </div>
 
-          {/* Real Estate */}
-          <div className="flex justify-center -mt-2">
-            <Link to="/real-estate" className="group relative overflow-hidden flex items-center justify-center p-4 animate-[slideInUp_1s_ease-out_2.3s_both]">
+          {/* Real Estate Box */}
+          <div className="flex justify-center">
+            <Link to="/real-estate" className="group relative overflow-hidden flex items-center justify-center px-6 py-3 md:px-10 border border-white/10 rounded-full animate-[slideInUp_1s_ease-out_2.3s_both] backdrop-blur-sm">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[sweep_4s_infinite_2s] pointer-events-none" />
               <span className="relative z-10 text-[#3b82f6] text-[10px] md:text-[12px] font-bold tracking-[0.4em] uppercase group-hover:text-white transition-colors">
                 Real Estate

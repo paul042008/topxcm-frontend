@@ -2,6 +2,7 @@ import { motion, Variants } from "framer-motion";
 
 const config = {
   fashion: {
+    logo: null,
     letters: ["X", "C", "M"],
     bg: "bg-[#D9EAF0]",
     glowA: "bg-white/60",
@@ -15,24 +16,26 @@ const config = {
     taglineColor: "text-[#00AEEF]/60",
   },
   photography: {
-    letters: ["T", "O", "P"],
-    bg: "bg-black",
-    glowA: "bg-[#D4AF37]/20",
-    glowB: "bg-[#D4AF37]/10",
+    // ✅ String path used correctly
+    logo: "/images/logo.jpg", 
+    letters: [], 
+    bg: "bg-white", 
+    glowA: "bg-[#D4AF37]/10",
+    glowB: "bg-[#D4AF37]/5",
     letterColor: "text-[#D4AF37]",
-    textShadow: "0 10px 30px rgba(212,175,55,0.3)",
-    progressTrack: "bg-[#D4AF37]/10",
+    textShadow: "none",
+    progressTrack: "bg-black/5",
     progressBar: "bg-[#D4AF37]",
-    shimmer: "via-[#D4AF37]/30",
+    shimmer: "via-[#D4AF37]/10",
     tagline: "Capturing Excellence",
-    taglineColor: "text-[#D4AF37]/60",
+    taglineColor: "text-black/40", 
   },
-};
+}; // ✅ Added the missing closing brace here
 
 export default function LoadingState() {
-  // Auto-detects which page we're on from the URL — no props needed
   const isPhoto = window.location.pathname.toLowerCase().includes("photo");
-  const c = config[isPhoto ? "photography" : "fashion"];
+  // Cast as any to allow flexible config access for logo/letters
+  const c = (config as any)[isPhoto ? "photography" : "fashion"];
 
   const containerVariants: Variants = {
     animate: {
@@ -71,32 +74,45 @@ export default function LoadingState() {
         className={`absolute w-[500px] h-[500px] ${c.glowB} blur-[120px] rounded-full -right-20 -bottom-20 pointer-events-none`}
       />
 
-      {/* Animated letters */}
+      {/* Animated content (Logo or Letters) */}
       <motion.div
         variants={containerVariants}
         initial="initial"
         animate="animate"
-        className="relative flex items-center gap-1 md:gap-3"
+        className="relative flex items-center justify-center"
       >
-        {c.letters.map((char, index) => (
-          <motion.span
-            key={index}
+        {c.logo ? (
+          /* LOGO MODE (Photography) */
+          <motion.img
             variants={letterVariants}
-            className={`text-6xl md:text-9xl font-black tracking-tighter uppercase select-none ${c.letterColor}`}
-            style={{
-              fontFamily: "Impact, 'Arial Black', sans-serif",
-              textShadow: c.textShadow,
-            }}
-          >
-            {char}
-          </motion.span>
-        ))}
+            src={c.logo}
+            alt="Logo"
+            className="h-24 md:h-32 object-contain relative z-10"
+          />
+        ) : (
+          /* LETTER MODE (Fashion) */
+          <div className="flex items-center gap-1 md:gap-3">
+            {c.letters?.map((char: string, index: number) => (
+              <motion.span
+                key={index}
+                variants={letterVariants}
+                className={`text-6xl md:text-9xl font-black tracking-tighter uppercase select-none ${c.letterColor}`}
+                style={{
+                  fontFamily: "Impact, 'Arial Black', sans-serif",
+                  textShadow: c.textShadow,
+                }}
+              >
+                {char}
+              </motion.span>
+            ))}
+          </div>
+        )}
 
         {/* Shimmer sweep */}
         <motion.div
           animate={{ x: ["-100%", "250%"] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.5 }}
-          className={`absolute inset-0 bg-gradient-to-r from-transparent ${c.shimmer} to-transparent skew-x-[-25deg] pointer-events-none`}
+          className={`absolute inset-0 bg-gradient-to-r from-transparent ${c.shimmer} to-transparent skew-x-[-25deg] pointer-events-none z-20`}
         />
       </motion.div>
 

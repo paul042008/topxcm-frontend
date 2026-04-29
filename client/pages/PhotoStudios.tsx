@@ -43,7 +43,7 @@ function ItemModal({ item, onClose }: { item: PhotoItem; onClose: () => void }) 
           ✕
         </button>
 
-        <div className="w-full aspect-[4/5] overflow-hidden bg-zinc-800 relative">
+        <div className="w-full aspect-[4/5] overflow-hidden bg-zinc-800">
           <img
             src={item.image}
             alt={item.title}
@@ -51,16 +51,10 @@ function ItemModal({ item, onClose }: { item: PhotoItem; onClose: () => void }) 
             onContextMenu={(e) => e.preventDefault()}
             draggable={false}
           />
-          {/* Play button overlay on modal */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-black/60 backdrop-blur">
-              <span className="ml-1 text-[#D4AF37] text-2xl">▶</span>
-            </div>
-          </div>
         </div>
 
         <div className="p-6">
-          <p className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-1">Videos</p>
+          <p className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-1">Studio</p>
           <h3 className="text-xl font-serif text-white mb-2">{item.title}</h3>
           {item.description && (
             <p className="text-white/50 text-sm leading-relaxed">{item.description}</p>
@@ -71,7 +65,7 @@ function ItemModal({ item, onClose }: { item: PhotoItem; onClose: () => void }) 
   );
 }
 
-export default function PhotoVideos() {
+export default function PhotoStudios() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [items, setItems] = useState<PhotoItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +75,7 @@ export default function PhotoVideos() {
     fetch(`${API}/api/photo-items`)
       .then((res) => res.json())
       .then((data: PhotoItem[]) => {
-        setItems(data.filter((i) => i.category === "videos"));
+        setItems(data.filter((i) => i.category === "studio"));
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -93,7 +87,7 @@ export default function PhotoVideos() {
       <header className="fixed top-0 left-0 w-full z-[100] flex items-center justify-start px-5 py-4 bg-black/80 backdrop-blur-xl border-b border-white/10">
         <BackButton />
         <div className="flex flex-col items-start ml-4">
-          <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold">Videos</p>
+          <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold">Studio</p>
           <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">THE OFFICIAL PHOTOGRAPHY</span>
         </div>
         <div className="ml-auto">
@@ -106,9 +100,9 @@ export default function PhotoVideos() {
       </header>
 
       <div className="pt-24 px-5 py-10 border-b border-white/10 bg-zinc-950">
-        <h1 className="text-3xl md:text-5xl font-serif italic text-white mb-2">Videos</h1>
+        <h1 className="text-3xl md:text-5xl font-serif italic text-white mb-2">Studio</h1>
         <p className="text-white/40 text-sm font-light max-w-sm leading-relaxed">
-          Cinematic motion work with premium storytelling. Reels and clips designed to feel polished and engaging.
+          Capturing the intersection of personality and environment with professional post-production.
         </p>
       </div>
 
@@ -119,7 +113,7 @@ export default function PhotoVideos() {
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-white/20 text-lg font-serif italic">No videos uploaded yet.</p>
+            <p className="text-white/20 text-lg font-serif italic">No studio shots uploaded yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -140,13 +134,7 @@ export default function PhotoVideos() {
                   draggable={false}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300" />
-                {/* Play icon on grid item */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-black/60 backdrop-blur">
-                    <span className="ml-1 text-[#D4AF37] text-lg">▶</span>
-                  </div>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <div className="absolute inset-0 flex items-end p-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <p className="text-white text-xs font-serif line-clamp-1">{item.title}</p>
                 </div>
               </motion.div>
@@ -158,7 +146,7 @@ export default function PhotoVideos() {
       <footer className="py-16 text-center bg-zinc-950 border-t border-white/5">
         <div className="h-10 w-[1px] bg-[#D4AF37] mx-auto mb-5" />
         <p className="text-[8px] tracking-[1em] text-white/20 uppercase">
-          THE OFFICIAL PHOTOGRAPHY • Videos & Motion
+          THE OFFICIAL PHOTOGRAPHY • Studio Collection
         </p>
       </footer>
 

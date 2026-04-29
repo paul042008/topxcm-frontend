@@ -19,6 +19,10 @@ export interface Item {
   thumbnails?: string[];
   gallery?: string[];
   album?: string[];
+
+  // 🔥 fashion albums
+  albumId?: string;
+  albumName?: string;
 }
 
 export default function useData() {
@@ -40,4 +44,3 @@ export default function useData() {
 
   return { data, loading };
 }
-
