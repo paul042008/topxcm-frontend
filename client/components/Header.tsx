@@ -1,10 +1,18 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Facebook, Instagram, Twitter } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.openMenu) {
+      setIsMenuOpen(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Animation variants for the container (stagger effect)
   // ✅ Added "Variants" type and "as const" to satisfy TypeScript
@@ -86,29 +94,56 @@ export default function Header() {
               className="relative flex-grow flex flex-col items-center justify-center gap-8 z-20 text-center"
             >
               
-              {/* ✅ Animated & Much Larger Explorer Text */}
-             <motion.p 
-  variants={itemVariants}
-  className="text-2xl md:text-4xl italic font-serif tracking-[0.2em] text-white mb-8 text-center px-4"
-  style={{ fontFamily: "'Playfair Display', serif" }}
->
-  Where would you like to begin?
-</motion.p>
+              {/* Label — pushed down with extra top margin */}
+              <motion.p 
+                variants={itemVariants}
+                className="text-2xl md:text-4xl italic font-serif tracking-[0.2em] text-white mt-12 mb-8 text-center px-4"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                Where would you like to begin?
+              </motion.p>
+
               {[
-                { name: "Photography", path: "/photography", color: "text-[#D4AF37]" },
-                { name: "Fashion", path: "/fashion", color: "text-[#00AEEF]" },
-                { name: "Real Estate", path: "/real-estate", color: "text-[#00AEEF]" }
+                { name: "Photography", path: "/photography", color: "text-[#D4AF37]", borderColor: "border-[#D4AF37]/30", delay: "0s" },
+                { name: "Fashion", path: "/fashion", color: "text-[#00AEEF]", borderColor: "border-[#00AEEF]/30", delay: "0.6s" },
+                { name: "Real Estate", path: "/real-estate", color: "text-[#00AEEF]", borderColor: "border-[#00AEEF]/30", delay: "1.2s" },
               ].map((item) => (
                 <motion.div key={item.name} variants={itemVariants}>
                   <Link
                     to={item.path}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`text-base md:text-xl font-sans font-bold uppercase tracking-[0.4em] ${item.color} hover:text-white transition-colors duration-300`}
+                    className={`group relative overflow-hidden flex items-center justify-center rounded-full border ${item.borderColor} px-10 py-3 min-w-[220px] transition-colors duration-300 hover:border-white/40`}
                   >
-                    {item.name}
+                    {/* Sweep flash */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full pointer-events-none"
+                      style={{ animation: `sweepFlash 3.5s infinite ${item.delay}` }}
+                    />
+                    <span className={`relative z-10 text-[11px] font-black uppercase tracking-[0.45em] ${item.color} group-hover:text-white transition-colors duration-300`}>
+                      {item.name}
+                    </span>
                   </Link>
                 </motion.div>
               ))}
+
+              {/* About Us — white box, animated, below the rest */}
+              <motion.div variants={itemVariants} className="mt-2">
+                <Link
+                  to="/about"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="group relative overflow-hidden flex items-center justify-center rounded-full border border-white/30 px-10 py-3 min-w-[220px] hover:border-white/60 transition-colors duration-300"
+                >
+                  {/* Sweep flash — offset timing */}
+                  <div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full pointer-events-none"
+                    style={{ animation: "sweepFlash 3.5s infinite 1.8s" }}
+                  />
+                  <span className="relative z-10 text-[11px] font-black uppercase tracking-[0.45em] text-white group-hover:text-[#D4AF37] transition-colors duration-300">
+                    About Us
+                  </span>
+                </Link>
+              </motion.div>
+
             </motion.nav>
 
             {/* Social Icons */}
@@ -125,6 +160,14 @@ export default function Header() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <style>{`
+        @keyframes sweepFlash {
+          0%   { transform: translateX(-150%) skewX(-20deg); }
+          18%  { transform: translateX(150%) skewX(-20deg); }
+          100% { transform: translateX(150%) skewX(-20deg); }
+        }
+      `}</style>
     </>
   );
 }

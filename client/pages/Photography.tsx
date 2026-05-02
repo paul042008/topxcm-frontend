@@ -107,11 +107,10 @@ export default function Photography() {
 
   const heroSlides = [
     "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=2000",
+     "/images/slide3.jpg",
     "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000",
     "/images/slide1.jpg",
     "/images/slide2.jpg",
-    "/images/slide3.jpg",
-    "/images/slide4.jpg",
   ];
 
   const rowImages = [
@@ -142,9 +141,6 @@ export default function Photography() {
         selectedImg ? "h-screen overflow-hidden" : ""
       }`}
     >
-      {/* ── PHOTO MENU ── */}
-      <PhotoMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-
       {/* Page content fades when menu is open — exactly like the sample */}
       <div
         className="transition-all duration-500"
@@ -234,20 +230,7 @@ export default function Photography() {
                 Photography
               </span>
             </div>
-            {/* Menu trigger — same pattern as FashionMenu button */}
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="flex items-center gap-3 group"
-            >
-              <span className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] hidden md:block opacity-0 group-hover:opacity-100 transition-opacity">
-                Menu
-              </span>
-              <div className="flex flex-col gap-[5px]">
-                <span className="block w-7 h-[1.5px] bg-[#D4AF37]" />
-                <span className="block w-5 h-[1.5px] bg-[#D4AF37] ml-auto" />
-                <span className="block w-7 h-[1.5px] bg-[#D4AF37]" />
-              </div>
-            </button>
+            <PhotoMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
           </header>
 
           {/* ── HERO CONTENT ── */}
@@ -407,7 +390,7 @@ export default function Photography() {
                 <span style={{ color: "#D4AF37" }}>is Art</span>
               </h2>
               <p className="leading-relaxed text-lg font-light text-white/60">
-                Based in the heart of Lagos, TOP is a creative photography studio dedicated to crafting
+                Based in the heart of Lagos, TOP is a creative photography brand dedicated to crafting
                 timeless visual stories through cinematic weddings, expressive portraits, and striking
                 aerial imagery—transforming fleeting moments into elegant, timeless memories.
               </p>
@@ -431,100 +414,107 @@ export default function Photography() {
                 </a>
               </div>
 
-              {/* Contact strip */}
+              {/* Contact & Social box */}
               <div
-                className="pt-10 mt-4 grid grid-cols-2 gap-8"
-                style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}
+                className="mt-8 rounded-2xl p-6 space-y-6"
+                style={{ border: "1px solid rgba(212,175,55,0.15)", backgroundColor: "rgba(212,175,55,0.03)" }}
               >
-                <div className="space-y-1">
-                  <p
-                    className="text-[10px] font-bold tracking-[0.5em] uppercase"
-                    style={{ color: "#D4AF37" }}
+                {/* Inquiries row */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                    style={{ border: "1px solid rgba(212,175,55,0.3)", backgroundColor: "rgba(212,175,55,0.07)" }}
                   >
-                    Inquiries
-                  </p>
-                  <p className="text-white font-serif italic text-lg tracking-wide">
-                    +234 806 158 7993
-                  </p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6.08 6.08l1.37-1.37a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold tracking-[0.5em] uppercase" style={{ color: "#D4AF37" }}>Inquiries</p>
+                    <a href="tel:+2348061587993" className="text-white font-serif italic text-base tracking-wide hover:text-[#D4AF37] transition-colors">
+                      +234 806 158 7993
+                    </a>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p
-                    className="text-[10px] font-bold tracking-[0.5em] uppercase"
-                    style={{ color: "#D4AF37" }}
-                  >
-                    Social
-                  </p>
-                  <p className="text-white font-serif italic text-lg tracking-wide">
-                    @topstudios1
-                  </p>
+
+                {/* Divider */}
+                <div style={{ height: "1px", backgroundColor: "rgba(212,175,55,0.1)" }} />
+
+                {/* Social icons row */}
+                <div>
+                  <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>Connect With Us</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+
+                    {/* Facebook */}
+                    <a
+                      href="https://www.facebook.com/share/1KToiX8cS4/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                      style={{ border: "1px solid rgba(212,175,55,0.25)", backgroundColor: "rgba(212,175,55,0.04)" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.04)"; }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37">
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Facebook</span>
+                    </a>
+
+                    {/* Instagram */}
+                    <a
+                      href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA=="
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                      style={{ border: "1px solid rgba(212,175,55,0.25)", backgroundColor: "rgba(212,175,55,0.04)" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.04)"; }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                        <circle cx="12" cy="12" r="4"/>
+                        <circle cx="17.5" cy="6.5" r="1" fill="#D4AF37" stroke="none"/>
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Instagram</span>
+                    </a>
+
+                    {/* Twitter / X */}
+                    <a
+                      href="https://twitter.com/topstudios1"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                      style={{ border: "1px solid rgba(212,175,55,0.25)", backgroundColor: "rgba(212,175,55,0.04)" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.04)"; }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.736-8.835L2.25 2.25h6.918l4.265 5.638 4.811-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/>
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Twitter</span>
+                    </a>
+
+                    {/* Email */}
+                    <a
+                      href="mailto:topstudios@email.com"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                      style={{ border: "1px solid rgba(212,175,55,0.25)", backgroundColor: "rgba(212,175,55,0.04)" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.04)"; }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Email</span>
+                    </a>
+
+                  </div>
                 </div>
               </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ── SOCIAL ICONS SECTION ── */}
-        <section
-          className="py-16 px-6 text-center"
-          style={{ borderTop: "1px solid rgba(212,175,55,0.08)" }}
-        >
-          <p className="text-[10px] uppercase tracking-[0.5em] mb-8 font-bold" style={{ color: "#D4AF37" }}>
-            Follow Us
-          </p>
-          <div className="flex items-center justify-center gap-10">
-
-            {/* Facebook */}
-            <a
-              href="https://www.facebook.com/share/1KToiX8cS4/"
-              target="_blank"
-              rel="noreferrer"
-              className="group flex flex-col items-center gap-3 transition-all duration-300"
-            >
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                style={{ border: "1px solid rgba(212,175,55,0.3)", backgroundColor: "rgba(212,175,55,0.05)" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(212,175,55,0.15)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(212,175,55,0.05)"; }}
-              >
-                {/* Facebook SVG */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="#D4AF37">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-                </svg>
-              </div>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">
-                Facebook
-              </span>
-            </a>
-
-            {/* Divider */}
-            <div className="h-10 w-[1px]" style={{ backgroundColor: "rgba(212,175,55,0.15)" }} />
-
-            {/* Instagram */}
-            <a
-              href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA=="
-              target="_blank"
-              rel="noreferrer"
-              className="group flex flex-col items-center gap-3 transition-all duration-300"
-            >
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                style={{ border: "1px solid rgba(212,175,55,0.3)", backgroundColor: "rgba(212,175,55,0.05)" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(212,175,55,0.15)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(212,175,55,0.05)"; }}
-              >
-                {/* Instagram SVG */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                  <circle cx="12" cy="12" r="4"/>
-                  <circle cx="17.5" cy="6.5" r="1" fill="#D4AF37" stroke="none"/>
-                </svg>
-              </div>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">
-                Instagram
-              </span>
-            </a>
-
           </div>
         </section>
 

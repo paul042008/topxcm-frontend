@@ -97,6 +97,9 @@ export default function Hero() {
               </span>
             </Link>
           </div>
+          <p className="absolute bottom-6 left-0 right-0 text-center text-[8px] tracking-[0.8em] text-white/15 uppercase z-10">
+  © 2026 TOP • Cinematic Excellence
+</p>
 
         </div>
       </div>
