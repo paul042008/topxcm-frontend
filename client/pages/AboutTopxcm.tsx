@@ -69,6 +69,15 @@ export default function AboutTopxcm() {
             <p className="text-white/95 text-sm leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,1)]">
               Dolapo leads photography—capturing timeless moments with creativity and precision—while Asuqwo oversees fashion and real estate, delivering style and smart property opportunities.
             </p>
+             <p className="text-white/95 text-sm leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,1)]">
+             TOPXCM is where creativity meets lifestyle. 
+             </p>
+              <p className="text-white/95 text-sm leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,1)]">
+
+
+Welcome to our world! 
+Let's serve you.
+              </p>
           </div>
 
           {/* SECOND PHOTO: Matching portrait style, kept in center for balance */}
