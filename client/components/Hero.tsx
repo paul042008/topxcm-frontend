@@ -9,7 +9,7 @@ export default function Hero() {
   const [displayedText, setDisplayedText] = useState("");
 
   const navigate = useNavigate();
-  const sloganText = "A Fashion - Photography & Real Estate Empire";
+  const sloganText = "A Fashion - Photography\n& Real Estate Empire";
 
   let lastTap = 0;
   const handleDoubleTap = () => {
@@ -59,8 +59,8 @@ export default function Hero() {
         </h1>
 
         {/* CHANGED: Container widened, text made smaller and forced to one line */}
-        <div className="pointer-events-auto w-full max-w-2xl min-h-[40px] flex items-center justify-center">
-          <p className="text-[10px] md:text-sm text-white/70 uppercase tracking-[0.25em] font-sans leading-relaxed whitespace-nowrap">
+        <div className="pointer-events-auto w-full max-w-2xl min-h-[60px] flex items-center justify-center">
+          <p className="text-[10px] md:text-sm text-white/70 uppercase tracking-[0.25em] font-sans leading-relaxed whitespace-pre-line text-center">
             {displayedText}<span className="animate-pulse ml-1 text-[#D4AF37]">|</span>
           </p>
         </div>

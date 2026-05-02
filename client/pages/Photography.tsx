@@ -106,9 +106,12 @@ export default function Photography() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const heroSlides = [
-    "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2000",
     "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=2000",
     "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000",
+    "/images/slide1.jpg",
+    "/images/slide2.jpg",
+    "/images/slide3.jpg",
+    "/images/slide4.jpg",
   ];
 
   const rowImages = [
@@ -124,7 +127,7 @@ export default function Photography() {
   useEffect(() => {
     const timer = setInterval(
       () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length),
-      8000
+      3000
     );
     return () => clearInterval(timer);
   }, []);
@@ -209,7 +212,7 @@ export default function Photography() {
                 initial={{ opacity: 0, scale: 1.04 }}
                 animate={{ opacity: 0.6, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 3.5, ease: "easeInOut" }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
               />
@@ -355,8 +358,47 @@ export default function Photography() {
             borderTop: "1px solid rgba(212,175,55,0.1)",
           }}
         >
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+          <div className="max-w-6xl mx-auto flex flex-col gap-16">
             <div className="space-y-6">
+
+              {/* About Us */}
+              <div>
+                <h3 className="font-serif italic text-2xl mb-4" style={{ color: "#D4AF37" }}>
+                  About Us
+                </h3>
+                <p className="leading-relaxed text-base font-light text-white/60 mb-8">
+                  Photography is more than capturing images—it is the art of storytelling. We approach
+                  every frame with intention, crafting cinematic experiences that feel as powerful as the
+                  moments themselves. From weddings to portraits down to live coverage and aerial
+                  perspectives, our work is driven by a commitment to elegance, authenticity, and excellence.
+                </p>
+
+                {/* Two images side by side under About Us */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div
+                    className="overflow-hidden rounded-2xl"
+                    style={{ border: "1px solid rgba(212,175,55,0.2)" }}
+                  >
+                    <img
+                      src="/images/about1.jpg"
+                      alt="TOP Photography"
+                      className="w-full h-[220px] object-cover"
+                    />
+                  </div>
+                  <div
+                    className="overflow-hidden rounded-2xl"
+                    style={{ border: "1px solid rgba(212,175,55,0.2)" }}
+                  >
+                    <img
+                      src="/images/about2.jpg"
+                      alt="TOP Photography Studio"
+                      className="w-full h-[220px] object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: "2rem" }}>
               <h3 className="font-serif italic text-3xl" style={{ color: "#D4AF37" }}>
                 The Philosophy
               </h3>
@@ -365,10 +407,9 @@ export default function Photography() {
                 <span style={{ color: "#D4AF37" }}>is Art</span>
               </h2>
               <p className="leading-relaxed text-lg font-light text-white/60">
-                Based in the heart of Lagos, TOP is a luxury boutique studio specialising in cinematic
-                weddings, premium portraiture, and aerial visuals. We don't just take photos — we
-                orchestrate light and emotion to preserve life's most fleeting moments with unparalleled
-                elegance.
+                Based in the heart of Lagos, TOP is a creative photography studio dedicated to crafting
+                timeless visual stories through cinematic weddings, expressive portraits, and striking
+                aerial imagery—transforming fleeting moments into elegant, timeless memories.
               </p>
               <div className="pt-6 flex gap-4 flex-wrap">
                 <a
@@ -418,7 +459,72 @@ export default function Photography() {
                   </p>
                 </div>
               </div>
+              </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── SOCIAL ICONS SECTION ── */}
+        <section
+          className="py-16 px-6 text-center"
+          style={{ borderTop: "1px solid rgba(212,175,55,0.08)" }}
+        >
+          <p className="text-[10px] uppercase tracking-[0.5em] mb-8 font-bold" style={{ color: "#D4AF37" }}>
+            Follow Us
+          </p>
+          <div className="flex items-center justify-center gap-10">
+
+            {/* Facebook */}
+            <a
+              href="https://www.facebook.com/share/1KToiX8cS4/"
+              target="_blank"
+              rel="noreferrer"
+              className="group flex flex-col items-center gap-3 transition-all duration-300"
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                style={{ border: "1px solid rgba(212,175,55,0.3)", backgroundColor: "rgba(212,175,55,0.05)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(212,175,55,0.15)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(212,175,55,0.05)"; }}
+              >
+                {/* Facebook SVG */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="#D4AF37">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                </svg>
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">
+                Facebook
+              </span>
+            </a>
+
+            {/* Divider */}
+            <div className="h-10 w-[1px]" style={{ backgroundColor: "rgba(212,175,55,0.15)" }} />
+
+            {/* Instagram */}
+            <a
+              href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA=="
+              target="_blank"
+              rel="noreferrer"
+              className="group flex flex-col items-center gap-3 transition-all duration-300"
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                style={{ border: "1px solid rgba(212,175,55,0.3)", backgroundColor: "rgba(212,175,55,0.05)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(212,175,55,0.15)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(212,175,55,0.05)"; }}
+              >
+                {/* Instagram SVG */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <circle cx="12" cy="12" r="4"/>
+                  <circle cx="17.5" cy="6.5" r="1" fill="#D4AF37" stroke="none"/>
+                </svg>
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">
+                Instagram
+              </span>
+            </a>
+
           </div>
         </section>
 
