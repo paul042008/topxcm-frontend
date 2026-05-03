@@ -1,14 +1,8 @@
 [build]
-  # Leave empty because package.json is in the root
-  base = "" 
-
-  # Only build the client since you don't have the server folder uploaded
   command = "npm run build:client"
+  # This MUST match the outDir in your vite.config.ts
+  publish = "dist/spa" 
 
-  # This must match the folder name that appeared locally
-  publish = "dist"
-
-# This section is CRITICAL for React/Vite apps
 [[redirects]]
   from = "/api/*"
   to = "https://topxcm-backend.onrender.com/api/:splat"
