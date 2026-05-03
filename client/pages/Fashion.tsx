@@ -32,32 +32,23 @@ const ImageRow = ({
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-
     const step = () => {
       if (!isUserScrolling.current && track) {
         track.scrollLeft += speed;
         const half = track.scrollWidth / 2;
-        if (speed > 0 && track.scrollLeft >= half) {
-          track.scrollLeft -= half;
-        } else if (speed < 0 && track.scrollLeft <= 0) {
-          track.scrollLeft += half;
-        }
+        if (speed > 0 && track.scrollLeft >= half) track.scrollLeft -= half;
+        else if (speed < 0 && track.scrollLeft <= 0) track.scrollLeft += half;
       }
       animFrameRef.current = requestAnimationFrame(step);
     };
-
     animFrameRef.current = requestAnimationFrame(step);
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
+    return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
   }, [speed]);
 
   const pauseAutoScroll = () => {
     isUserScrolling.current = true;
     if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-    scrollTimeout.current = setTimeout(() => {
-      isUserScrolling.current = false;
-    }, 2000);
+    scrollTimeout.current = setTimeout(() => { isUserScrolling.current = false; }, 2000);
   };
 
   const loopedImages = [...images, ...images];
@@ -138,13 +129,13 @@ export default function FashionPage() {
         selectedImg ? "h-screen overflow-hidden" : ""
       }`}
     >
-     <FashionMenu
-  isFashionLanding={true}
-  onOpenAction={() => setIsMenuOpen(true)}
-  onCloseAction={() => setIsMenuOpen(false)}
-/>
+      <FashionMenu
+        isFashionLanding={true}
+        onOpenAction={() => setIsMenuOpen(true)}
+        onCloseAction={() => setIsMenuOpen(false)}
+      />
 
-      {/* ── LIGHTBOX — stays outside fade wrapper so it's always visible ── */}
+      {/* ── LIGHTBOX ── */}
       <AnimatePresence>
         {selectedImg && (
           <motion.div
@@ -180,7 +171,7 @@ export default function FashionPage() {
         )}
       </AnimatePresence>
 
-      {/* ── PAGE CONTENT — fades when menu is open ── */}
+      {/* ── PAGE CONTENT ── */}
       <div
         className="transition-all duration-500"
         style={{
@@ -191,7 +182,7 @@ export default function FashionPage() {
       >
         {/* ── HERO SECTION ── */}
         <section className="relative h-screen w-full overflow-hidden">
-          {/* Background slides */}
+          {/* Background slides — UNCHANGED */}
           <div className="absolute inset-0 z-0">
             <AnimatePresence mode="wait">
               <motion.div
@@ -204,6 +195,7 @@ export default function FashionPage() {
                 style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
               />
             </AnimatePresence>
+            {/* Original gradient — unchanged */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-[#00AEEF]/10 to-white/95" />
           </div>
 
@@ -221,12 +213,17 @@ export default function FashionPage() {
 
           {/* Hero Content */}
           <main className="relative z-10 flex flex-col items-center justify-center h-[72vh] text-center px-6">
+
+            {/* Welcome to — dark shadow ~70% */}
             <motion.p
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 2, ease: "easeOut" }}
-              className="text-base md:text-xl uppercase tracking-[0.5em] mb-6 font-bold drop-shadow-[0_4px_10px_rgba(0,174,239,0.5)]"
-              style={{ color: "#ffffff" }}
+              className="text-base md:text-xl uppercase tracking-[0.5em] mb-6 font-bold"
+              style={{
+                color: "#ffffff",
+                textShadow: "0 4px 20px rgba(0,0,0,0.75), 0 2px 8px rgba(0,0,0,0.7), 0 8px 40px rgba(0,0,0,0.65)"
+              }}
             >
               Welcome to
             </motion.p>
@@ -246,36 +243,40 @@ export default function FashionPage() {
                 </motion.h1>
               </div>
 
+              {/* Wardrobes — dark shadow ~70% */}
               <motion.h2
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 2, duration: 1.8 }}
-                className="text-white text-4xl md:text-6xl font-serif italic drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
+                className="text-white text-4xl md:text-6xl font-serif italic"
+                style={{
+                  textShadow: "0 6px 28px rgba(0,0,0,0.75), 0 2px 10px rgba(0,0,0,0.72), 0 12px 50px rgba(0,0,0,0.65)"
+                }}
               >
                 Wardrobes
               </motion.h2>
             </motion.div>
 
-            {/* Typewriter slogan */}
+            {/* Slogan — no box, blue glow shadow ~50% */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 3, duration: 1.5 }}
-              className="mt-10 bg-white/8 backdrop-blur-md p-4 px-10 rounded-2xl border border-white/10 shadow-xl"
+              className="mt-10"
             >
               <p
-                className="font-serif italic text-base md:text-2xl tracking-widest min-h-[1.5em] drop-shadow-[0_2px_8px_rgba(0,174,239,0.4)]"
-                style={{ color: "#00AEEF" }}
+                className="font-serif italic text-base md:text-2xl tracking-widest min-h-[1.5em]"
+                style={{
+                  color: "#00AEEF",
+                  textShadow: "0 4px 18px rgba(0,174,239,0.5), 0 2px 8px rgba(0,174,239,0.45), 0 0 36px rgba(0,174,239,0.35)"
+                }}
               >
                 {sloganText.split("").map((char, index) => (
                   <motion.span
                     key={index}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{
-                      delay: 4 + index * 0.05,
-                      duration: 0.3,
-                    }}
+                    transition={{ delay: 4 + index * 0.05, duration: 0.3 }}
                   >
                     {char}
                   </motion.span>
@@ -291,10 +292,7 @@ export default function FashionPage() {
             transition={{ delay: 6 }}
             className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
           >
-            <span
-              className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-50"
-              style={{ color: "#00AEEF" }}
-            >
+            <span className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-50" style={{ color: "#00AEEF" }}>
               Scroll
             </span>
             <div className="w-[1px] h-12 bg-gradient-to-b from-[#00AEEF] to-transparent relative overflow-hidden">
@@ -316,24 +314,30 @@ export default function FashionPage() {
           </div>
         </section>
 
-        {/* ── ABOUT SECTION ── */}
+        {/* ── ABOUT SECTION — bg UNCHANGED ── */}
         <section className="py-32 px-6 md:px-20 bg-[#00AEEF]/8">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
-              <h3 className="font-serif italic text-3xl" style={{ color: "#00AEEF" }}>
+
+              {/* Our Story — black */}
+              <h3 className="font-serif italic text-3xl text-black">
                 Our Story
               </h3>
+
               <h2
                 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none"
                 style={{ color: "#00AEEF" }}
               >
                 Crafting <br /> Excellence
               </h2>
-              <p className="leading-relaxed text-lg font-light" style={{ color: "#00AEEF", opacity: 0.7 }}>
+
+              {/* Writeup — black */}
+              <p className="leading-relaxed text-lg font-light text-[#00AEEF]" style={{ opacity: 0.8 }}>
                 XCM Wardrobes isn't just a fashion house; it's a statement of identity. We believe that
                 every stitch tells a story of confidence, culture, and character. From bespoke suits to
                 traditional Agbada and modern casuals, we spice up your style with precision and passion.
               </p>
+
               <div className="pt-6">
                 <button
                   className="border px-10 py-4 uppercase text-xs font-bold tracking-[0.3em] transition-all"
@@ -356,7 +360,6 @@ export default function FashionPage() {
                 className="mt-8 rounded-2xl p-6 space-y-6"
                 style={{ border: "1px solid rgba(0,174,239,0.15)", backgroundColor: "rgba(0,174,239,0.03)" }}
               >
-                {/* Inquiries row */}
                 <div className="flex items-center gap-4">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
@@ -377,18 +380,12 @@ export default function FashionPage() {
                   </div>
                 </div>
 
-                {/* Divider */}
                 <div style={{ height: "1px", backgroundColor: "rgba(0,174,239,0.1)" }} />
 
-                {/* Social icons row */}
                 <div>
                   <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#00AEEF" }}>Connect With Us</p>
                   <div className="flex items-center gap-3 flex-wrap">
-
-                    {/* Facebook */}
-                    <a
-                      href="https://www.facebook.com/share/1KToiX8cS4/"
-                      target="_blank" rel="noreferrer"
+                    <a href="https://www.facebook.com/share/1KToiX8cS4/" target="_blank" rel="noreferrer"
                       className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                       style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.04)" }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.12)"; }}
@@ -397,11 +394,7 @@ export default function FashionPage() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#00AEEF"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
                       <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#00AEEF] transition-colors">Facebook</span>
                     </a>
-
-                    {/* Instagram */}
-                    <a
-                      href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA=="
-                      target="_blank" rel="noreferrer"
+                    <a href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA==" target="_blank" rel="noreferrer"
                       className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                       style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.04)" }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.12)"; }}
@@ -412,11 +405,7 @@ export default function FashionPage() {
                       </svg>
                       <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#00AEEF] transition-colors">Instagram</span>
                     </a>
-
-                    {/* Twitter */}
-                    <a
-                      href="YOUR_TWITTER_LINK_HERE"
-                      target="_blank" rel="noreferrer"
+                    <a href="YOUR_TWITTER_LINK_HERE" target="_blank" rel="noreferrer"
                       className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                       style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.04)" }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.12)"; }}
@@ -425,10 +414,7 @@ export default function FashionPage() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#00AEEF"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.736-8.835L2.25 2.25h6.918l4.265 5.638 4.811-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/></svg>
                       <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#00AEEF] transition-colors">Twitter</span>
                     </a>
-
-                    {/* Email */}
-                    <a
-                      href="mailto:YOUR_EMAIL_HERE"
+                    <a href="mailto:YOUR_EMAIL_HERE"
                       className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                       style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.04)" }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.12)"; }}
@@ -439,7 +425,6 @@ export default function FashionPage() {
                       </svg>
                       <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#00AEEF] transition-colors">Email</span>
                     </a>
-
                   </div>
                 </div>
               </div>
@@ -447,16 +432,22 @@ export default function FashionPage() {
           </div>
         </section>
 
+        {/* ── FOOTER — subtle, barely visible ── */}
+        <footer className="py-16 text-center border-t border-[#00AEEF]/8 bg-white">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-8 w-[1px] bg-gradient-to-b from-[#00AEEF]/25 to-transparent" />
+            <p className="text-[8px] tracking-[1em] uppercase" style={{ color: "rgba(0,174,239,0.22)" }}>
+              © 2026 XCM Wardrobes • Lagos
+            </p>
+          </div>
+        </footer>
+
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,500&display=swap');
-
           .no-scrollbar::-webkit-scrollbar { display: none; }
-          .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
+          .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
       </div>
     </div>
   );
-} 
+}

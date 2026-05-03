@@ -43,23 +43,47 @@ export default function FashionContact() {
             We believe every stitch tells a story of confidence, culture, and character. From bespoke suits to traditional Agbada and modern casuals, we spice up your style with precision and passion.
           </p>
 
-          {/* Location */}
+          {/* Two images — matching PhotoContact style */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="aspect-[3/4] rounded-2xl overflow-hidden border border-[#00AEEF]/15 bg-[#00AEEF]/5">
+              <img
+                src="/images/1777805031168~2.png"
+                alt="XCM Wardrobes"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+            <div className="aspect-[3/4] rounded-2xl overflow-hidden border border-[#00AEEF]/15 bg-[#00AEEF]/5">
+              <img
+                src="/images/fashion-about2.jpg"
+                alt="XCM Wardrobes studio"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Location */}
+        <div
+          className="flex items-start gap-4 px-6 py-5 rounded-2xl"
+          style={{ border: "1px solid rgba(0,174,239,0.15)", backgroundColor: "rgba(0,174,239,0.03)" }}
+        >
           <div
-            className="flex items-start gap-4 px-6 py-5 rounded-2xl"
-            style={{ border: "1px solid rgba(0,174,239,0.15)", backgroundColor: "rgba(0,174,239,0.03)" }}
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+            style={{ border: "1px solid rgba(0,174,239,0.3)", backgroundColor: "rgba(0,174,239,0.07)" }}
           >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-              style={{ border: "1px solid rgba(0,174,239,0.3)", backgroundColor: "rgba(0,174,239,0.07)" }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-            </div>
-            <div>
-              <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-1" style={{ color: "#00AEEF" }}>Location</p>
-              <p className="text-slate-600 text-sm leading-relaxed">Behind Block 68, 34 Road, Gowon Estate, Lagos</p>
-            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-1" style={{ color: "#00AEEF" }}>Location</p>
+            <p className="text-slate-600 text-sm leading-relaxed">Behind Block 68, 34 Road, Gowon Estate, Lagos</p>
           </div>
         </div>
 

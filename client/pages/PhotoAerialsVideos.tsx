@@ -85,8 +85,8 @@ export default function PhotoAerialsVideos() {
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
         <BackButton />
         <div className="flex flex-col items-center gap-0.5">
-          <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">Aerials & Videos</p>
-          <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">TOP Photography</span>
+          <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">Drone Aerials & Videos</p>
+          <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">The Official Photography</span>
         </div>
         <PhotoMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} onCloseAction={() => setMenuOpen(false)} />
       </header>
@@ -96,7 +96,7 @@ export default function PhotoAerialsVideos() {
           <div>
             <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.7em] mb-3 font-bold">The Collection</p>
             <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none" style={{ fontFamily: "Impact, 'Arial Black', sans-serif" }}>
-              Aerials &<br />Videos
+              Drone Aerials &<br />Videos
             </h1>
           </div>
           <p className="text-white/30 text-sm font-light max-w-sm leading-relaxed">
@@ -115,7 +115,7 @@ export default function PhotoAerialsVideos() {
               activeTab === tab ? "text-[#D4AF37] border-[#D4AF37]" : "text-white/30 border-transparent hover:text-white/60"
             }`}
           >
-            {tab === "all" ? "All" : tab === "aerials" ? "Aerials" : "Videos"}
+            {tab === "all" ? "All" : tab === "aerials" ? "Aerials" : "Hand Held Videos"}
           </button>
         ))}
       </div>
@@ -160,7 +160,7 @@ export default function PhotoAerialsVideos() {
       <footer className="py-20 text-center border-t border-white/5">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />
-          <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP Photography Studio • Lagos</p>
+          <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP  Brand • Lagos</p>
         </div>
       </footer>
 

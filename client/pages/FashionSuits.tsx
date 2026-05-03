@@ -307,7 +307,7 @@ export default function FashionSuits() {
         </button>
         <div className="flex flex-col items-start ml-4">
   <p className="text-[#00AEEF] text-[10px] tracking-[0.7em] uppercase font-bold">Suits Collection</p>
-  <span className="text-[#1E3A8A]/30 text-[8px] tracking-[0.3em] uppercase">XCM Tailoring</span>
+  <span className="text-[#1E3A8A]/30 text-[8px] tracking-[0.3em] uppercase">XCM Wardrobes</span>
 </div>
         <FashionMenu onOpenAction={() => setMenuOpen(true)} onCloseAction={() => setMenuOpen(false)} />
       </header>
@@ -347,7 +347,7 @@ export default function FashionSuits() {
       <footer className="py-16 text-center bg-white/40">
         <div className="h-10 w-[1px] bg-[#00AEEF] mx-auto mb-5" />
         <p className="text-[8px] tracking-[1em] text-[#1E3A8A]/30 uppercase">
-          XCM Bespoke Tailoring • International
+          2026 XCM Wardrobes • Lagos
         </p>
       </footer>
 

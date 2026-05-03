@@ -65,13 +65,10 @@ export default function PhotoMenu({
           </div>
 
           <nav className="flex-grow flex flex-col items-center justify-center gap-8 relative z-10">
-            <p className="text-white/25 text-[9px] uppercase tracking-[0.5em] font-medium mb-2">
-              Which page would you like to explore?
-            </p>
             {[
-              { name: "Weddings", path: "/photography/weddings" },
+              { name: "Weddings & Other Events", path: "/photography/weddings" },
               { name: "Studio & Outdoors", path: "/photography/studio-outdoors" },
-              { name: "Aerials & Videos", path: "/photography/aerials-videos" },
+              { name: "Drone Aerials & Videos", path: "/photography/aerials-videos" },
               { name: "Frames & Canvas", path: "/photography/canvas" },
               { name: "Contact Us", path: "/photography/contact" },
             ].map((link) => (

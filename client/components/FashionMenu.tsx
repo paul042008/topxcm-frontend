@@ -61,7 +61,7 @@ export default function FashionMenu({
             {/* TOP LEFT BRAND (NO BOX) */}
             <div className="flex flex-col gap-0.5 opacity-50">
               <span className="font-serif italic text-black text-lg md:text-xl leading-none">
-                The Official
+                The XCM
               </span>
               <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light">
                 Fashion Corner

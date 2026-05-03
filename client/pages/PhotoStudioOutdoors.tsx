@@ -78,7 +78,7 @@ export default function PhotoStudioOutdoors() {
         <BackButton />
         <div className="flex flex-col items-center gap-0.5">
           <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">Studio & Outdoors</p>
-          <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">TOP Photography</span>
+          <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">The Official Photography</span>
         </div>
         <PhotoMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} onCloseAction={() => setMenuOpen(false)} />
       </header>
@@ -147,7 +147,7 @@ export default function PhotoStudioOutdoors() {
       <footer className="py-20 text-center border-t border-white/5">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />
-          <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP Photography Studio • Lagos</p>
+          <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP Brand • Lagos</p>
         </div>
       </footer>
 

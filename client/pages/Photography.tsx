@@ -108,6 +108,7 @@ export default function Photography() {
   const heroSlides = [
     "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=2000",
      "/images/slide3.jpg",
+     "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2000",
     "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000",
     "/images/slide1.jpg",
     "/images/slide2.jpg",
