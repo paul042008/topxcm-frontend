@@ -1,14 +1,22 @@
-[build]
-  command = "npm run build:client"
-  # This MUST match the outDir in your vite.config.ts
-  publish = "dist/spa" 
+ [build]
+  # 'base' tells Netlify where to find package.json. 
+  # Since yours is in the root, leave this as an empty string.
+  base = ""
 
+  # This is the command from your package.json
+  command = "npm run build:client"
+
+  # This MUST match the outDir in your vite.config.ts
+  publish = "dist/spa"
+
+# This handles your API calls to Render
 [[redirects]]
   from = "/api/*"
   to = "https://topxcm-backend.onrender.com/api/:splat"
   status = 200
   force = true
 
+# This handles React Router navigation
 [[redirects]]
   from = "/*"
   to = "/index.html"
