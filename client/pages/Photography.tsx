@@ -112,6 +112,10 @@ export default function Photography() {
     "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000",
     "/images/slide1.jpg",
     "/images/slide2.jpg",
+    "/images/slide4.jpg",
+    "/images/slide5.jpg",
+    "/images/slide6.jpg",
+    "/images/slide7.jpg",
   ];
 
   const rowImages = [
@@ -347,39 +351,12 @@ export default function Photography() {
 
               {/* About Us */}
               <div>
-                <h3 className="font-serif italic text-2xl mb-4" style={{ color: "#D4AF37" }}>
-                  About Us
-                </h3>
-                <p className="leading-relaxed text-base font-light text-white/60 mb-8">
-                  Photography is more than capturing images—it is the art of storytelling. We approach
-                  every frame with intention, crafting cinematic experiences that feel as powerful as the
-                  moments themselves. From weddings to portraits down to live coverage and aerial
-                  perspectives, our work is driven by a commitment to elegance, authenticity, and excellence.
-                </p>
+ 
 
                 {/* Two images side by side under About Us */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div
-                    className="overflow-hidden rounded-2xl"
-                    style={{ border: "1px solid rgba(212,175,55,0.2)" }}
-                  >
-                    <img
-                      src="/images/about1.jpg"
-                      alt="TOP Photography"
-                      className="w-full h-[220px] object-cover"
-                    />
-                  </div>
-                  <div
-                    className="overflow-hidden rounded-2xl"
-                    style={{ border: "1px solid rgba(212,175,55,0.2)" }}
-                  >
-                    <img
-                      src="/images/about2.jpg"
-                      alt="TOP Photography Studio"
-                      className="w-full h-[220px] object-cover"
-                    />
-                  </div>
-                </div>
+                
+                
+                
               </div>
 
               <div style={{ borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: "2rem" }}>
