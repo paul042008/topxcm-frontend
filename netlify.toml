@@ -1,4 +1,14 @@
-[[redirects]]
+[build]
+  # The directory where Netlify runs your build command
+  base = "client"
+
+  # The command to compile your React code
+  command = "pnpm run build"
+
+  # The folder that contains the finished files (index.html, etc.)
+  # If you use Vite, this is usually "dist". If Create React App, "build".
+  publish = "dist"
+  [[redirects]]
   from = "/api/*"
   to = "https://topxcm-backend.onrender.com/api/:splat"
   status = 200
