@@ -1,13 +1,14 @@
 [build]
-  # Tell Netlify the package.json and code are in the root
+  # Leave empty because package.json is in the root
   base = "" 
 
-  # ONLY build the client, ignore the server folder
-  command = "pnpm run build:client"
+  # Only build the client since you don't have the server folder uploaded
+  command = "npm run build:client"
 
-  # Direct Netlify to the folder Vite creates (likely client/dist or dist)
+  # This must match the folder name that appeared locally
   publish = "dist"
 
+# This section is CRITICAL for React/Vite apps
 [[redirects]]
   from = "/api/*"
   to = "https://topxcm-backend.onrender.com/api/:splat"
