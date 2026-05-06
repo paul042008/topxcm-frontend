@@ -38,7 +38,7 @@ export default function PhotoContact() {
   {/* First Image (Up) */}
   <div className="w-full aspect-[3/4] rounded-2xl overflow-hidden border border-white/10 bg-white/5 mb-6">
     <img
-      src="/images/about1 (2).jpg"
+      src="/images/about1 (3).jpg"
       alt="TOP Photography team"
       className="w-full h-full object-cover"
       onError={(e) => {
