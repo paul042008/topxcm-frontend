@@ -52,28 +52,32 @@ export default function AboutTopxcm() {
 
           {/* FIRST PHOTO */}
           <div className={`flex justify-start transition-all duration-700 delay-100 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <div className="w-full max-w-md aspect-[3/4] rounded-3xl overflow-hidden border border-[#1a5276]/15 bg-white/20 backdrop-blur-sm relative group shadow-xl">
-              <img src="/images/IMG-20260503-WA0030.jpg" alt="TOPXCM" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-            </div>
+            <div className="w-full max-w-md rounded-3xl overflow-hidden border border-[#1a5276]/15 bg-white/20 backdrop-blur-sm relative group shadow-xl">
+  <img 
+    src="/images/Paul.jpg" 
+    alt="TOPXCM" 
+    className="w-full h-auto block transition-transform duration-700 group-hover:scale-105" 
+  />
+</div>
           </div>
 
           {/* WHO WE ARE BOX */}
           <div className={`space-y-6 p-8 rounded-3xl bg-white/35 backdrop-blur-md border border-[#1a5276]/15 transition-all duration-700 delay-200 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            <p className="text-[#1a5276] text-[9px] uppercase tracking-[0.6em] font-bold">Who We Are</p>
+            <p className="text-[#D4AF37] text-[12px] uppercase tracking-[0.6em] font-bold">Who We Are</p>
             <p className="text-[#1a3a4a] text-sm font-medium leading-relaxed">
-              Dolapo & Asuqwo are a dynamic couple driven by creativity, vision, and a shared passion for building meaningful experiences through art and enterprise. Together, they have established a brand that blends storytelling, style, and structure—turning ideas into timeless expressions.Dolapo & Asuqwo are a dynamic couple driven by creativity, vision, and a shared passion for building meaningful experiences through art and enterprise. Together, they have established a brand that blends storytelling, style, and structure—turning ideas into timeless expressions.
+              <span className="text-base font-bold">Dolapo & Asuqwo</span> are a dynamic couple driven by creativity, vision, and a shared passion for building meaningful experiences through art and enterprise. Together, they have established a brand that blends storytelling, style, and structure turning ideas into timeless expressions.
             </p>
             <p className="text-[#1a3a4a]/85 text-sm leading-relaxed">
-              TOPXCM is a Lagos-based creative empire that seamlessly blends professional photography and videography, bespoke and casual fashion, and trusted real estate solutions, tailored to individuals, brands, and businesses.
+              <span className="text-base font-bold">TOPXCM</span> is a Lagos-based creative empire that seamlessly blends professional photography and videography, bespoke and casual fashion, and trusted real estate solutions, tailored to individuals, brands, and businesses.
             </p>
             <p className="text-[#1a3a4a]/85 text-sm leading-relaxed">
-              Dolapo leads photography—capturing timeless moments with creativity and precision—while Asuqwo oversees fashion and real estate, delivering style and smart property opportunities.
+              Dolapo leads photography—capturing timeless moments with creativity and precision, while Asuqwo oversees fashion and real estate, delivering style and smart property opportunities.
             </p>
             <p className="text-[#1a3a4a]/85 text-sm leading-relaxed">
               TOPXCM is where creativity meets lifestyle.
             </p>
             <p className="text-[#1a3a4a]/85 text-sm leading-relaxed">
-              Welcome to our world!{"\n"}Let's serve you.
+              Welcome to our world. Let's serve you!
             </p>
           </div>
 
@@ -87,8 +91,8 @@ export default function AboutTopxcm() {
           {/* Pillars */}
 <div className={`grid grid-cols-3 gap-4 transition-all duration-700 delay-[400ms] ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
   {[
-    { label: "Photography", sub: "Cinematic imagery", color: "#D4AF37" },
     { label: "Fashion", sub: "Bespoke tailoring", color: "#00AEEF" },
+    { label: "Photography", sub: "Cinematic imagery", color: "#D4AF37" },
     { label: "Real Estate", sub: "Premium properties", color: "#00AEEF" },
   ].map((pillar) => (
     <div 
@@ -114,7 +118,7 @@ export default function AboutTopxcm() {
         <footer className="py-20 text-center border-t border-[#1a5276]/10 mt-8 bg-white/20 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4">
             <div className="h-10 w-[1px] bg-gradient-to-b from-[#1a5276] to-transparent" />
-            <p className="text-[8px] tracking-[1em] text-[#1a5276]/50 uppercase">© 2026 TOPXCM • Lagos, Nigeria</p>
+            <p className="text-[8px] tracking-[1em] text-[#1a5276]/50 uppercase">© 2026 TOPXCM • All Right Reserve</p>
           </div>
         </footer>
       </div>

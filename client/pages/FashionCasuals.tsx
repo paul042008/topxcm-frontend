@@ -333,7 +333,7 @@ export default function FashionCasuals() {
       <footer className="py-16 text-center bg-white/40">
         <div className="h-10 w-[1px] bg-[#00AEEF] mx-auto mb-5" />
         <p className="text-[8px] tracking-[1em] text-[#1E3A8A]/30 uppercase">
-          2026 XCM Wardrobes • Lagos
+          2026 XCM • All Right Reserve
         </p>
       </footer>
 

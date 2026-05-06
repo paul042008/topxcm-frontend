@@ -202,7 +202,7 @@ export default function FashionPage() {
           {/* ── HEADER ── */}
           <header className="relative z-50 flex justify-between items-center p-6 md:p-10">
             <div className="flex flex-col gap-0.5">
-              <span className="font-serif italic text-gray-800 text-lg md:text-xl leading-none">
+              <span className="font-serif italic text-[#00AEEF] text-lg md:text-xl leading-none">
                 The XCM
               </span>
               <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light">
@@ -222,7 +222,7 @@ export default function FashionPage() {
               className="text-base md:text-xl uppercase tracking-[0.5em] mb-6 font-bold"
               style={{
                 color: "#ffffff",
-                textShadow: "0 4px 20px rgba(0,0,0,0.75), 0 2px 8px rgba(0,0,0,0.7), 0 8px 40px rgba(0,0,0,0.65)"
+                textShadow: "0 4px 18px rgba(0,174,239,0.5), 0 2px 8px rgba(0,174,239,0.45), 0 0 36px rgba(0,174,239,0.35)"
               }}
             >
               Welcome to
@@ -250,7 +250,7 @@ export default function FashionPage() {
                 transition={{ delay: 2, duration: 1.8 }}
                 className="text-white text-4xl md:text-6xl font-serif italic"
                 style={{
-                  textShadow: "0 6px 28px rgba(0,0,0,0.75), 0 2px 10px rgba(0,0,0,0.72), 0 12px 50px rgba(0,0,0,0.65)"
+                  textShadow: "0 4px 18px rgba(0,174,239,0.5), 0 2px 8px rgba(0,174,239,0.45), 0 0 36px rgba(0,174,239,0.35)"
                 }}
               >
                 Wardrobes
@@ -437,7 +437,7 @@ export default function FashionPage() {
           <div className="flex flex-col items-center gap-4">
             <div className="h-8 w-[1px] bg-gradient-to-b from-[#00AEEF]/25 to-transparent" />
             <p className="text-[8px] tracking-[1em] uppercase" style={{ color: "rgba(0,174,239,0.22)" }}>
-              © 2026 XCM Wardrobes • Lagos
+              © 2026 XCM • All Right Reserve
             </p>
           </div>
         </footer>

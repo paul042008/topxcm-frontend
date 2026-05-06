@@ -182,7 +182,7 @@ export default function FashionContact() {
       <footer className="py-20 text-center border-t mt-16" style={{ borderColor: "rgba(0,174,239,0.1)" }}>
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-[1px]" style={{ background: "linear-gradient(to bottom, #00AEEF, transparent)" }} />
-          <p className="text-[8px] tracking-[1em] uppercase" style={{ color: "rgba(0,174,239,0.3)" }}>© 2026 XCM Wardrobes • Lagos, Nigeria</p>
+          <p className="text-[8px] tracking-[1em] uppercase" style={{ color: "rgba(0,174,239,0.3)" }}>© 2026 XCM • All Right Reserve</p>
         </div>
       </footer>
     </div>

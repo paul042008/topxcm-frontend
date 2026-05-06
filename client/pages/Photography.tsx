@@ -513,7 +513,7 @@ export default function Photography() {
               className="text-[9px] tracking-[1.2em] uppercase font-medium"
               style={{ color: "rgba(255,255,255,0.2)" }}
             >
-              © 2026 TOP • Cinematic Excellence
+              © 2026 TOP • All Right Reserve 
             </p>
           </div>
         </footer>

@@ -131,7 +131,7 @@ export default function PhotoCanvas() {
       <footer className="py-20 text-center border-t border-white/5">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />
-          <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP Brand • Lagos</p>
+          <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP • All Right Reserve</p>
         </div>
       </footer>
 
