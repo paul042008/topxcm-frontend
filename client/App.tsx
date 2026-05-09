@@ -9,7 +9,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoadingState from './components/LoadingState';
 import AboutTopxcm from "./pages/AboutTopxcm";
 
-
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PhotoAerialsVideos = lazy(() => import("./pages/PhotoAerialsVideos"));
@@ -24,10 +23,11 @@ const FashionNatives = lazy(() => import("./pages/FashionNatives"));
 const FashionCasuals = lazy(() => import("./pages/FashionCasuals"));
 const FashionContact = lazy(() => import("./pages/FashionContact"));
 const RealEstate = lazy(() => import("./pages/RealEstate"));
+const RealEstateListings = lazy(() => import("./pages/RealEstateListings"));
+const RealEstateContact = lazy(() => import("./pages/RealEstateContact"));
 const WeddingAlbum = lazy(() => import("./pages/WeddingAlbum"));
 const Admin = lazy(() => import("./pages/Admin"));
 const PhotoCanvas = lazy(() => import("./pages/PhotoCanvas"));
-
 
 const queryClient = new QueryClient();
 
@@ -58,8 +58,12 @@ const App = () => (
             <Route path="/fashion/casuals" element={<FashionCasuals />} />
             <Route path="/fashion/contact" element={<FashionContact />} />
 
-            {/* Other Routes */}
+            {/* Real Estate Routes */}
             <Route path="/real-estate" element={<RealEstate />} />
+            <Route path="/real-estate/listings" element={<RealEstateListings />} />
+            <Route path="/real-estate/contact" element={<RealEstateContact />} />
+
+            {/* Other Routes */}
             <Route path="/wedding/:id" element={<WeddingAlbum />} />
             <Route path="/admin" element={<Admin />} />
 

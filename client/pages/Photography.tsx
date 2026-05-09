@@ -126,7 +126,7 @@ export default function Photography() {
     "/images/photo-5.jfif",
   ];
 
-  const sloganText = "...your official photographers";
+  const sloganText = "...your official photographer";
 
   useEffect(() => {
     const timer = setInterval(
@@ -230,7 +230,7 @@ export default function Photography() {
                 style={{ letterSpacing: "0.02em" }}
               >
                 The Official
-              </span>
+              </span>       
               <span className="text-[#D4AF37] text-[9px] tracking-[0.55em] uppercase font-light">
                 Photography
               </span>
