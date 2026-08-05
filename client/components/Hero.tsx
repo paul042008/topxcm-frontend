@@ -7,12 +7,9 @@ export default function Hero() {
   const [showSlogan, setShowSlogan] = useState(false);
   const [showButtons, setShowButtons] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingText, setLoadingText] = useState("");
 
   const navigate = useNavigate();
   const sloganText = "A Fashion - Photography\n& Real Estate Empire";
-  const fullLoaderText = "TOPXCM";
 
   let lastTap = 0;
   const handleDoubleTap = () => {
@@ -27,7 +24,6 @@ export default function Hero() {
     setTimeout(() => setShowTitle(true), 1000);
     setTimeout(() => setShowSlogan(true), 1800);
     setTimeout(() => setShowButtons(true), 2500);
-    setTimeout(() => setIsLoading(false), 3000);
   }, []);
 
   // --- Slogan typing effect ---
@@ -43,31 +39,8 @@ export default function Hero() {
     }
   }, [showSlogan]);
 
-  // --- Loader typing effect (FAST) ---
-  useEffect(() => {
-    if (isLoading) {
-      let i = 0;
-      const interval = setInterval(() => {
-        setLoadingText(fullLoaderText.slice(0, i + 1));
-        i++;
-        if (i === fullLoaderText.length) clearInterval(interval);
-      }, 100); // fast typing (~0.6s total)
-      return () => clearInterval(interval);
-    }
-  }, [isLoading]);
-
   return (
     <>
-      {/* ─── LOADING OVERLAY (typing "TOPXCM") ─── */}
-      {isLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
-          <div className="text-4xl md:text-6xl font-black tracking-[0.2em] text-[#D4AF37]">
-            {loadingText}
-            <span className="animate-pulse ml-1">|</span>
-          </div>
-        </div>
-      )}
-
       {/* ─── MAIN CONTENT ─── */}
       <section
         className="fixed inset-0 h-[100dvh] w-full bg-black overflow-hidden select-none flex flex-col items-center justify-between"
