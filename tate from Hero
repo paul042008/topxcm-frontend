@@ -1,0 +1,57 @@
+[1mdiff --git a/client/components/Hero.tsx b/client/components/Hero.tsx[m
+[1mindex aaf6aac..21f7a92 100644[m
+[1m--- a/client/components/Hero.tsx[m
+[1m+++ b/client/components/Hero.tsx[m
+[36m@@ -7,12 +7,9 @@[m [mexport default function Hero() {[m
+   const [showSlogan, setShowSlogan] = useState(false);[m
+   const [showButtons, setShowButtons] = useState(false);[m
+   const [displayedText, setDisplayedText] = useState("");[m
+[31m-  const [isLoading, setIsLoading] = useState(true);[m
+[31m-  const [loadingText, setLoadingText] = useState("");[m
+ [m
+   const navigate = useNavigate();[m
+   const sloganText = "A Fashion - Photography\n& Real Estate Empire";[m
+[31m-  const fullLoaderText = "TOPXCM";[m
+ [m
+   let lastTap = 0;[m
+   const handleDoubleTap = () => {[m
+[36m@@ -27,7 +24,6 @@[m [mexport default function Hero() {[m
+     setTimeout(() => setShowTitle(true), 1000);[m
+     setTimeout(() => setShowSlogan(true), 1800);[m
+     setTimeout(() => setShowButtons(true), 2500);[m
+[31m-    setTimeout(() => setIsLoading(false), 3000);[m
+   }, []);[m
+ [m
+   // --- Slogan typing effect ---[m
+[36m@@ -43,31 +39,8 @@[m [mexport default function Hero() {[m
+     }[m
+   }, [showSlogan]);[m
+ [m
+[31m-  // --- Loader typing effect (FAST) ---[m
+[31m-  useEffect(() => {[m
+[31m-    if (isLoading) {[m
+[31m-      let i = 0;[m
+[31m-      const interval = setInterval(() => {[m
+[31m-        setLoadingText(fullLoaderText.slice(0, i + 1));[m
+[31m-        i++;[m
+[31m-        if (i === fullLoaderText.length) clearInterval(interval);[m
+[31m-      }, 100); // fast typing (~0.6s total)[m
+[31m-      return () => clearInterval(interval);[m
+[31m-    }[m
+[31m-  }, [isLoading]);[m
+[31m-[m
+   return ([m
+     <>[m
+[31m-      {/* ─── LOADING OVERLAY (typing "TOPXCM") ─── */}[m
+[31m-      {isLoading && ([m
+[31m-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">[m
+[31m-          <div className="text-4xl md:text-6xl font-black tracking-[0.2em] text-[#D4AF37]">[m
+[31m-            {loadingText}[m
+[31m-            <span className="animate-pulse ml-1">|</span>[m
+[31m-          </div>[m
+[31m-        </div>[m
+[31m-      )}[m
+[31m-[m
+       {/* ─── MAIN CONTENT ─── */}[m
+       <section[m
+         className="fixed inset-0 h-[100dvh] w-full bg-black overflow-hidden select-none flex flex-col items-center justify-between"[m

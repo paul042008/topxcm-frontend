@@ -6,7 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LoadingState from './components/LoadingState';
+// import LoadingState from './components/LoadingState'; // ❌ removed
 import AboutTopxcm from "./pages/AboutTopxcm";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -37,7 +37,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Suspense fallback={<LoadingState />}>
+        {/* ✅ Removed LoadingState – now shows nothing while loading */}
+        <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<Index />} />
 
