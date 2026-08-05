@@ -57,7 +57,6 @@ const ImageRow = ({
     <div className="relative w-full overflow-hidden">
       <div
         ref={trackRef}
-        // items-center instead of items-end fixes the uneven white gaps above shorter tiles
         className="flex overflow-x-auto gap-6 py-4 px-8 no-scrollbar select-none items-center"
         style={{ scrollBehavior: "auto" }}
         onWheel={pauseAutoScroll}
@@ -77,7 +76,6 @@ const ImageRow = ({
               boxShadow: "0 20px 40px -12px rgba(0,74,112,0.18)",
             }}
           >
-            {/* pale-blue "mat" behind each tile so varying sizes feel intentional, not random */}
             <div className={`w-full h-full overflow-hidden border border-[#00AEEF]/15 cursor-pointer group rounded-[inherit]`}>
               <img
                 src={img}
@@ -248,13 +246,11 @@ export default function FashionPage() {
               className="flex flex-col items-center"
             >
               <div className="bg-white/15 backdrop-blur-md p-3 px-8 rounded-2xl border border-white/25 shadow-2xl mb-4">
-                {/* XCM – solid blue stroke + paint-order */}
+                {/* ✅ XCM – outline removed */}
                 <motion.h1
                   className="text-5xl md:text-7xl font-black tracking-tighter"
                   style={{
                     color: "#00AEEF",
-                    WebkitTextStroke: "1px #004a70",
-                    paintOrder: "stroke fill",
                     textShadow: "none",
                   }}
                 >
@@ -329,7 +325,6 @@ export default function FashionPage() {
 
         {/* ── IMAGE ROWS ── */}
         <section className="relative py-24 overflow-hidden bg-gradient-to-b from-white via-[#f0f8ff] to-[#dceaf5]">
-          {/* subtle dot texture so the section doesn't read as flat/empty */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -340,11 +335,9 @@ export default function FashionPage() {
               WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
             }}
           />
-          {/* soft glow blobs to fill dead space at the edges */}
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#00AEEF]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#00AEEF]/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* section heading so the rows aren't just floating images */}
           <div className="relative text-center mb-14 px-6">
             <p className="text-[10px] tracking-[0.5em] uppercase font-bold text-[#00AEEF]/60 mb-3">
               The Collection
