@@ -374,7 +374,7 @@ export default function Photography() {
               </p>
               <div className="pt-6 flex gap-4 flex-wrap">
                 <a
-                  href="https://wa.me/2348061587993"
+                  href="https://wa.me/2348132799299"
                   target="_blank"
                   rel="noreferrer"
                   className="border px-10 py-4 uppercase text-xs font-bold tracking-[0.3em] transition-all inline-block"
@@ -409,8 +409,8 @@ export default function Photography() {
                   </div>
                   <div>
                     <p className="text-[9px] font-bold tracking-[0.5em] uppercase" style={{ color: "#D4AF37" }}>Inquiries</p>
-                    <a href="tel:+2348061587993" className="text-white font-serif italic text-base tracking-wide hover:text-[#D4AF37] transition-colors">
-                      +234 806 158 7993
+                    <a href="tel:+2348132799299" className="text-white font-serif italic text-base tracking-wide hover:text-[#D4AF37] transition-colors">
+                      +234 813 279 9299
                     </a>
                   </div>
                 </div>

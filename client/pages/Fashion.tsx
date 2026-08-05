@@ -100,9 +100,12 @@ export default function FashionPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const heroSlides = [
-    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2000",
-    "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2000",
-    "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2000",
+    "/images/hero1.jpg",
+    "/images/hero2.png",
+    "/images/hero3.jpg",
+    "/images/hero4.png",
+    "/images/hero5.png",
+    "/images/hero6.png",
   ];
 
   const rowImages = [
