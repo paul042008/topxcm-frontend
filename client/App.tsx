@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import LoadingState from './components/LoadingState'; // ❌ removed
 import AboutTopxcm from "./pages/AboutTopxcm";
+import FashionLatest from "./pages/FashionLatest";
 
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/fashion/natives" element={<FashionNatives />} />
             <Route path="/fashion/casuals" element={<FashionCasuals />} />
             <Route path="/fashion/contact" element={<FashionContact />} />
+            <Route path="/fashion/latest" element={<FashionLatest />} />
 
             {/* Real Estate Routes */}
             <Route path="/real-estate" element={<RealEstate />} />

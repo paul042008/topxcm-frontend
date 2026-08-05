@@ -15,12 +15,10 @@ export default function FashionMenu({
 }) {
   const [open, setOpen] = useState(initialOpen);
 
-  // ✅ THIS IS WHAT YOU WERE MISSING
   useEffect(() => {
     setOpen(initialOpen);
   }, [initialOpen]);
 
-  // ✅ ADDED: route detection
   const location = useLocation();
   const isFashionHome = location.pathname === "/fashion";
   const isSubPage =
@@ -29,7 +27,7 @@ export default function FashionMenu({
 
   const handleOpen = () => {
     setOpen(true);
-    if (onOpenAction) onOpenAction(); // sync with parent (blur)
+    if (onOpenAction) onOpenAction();
   };
 
   const handleClose = () => {
@@ -57,8 +55,6 @@ export default function FashionMenu({
 
           {/* ── HEADER ── */}
           <div className="w-full px-8 pt-12 flex justify-between items-center">
-
-            {/* TOP LEFT BRAND (NO BOX) */}
             <div className="flex flex-col gap-0.5 opacity-50">
               <span className="font-serif italic text-black text-lg md:text-xl leading-none">
                 The XCM
@@ -67,8 +63,6 @@ export default function FashionMenu({
                 Fashion Corner
               </span>
             </div>
-
-            {/* CLOSE BUTTON */}
             <button
               onClick={handleClose}
               className="text-black p-2 hover:rotate-90 transition-transform duration-300"
@@ -80,7 +74,8 @@ export default function FashionMenu({
           {/* ── NAV ── */}
           <nav className="flex-grow flex flex-col items-center justify-center gap-8">
             {[
-              
+              // ✅ Added "Latest" link at the top
+              { name: "Latest", path: "/fashion/latest" },
               { name: "Suits", path: "/fashion/suits" },
               { name: "Agbada", path: "/fashion/agbada" },
               { name: "Natives", path: "/fashion/natives" },
@@ -97,7 +92,6 @@ export default function FashionMenu({
               </Link>
             ))}
 
-            {/* ✅ ADDED: CONDITIONAL NAV LINKS */}
             {isFashionHome && (
               <Link
                 to="/"
