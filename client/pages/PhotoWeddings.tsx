@@ -187,13 +187,15 @@ export default function PhotoWeddings() {
   const [weddings, setWeddings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ─── FETCH WEDDINGS FROM /api/items ──────────────────────────────────────
+  // ─── FETCH WEDDINGS + EXCLUDE ALBUM IMAGES ──────────────────────────────
   useEffect(() => {
     fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: any[]) => {
-        // Filter for category "weddings"
-        const filtered = data.filter((item) => item.category === "weddings");
+        // Keep only wedding albums that are NOT part of a fashion album
+        const filtered = data.filter(
+          (item) => item.category === "weddings" && !item.albumId
+        );
         setWeddings(filtered);
         setLoading(false);
       })

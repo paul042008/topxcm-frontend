@@ -19,6 +19,7 @@ interface Album {
   price: string;
   cover?: string;
   images: AlbumImage[];
+  isSingle?: boolean; // flag for quick‑upload singles
 }
 
 const API = "https://topxcm-backend.onrender.com";
@@ -96,7 +97,7 @@ function ItemModal({
   );
 }
 
-// ─── GALLERY VIEW ─────────────────────────────────────────────────────────────
+// ─── GALLERY VIEW (for full albums) ────────────────────────────────────────
 
 function GalleryView({
   album,
@@ -206,7 +207,7 @@ function GalleryView({
   );
 }
 
-// ─── ALBUM CARD ───────────────────────────────────────────────────────────────
+// ─── ALBUM CARD (for real albums) ──────────────────────────────────────────
 
 function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () => void }) {
   return (
@@ -262,6 +263,57 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
   );
 }
 
+// ─── SINGLE CARD (for quick‑upload items) ──────────────────────────────────
+
+function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () => void }) {
+  const image = album.images[0];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#1E3A8A]/5 flex flex-col"
+    >
+      <div className="aspect-[4/3] overflow-hidden bg-[#EEF4F8] relative">
+        <img
+          src={image?.url}
+          alt={album.name}
+          className="w-full h-full object-cover"
+        />
+        <span className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+          1 item
+        </span>
+      </div>
+
+      <div className="p-5 flex flex-col gap-3 flex-1">
+        <div>
+          <p className="text-[9px] uppercase tracking-[0.4em] text-[#00AEEF] font-bold mb-1">
+            {album.category}
+          </p>
+          <h3 className="text-lg font-serif text-[#1E3A8A] leading-tight">{album.name}</h3>
+        </div>
+
+        {album.description && (
+          <p className="text-slate-400 text-xs leading-relaxed line-clamp-3">{album.description}</p>
+        )}
+
+        {album.price && (
+          <p className="text-[#D4AF37] font-bold text-sm">{album.price}</p>
+        )}
+
+        <button
+          onClick={onViewSingle}
+          className="mt-auto w-full bg-[#1E3A8A] text-white rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#162d6e] active:scale-[0.98] transition flex items-center justify-center gap-2"
+        >
+          <span>View Item</span>
+          <span className="text-base">→</span>
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 export default function FashionSuits() {
@@ -269,6 +321,7 @@ export default function FashionSuits() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
+  const [singleItem, setSingleItem] = useState<AlbumImage | null>(null);
 
   // ─── FETCH BOTH ALBUMS AND SINGLE ITEMS ─────────────────────────────────────
   useEffect(() => {
@@ -286,27 +339,31 @@ export default function FashionSuits() {
         // 3. Filter albums by category
         const filteredAlbums = albumsData.filter((a) => a.category === "suits");
 
-        // 4. Convert single items into "fake albums"
-        const singleItemsAsAlbums: Album[] = itemsData
-          .filter((item: any) => item.category === "suits")
-          .map((item: any) => ({
-            id: `single-${item.id}`,
-            name: item.title || "Single Item",
-            category: item.category,
-            description: item.description || "",
-            price: item.price || "",
-            cover: item.image,
-            images: [
-              {
-                url: item.image,
-                title: item.title || "Untitled",
-                description: item.description || "",
-                price: item.price || "",
-              },
-            ],
-          }));
+        // 4. Filter standalone items: no albumId and category suits
+        const standaloneItems = itemsData.filter(
+          (item: any) => !item.albumId && item.category === "suits"
+        );
 
-        // 5. Combine both
+        // 5. Convert standalone items into "fake albums" with isSingle flag
+        const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
+          id: `single-${item.id}`,
+          name: item.title || "Single Item",
+          category: item.category,
+          description: item.description || "",
+          price: item.price || "",
+          cover: item.image,
+          isSingle: true,
+          images: [
+            {
+              url: item.image,
+              title: item.title || "Untitled",
+              description: item.description || "",
+              price: item.price || "",
+            },
+          ],
+        }));
+
+        // 6. Combine both
         setAlbums([...filteredAlbums, ...singleItemsAsAlbums]);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -318,6 +375,12 @@ export default function FashionSuits() {
 
     fetchData();
   }, []);
+
+  const handleViewSingle = (album: Album) => {
+    if (album.images && album.images.length > 0) {
+      setSingleItem(album.images[0]);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#D9EAF0] text-slate-800 overflow-x-hidden">
@@ -357,13 +420,21 @@ export default function FashionSuits() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {albums.map((album) => (
-              <AlbumCard
-                key={album.id}
-                album={album}
-                onViewGallery={() => setOpenAlbum(album)}
-              />
-            ))}
+            {albums.map((album) =>
+              album.isSingle ? (
+                <SingleCard
+                  key={album.id}
+                  album={album}
+                  onViewSingle={() => handleViewSingle(album)}
+                />
+              ) : (
+                <AlbumCard
+                  key={album.id}
+                  album={album}
+                  onViewGallery={() => setOpenAlbum(album)}
+                />
+              )
+            )}
           </div>
         )}
       </main>
@@ -380,6 +451,13 @@ export default function FashionSuits() {
       <AnimatePresence>
         {openAlbum && (
           <GalleryView album={openAlbum} onClose={() => setOpenAlbum(null)} />
+        )}
+      </AnimatePresence>
+
+      {/* Single item modal */}
+      <AnimatePresence>
+        {singleItem && (
+          <ItemModal image={singleItem} onClose={() => setSingleItem(null)} />
         )}
       </AnimatePresence>
     </div>

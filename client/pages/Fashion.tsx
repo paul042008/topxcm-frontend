@@ -1,8 +1,23 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
+import { Link } from "react-router-dom";
 
-// --- Auto-scrolling Image Row ---
+const API = "https://topxcm-backend.onrender.com";
+
+// ─── TYPES ──────────────────────────────────────────────────────────────────
+interface LatestItem {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  category: string;
+  price: string;
+  albumId?: string;
+  albumName?: string;
+}
+
+// ─── AUTO-SCROLLING IMAGE ROW ──────────────────────────────────────────────
 const ImageRow = ({
   images,
   onImageClick,
@@ -99,34 +114,106 @@ const ImageRow = ({
   );
 };
 
-// --- Main Page ---
+// ─── FEATURED LATEST SECTION ───────────────────────────────────────────────
+function FeaturedLatest({ items }: { items: LatestItem[] }) {
+  if (items.length === 0) return null;
+
+  const featured = items[0];
+  const imageUrl = featured.image;
+  const title = featured.albumName || featured.title || "Latest Collection";
+  const description = featured.description || "Fresh arrivals from our atelier.";
+
+  return (
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className="relative w-full h-[33vh] min-h-[280px] overflow-hidden group"
+    >
+      <div className="absolute inset-0">
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      </div>
+
+      <div className="relative h-full flex items-center px-8 md:px-16">
+        <div className="max-w-2xl">
+          <span className="inline-block text-[9px] uppercase tracking-[0.5em] text-[#00AEEF] font-bold border border-[#00AEEF]/30 px-4 py-1.5 mb-4">
+            Latest Collection
+          </span>
+          <h2 className="text-2xl md:text-4xl font-serif italic text-white leading-tight mb-3">
+            {title}
+          </h2>
+          <p className="text-white/70 text-sm md:text-base font-light max-w-md mb-5 line-clamp-2">
+            {description}
+          </p>
+          <Link
+            to="/fashion/latest"
+            className="inline-flex items-center gap-3 group/btn"
+          >
+            <span className="text-[#00AEEF] text-xs uppercase tracking-[0.4em] font-bold border-b border-[#00AEEF]/40 pb-0.5 group-hover/btn:border-[#00AEEF] transition-colors">
+              Explore Collection
+            </span>
+            <span className="text-[#00AEEF] transition-transform duration-300 group-hover/btn:translate-x-2">→</span>
+          </Link>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+// ─── MAIN PAGE ─────────────────────────────────────────────────────────────
 export default function FashionPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [latestItems, setLatestItems] = useState<LatestItem[]>([]);
+  const [loadingLatest, setLoadingLatest] = useState(true);
 
   const WA = "https://wa.me/2348061587993";
 
   const heroSlides = [
-    "/images/hero1.jpg",
+    "/images/hero1.png",
     "/images/hero2.png",
-    "/images/hero3.jpg",
-    "/images/hero4.png",
+    "/images/hero3.jpeg",
+    "/images/hero4.jpeg",
     "/images/hero5.png",
     "/images/hero6.png",
   ];
 
   const rowImages = [
-    "/images/hero1.jpg",
+    "/images/hero1.png",
     "/images/hero2.png",
-    "/images/hero3.jpg",
-    "/images/hero4.png",
+    "/images/hero3.jpeg",
+    "/images/hero4.jpeg",
     "/images/hero5.png",
     "/images/hero6.png",
+    "/images/hero7.png",
+    "/images/hero8.png",
+    "/images/hero9.png",
+    "/images/hero10.png",
+    "/images/hero11.png",
   ];
 
   const sloganText = "...a spice for your wardrobe";
 
+  // ─── FETCH LATEST ITEMS ──────────────────────────────────────────────────
+  useEffect(() => {
+    fetch(`${API}/api/items`)
+      .then((res) => res.json())
+      .then((data: any[]) => {
+        const latest = data.filter((item) => item.category === "latest");
+        setLatestItems(latest);
+        setLoadingLatest(false);
+      })
+      .catch(() => setLoadingLatest(false));
+  }, []);
+
+  // ─── HERO SLIDESHOW ──────────────────────────────────────────────────────
   useEffect(() => {
     const timer = setInterval(
       () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length),
@@ -141,8 +228,10 @@ export default function FashionPage() {
         selectedImg ? "h-screen overflow-hidden" : ""
       }`}
     >
+      {/* ─── MENU OVERLAY ─── */}
       <FashionMenu
         isFashionLanding={true}
+        initialOpen={isMenuOpen}
         onOpenAction={() => setIsMenuOpen(true)}
         onCloseAction={() => setIsMenuOpen(false)}
       />
@@ -192,7 +281,33 @@ export default function FashionPage() {
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
-        {/* ── HERO SECTION ── */}
+        {/* ─── TOP HEADER (only one) ─── */}
+        <header className="relative z-50 flex justify-between items-center p-6 md:p-10 bg-white/50 backdrop-blur-md border-b border-[#00AEEF]/10">
+          {/* LEFT: Brand */}
+          <div className="flex flex-col gap-0.5">
+            <span className="font-serif italic text-[#00AEEF] text-lg md:text-xl leading-none">
+              The XCM
+            </span>
+            <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light">
+              Fashion Corner
+            </span>
+          </div>
+
+          {/* RIGHT: Hamburger menu button */}
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="flex flex-col gap-[5px] group"
+          >
+            <span className="block w-7 h-[1.5px] bg-[#00AEEF] transition-all group-hover:w-8" />
+            <span className="block w-5 h-[1.5px] bg-[#00AEEF] ml-auto transition-all group-hover:w-8" />
+            <span className="block w-7 h-[1.5px] bg-[#00AEEF] transition-all group-hover:w-8" />
+          </button>
+        </header>
+
+        {/* ─── FEATURED LATEST (BEFORE HERO) ─── */}
+        {!loadingLatest && <FeaturedLatest items={latestItems} />}
+
+        {/* ── HERO SECTION (without its own header) ── */}
         <section className="relative h-screen w-full overflow-hidden">
           <div className="absolute inset-0 z-0">
             <AnimatePresence mode="wait">
@@ -209,21 +324,8 @@ export default function FashionPage() {
             <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-[#00AEEF]/10 to-white/95" />
           </div>
 
-          {/* ── HEADER ── */}
-          <header className="relative z-50 flex justify-between items-center p-6 md:p-10">
-            <div className="flex flex-col gap-0.5">
-              <span className="font-serif italic text-[#00AEEF] text-lg md:text-xl leading-none">
-                The XCM
-              </span>
-              <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light">
-                Fashion Corner
-              </span>
-            </div>
-          </header>
-
-          {/* Hero Content */}
-          <main className="relative z-10 flex flex-col items-center justify-center h-[72vh] text-center px-6">
-            {/* "WELCOME TO" – solid blue stroke + paint-order */}
+          {/* Hero Content (no header) */}
+          <main className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
             <motion.p
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -246,7 +348,6 @@ export default function FashionPage() {
               className="flex flex-col items-center"
             >
               <div className="bg-white/15 backdrop-blur-md p-3 px-8 rounded-2xl border border-white/25 shadow-2xl mb-4">
-                {/* ✅ XCM – outline removed */}
                 <motion.h1
                   className="text-5xl md:text-7xl font-black tracking-tighter"
                   style={{
@@ -258,7 +359,6 @@ export default function FashionPage() {
                 </motion.h1>
               </div>
 
-              {/* "Wardrobes" – solid blue stroke + paint-order */}
               <motion.h2
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -274,7 +374,6 @@ export default function FashionPage() {
               </motion.h2>
             </motion.div>
 
-            {/* Slogan – solid blue stroke + paint-order + blue glow shadow */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

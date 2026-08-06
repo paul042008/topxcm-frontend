@@ -13,6 +13,7 @@ interface Property {
   price?: string;
   image?: string;
   description?: string;
+  albumId?: string; // added to filter out album images
 }
 
 const API = "https://topxcm-backend.onrender.com";
@@ -161,12 +162,15 @@ export default function RealEstateListings() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // ─── FETCH PROPERTIES FROM /api/items ──────────────────────────────────────
+  // ─── FETCH + EXCLUDE ALBUM IMAGES ──────────────────────────────────────────
   useEffect(() => {
     fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: any[]) => {
-        const filtered = data.filter((item) => item.category === "realestate");
+        // Keep only realestate items that are NOT part of a fashion album
+        const filtered = data.filter(
+          (item) => item.category === "realestate" && !item.albumId
+        );
         setProperties(filtered);
         setLoading(false);
       })

@@ -9,6 +9,7 @@ interface PhotoItem {
   description: string;
   image: string;
   category: string;
+  albumId?: string; // present if image belongs to a fashion album
 }
 
 const API = "https://topxcm-backend.onrender.com";
@@ -62,13 +63,13 @@ export default function PhotoCanvas() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<PhotoItem | null>(null);
 
-  // ─── FETCH FROM CORRECT ENDPOINT ──────────────────────────────────────────
+  // ─── FETCH + EXCLUDE ALBUM IMAGES ──────────────────────────────────────────
   useEffect(() => {
     fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: PhotoItem[]) => {
-        // Filter for canvas category
-        const filtered = data.filter((i) => i.category === "canvas");
+        // Keep only canvas category and exclude items that belong to an album
+        const filtered = data.filter((i) => i.category === "canvas" && !i.albumId);
         setItems(filtered);
         setLoading(false);
       })

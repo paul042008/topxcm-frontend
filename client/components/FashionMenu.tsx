@@ -75,7 +75,7 @@ export default function FashionMenu({
           <nav className="flex-grow flex flex-col items-center justify-center gap-8">
             {[
               // ✅ Added "Latest" link at the top
-              { name: "Latest", path: "/fashion/latest" },
+              { name: "Latest Collection", path: "/fashion/latest" },
               { name: "Suits", path: "/fashion/suits" },
               { name: "Agbada", path: "/fashion/agbada" },
               { name: "Natives", path: "/fashion/natives" },

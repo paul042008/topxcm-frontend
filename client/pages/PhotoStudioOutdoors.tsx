@@ -9,6 +9,7 @@ interface PhotoItem {
   description: string;
   image: string;
   category: string;
+  albumId?: string; // present if image belongs to a fashion album
 }
 
 const API = "https://topxcm-backend.onrender.com";
@@ -58,14 +59,14 @@ export default function PhotoStudioOutdoors() {
   const [selectedItem, setSelectedItem] = useState<PhotoItem | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "studio" | "outdoors">("all");
 
-  // ─── FETCH FROM CORRECT ENDPOINT ──────────────────────────────────────────
+  // ─── FETCH + EXCLUDE ALBUM IMAGES ──────────────────────────────────────────
   useEffect(() => {
     fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: PhotoItem[]) => {
-        // Filter for studio and outdoors
+        // Keep only studio/outdoors and exclude items that belong to an album
         const filtered = data.filter(
-          (i) => i.category === "studio" || i.category === "outdoors"
+          (i) => (i.category === "studio" || i.category === "outdoors") && !i.albumId
         );
         setItems(filtered);
         setLoading(false);

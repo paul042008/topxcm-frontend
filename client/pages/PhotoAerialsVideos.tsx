@@ -9,6 +9,7 @@ interface PhotoItem {
   description: string;
   image: string;
   category: string;
+  albumId?: string; // added: present if the image belongs to a fashion album
 }
 
 const API = "https://topxcm-backend.onrender.com";
@@ -67,14 +68,14 @@ export default function PhotoAerialsVideos() {
   const [selectedItem, setSelectedItem] = useState<PhotoItem | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "aerials" | "videos">("all");
 
-  // ─── FETCH FROM CORRECT ENDPOINT ──────────────────────────────────────────
+  // ─── FETCH + EXCLUDE ALBUM IMAGES ──────────────────────────────────────────
   useEffect(() => {
     fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: PhotoItem[]) => {
-        // Filter for aerials and videos
+        // Keep only aerials/videos and exclude items that belong to an album
         const filtered = data.filter(
-          (i) => i.category === "aerials" || i.category === "videos"
+          (i) => (i.category === "aerials" || i.category === "videos") && !i.albumId
         );
         setItems(filtered);
         setLoading(false);
