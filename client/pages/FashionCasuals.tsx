@@ -270,14 +270,53 @@ export default function FashionCasuals() {
   const [loading, setLoading] = useState(true);
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
 
+  // ─── FETCH BOTH ALBUMS AND SINGLE ITEMS ─────────────────────────────────────
   useEffect(() => {
-    fetch(`${API}/api/fashion-albums`)
-      .then((res) => res.json())
-      .then((data: Album[]) => {
-        setAlbums(data.filter((a) => a.category === "casuals"));
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // 1. Fetch albums
+        const albumsRes = await fetch(`${API}/api/fashion-albums`);
+        const albumsData: Album[] = await albumsRes.json();
+
+        // 2. Fetch single items (from Quick Upload)
+        const itemsRes = await fetch(`${API}/api/items`);
+        const itemsData = await itemsRes.json();
+
+        // 3. Filter albums by category
+        const filteredAlbums = albumsData.filter((a) => a.category === "casuals");
+
+        // 4. Convert single items into "fake albums" so they appear in the grid
+        const singleItemsAsAlbums: Album[] = itemsData
+          .filter((item: any) => item.category === "casuals")
+          .map((item: any) => ({
+            id: `single-${item.id}`,
+            name: item.title || "Single Item",
+            category: item.category,
+            description: item.description || "",
+            price: item.price || "",
+            cover: item.image,
+            images: [
+              {
+                url: item.image,
+                title: item.title || "Untitled",
+                description: item.description || "",
+                price: item.price || "",
+              },
+            ],
+          }));
+
+        // 5. Combine both
+        setAlbums([...filteredAlbums, ...singleItemsAsAlbums]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setAlbums([]);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (

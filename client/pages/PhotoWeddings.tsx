@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
-import useData from "../hooks/useData";
 import LoadingState from "../components/LoadingState";
+
+const API = "https://topxcm-backend.onrender.com";
 
 // ── FEATURED (first) album — full-width cinematic spread
 function FeaturedAlbum({ item }: { item: any }) {
@@ -179,18 +180,31 @@ function CompactCard({ item, index }: { item: any; index: number }) {
   );
 }
 
-// ── MAIN PAGE
+// ── MAIN PAGE ────────────────────────────────────────────────────────────────
+
 export default function PhotoWeddings() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data, loading } = useData();
+  const [weddings, setWeddings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // ─── FETCH WEDDINGS FROM /api/items ──────────────────────────────────────
+  useEffect(() => {
+    fetch(`${API}/api/items`)
+      .then((res) => res.json())
+      .then((data: any[]) => {
+        // Filter for category "weddings"
+        const filtered = data.filter((item) => item.category === "weddings");
+        setWeddings(filtered);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   if (loading) return <LoadingState />;
 
-  const weddings = data.filter((item: any) => item.category === "weddings");
-
   const featured = weddings[0];
-  const editorial = weddings.slice(1, 5);   // next 4 in alternating layout
-  const compact = weddings.slice(5);         // rest in compact grid
+  const editorial = weddings.slice(1, 5); // next 4 in alternating layout
+  const compact = weddings.slice(5);       // rest in compact grid
 
   return (
     <div className="min-h-screen bg-[#080808] text-white">
@@ -231,7 +245,7 @@ export default function PhotoWeddings() {
               className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none"
               style={{ fontFamily: "Impact, 'Arial Black', sans-serif" }}
             >
-              Weddings & Other Events 
+              Weddings & Other Events
             </h1>
           </div>
           <p className="text-white/30 text-sm font-light max-w-sm leading-relaxed">

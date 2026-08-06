@@ -62,11 +62,14 @@ export default function PhotoCanvas() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<PhotoItem | null>(null);
 
+  // ─── FETCH FROM CORRECT ENDPOINT ──────────────────────────────────────────
   useEffect(() => {
-    fetch(`${API}/api/photo-items`)
+    fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: PhotoItem[]) => {
-        setItems(data.filter((i) => i.category === "canvas"));
+        // Filter for canvas category
+        const filtered = data.filter((i) => i.category === "canvas");
+        setItems(filtered);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -135,7 +138,7 @@ export default function PhotoCanvas() {
         </div>
       </footer>
 
-      {/* Floating Book Us */}
+      {/* Floating Order Now */}
       <a
         href={WA} target="_blank" rel="noreferrer"
         className="fixed bottom-6 right-6 z-[150] flex items-center gap-2 px-5 py-3 rounded-full text-black text-xs font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-105 active:scale-95"

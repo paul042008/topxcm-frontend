@@ -2,17 +2,17 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RealEstateMenu from "../components/RealEstateMenu";
 import { useNavigate } from "react-router-dom";
-import useData from "../hooks/useData";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 interface Property {
-  id: number;
+  id: string;
   title: string;
   category: string;
   location?: string;
   price?: string;
   image?: string;
+  description?: string;
 }
 
 const API = "https://topxcm-backend.onrender.com";
@@ -157,10 +157,21 @@ function PropertyCard({ property, onView }: { property: Property; onView: () => 
 export default function RealEstateListings() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openProperty, setOpenProperty] = useState<Property | null>(null);
-  const { data, loading } = useData();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const properties = loading ? [] : data.filter((item) => item.category === "realestate");
+  // ─── FETCH PROPERTIES FROM /api/items ──────────────────────────────────────
+  useEffect(() => {
+    fetch(`${API}/api/items`)
+      .then((res) => res.json())
+      .then((data: any[]) => {
+        const filtered = data.filter((item) => item.category === "realestate");
+        setProperties(filtered);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#EEF6FA] text-slate-800 overflow-x-hidden">

@@ -32,7 +32,6 @@ function ItemModal({
   image: AlbumImage;
   onClose: () => void;
 }) {
-  // Close on backdrop click or Escape key
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -61,7 +60,6 @@ function ItemModal({
           className="relative w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/20 flex items-center justify-center text-white text-sm hover:bg-black/40 transition"
@@ -69,7 +67,6 @@ function ItemModal({
             ✕
           </button>
 
-          {/* Image */}
           <div className="w-full aspect-[4/5] overflow-hidden bg-[#f0f4f8]">
             <img
               src={image.url}
@@ -78,7 +75,6 @@ function ItemModal({
             />
           </div>
 
-          {/* Details */}
           <div className="p-6">
             <h3 className="text-xl font-serif text-[#1E3A8A] mb-1">{image.title}</h3>
             {image.price && (
@@ -139,7 +135,7 @@ function GalleryView({
         <span className="ml-auto text-xs text-slate-400">{album.images.length} items</span>
       </div>
 
-      {/* Grid — 2 per row */}
+      {/* Grid */}
       <div className="px-4 py-6">
         {album.images.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -156,7 +152,6 @@ function GalleryView({
                 transition={{ delay: i * 0.06, duration: 0.4 }}
                 className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#1E3A8A]/5 flex flex-col"
               >
-                {/* Image */}
                 <div
                   className="aspect-[3/4] overflow-hidden cursor-pointer relative group"
                   onClick={() => setSelectedImage(img)}
@@ -166,7 +161,6 @@ function GalleryView({
                     alt={img.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  {/* View overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
                     <span className="opacity-0 group-hover:opacity-100 transition bg-white/90 text-[#1E3A8A] text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
                       View
@@ -174,7 +168,6 @@ function GalleryView({
                   </div>
                 </div>
 
-                {/* Info */}
                 <div className="p-3 flex flex-col gap-2 flex-1">
                   <h4 className="text-[#1E3A8A] font-bold text-xs uppercase tracking-wide leading-tight line-clamp-2">
                     {img.title || "Untitled"}
@@ -185,8 +178,6 @@ function GalleryView({
                   {img.description && (
                     <p className="text-slate-400 text-[11px] leading-relaxed line-clamp-2">{img.description}</p>
                   )}
-
-                  {/* Buttons */}
                   <div className="mt-auto pt-2 flex flex-col gap-1.5">
                     <button
                       onClick={() => setSelectedImage(img)}
@@ -208,7 +199,6 @@ function GalleryView({
         )}
       </div>
 
-      {/* Item modal */}
       {selectedImage && (
         <ItemModal image={selectedImage} onClose={() => setSelectedImage(null)} />
       )}
@@ -227,7 +217,6 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#1E3A8A]/5 flex flex-col"
     >
-      {/* Cover image */}
       <div className="aspect-[4/3] overflow-hidden bg-[#EEF4F8] relative">
         {album.cover || album.images[0]?.url ? (
           <img
@@ -240,13 +229,11 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
             <span className="text-4xl opacity-20">🤵</span>
           </div>
         )}
-        {/* Image count badge */}
         <span className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
           {album.images.length} items
         </span>
       </div>
 
-      {/* Details */}
       <div className="p-5 flex flex-col gap-3 flex-1">
         <div>
           <p className="text-[9px] uppercase tracking-[0.4em] text-[#00AEEF] font-bold mb-1">
@@ -283,22 +270,60 @@ export default function FashionSuits() {
   const [loading, setLoading] = useState(true);
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
 
+  // ─── FETCH BOTH ALBUMS AND SINGLE ITEMS ─────────────────────────────────────
   useEffect(() => {
-    fetch(`${API}/api/fashion-albums`)
-      .then((res) => res.json())
-      .then((data: Album[]) => {
-        // Only show suits albums
-        setAlbums(data.filter((a) => a.category === "suits"));
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // 1. Fetch albums
+        const albumsRes = await fetch(`${API}/api/fashion-albums`);
+        const albumsData: Album[] = await albumsRes.json();
+
+        // 2. Fetch single items (from Quick Upload)
+        const itemsRes = await fetch(`${API}/api/items`);
+        const itemsData = await itemsRes.json();
+
+        // 3. Filter albums by category
+        const filteredAlbums = albumsData.filter((a) => a.category === "suits");
+
+        // 4. Convert single items into "fake albums"
+        const singleItemsAsAlbums: Album[] = itemsData
+          .filter((item: any) => item.category === "suits")
+          .map((item: any) => ({
+            id: `single-${item.id}`,
+            name: item.title || "Single Item",
+            category: item.category,
+            description: item.description || "",
+            price: item.price || "",
+            cover: item.image,
+            images: [
+              {
+                url: item.image,
+                title: item.title || "Untitled",
+                description: item.description || "",
+                price: item.price || "",
+              },
+            ],
+          }));
+
+        // 5. Combine both
+        setAlbums([...filteredAlbums, ...singleItemsAsAlbums]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setAlbums([]);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
     <div className="min-h-screen bg-[#D9EAF0] text-slate-800 overflow-x-hidden">
 
       {/* Header */}
-     <header className="fixed top-0 left-0 w-full z-[100] flex items-center justify-start px-5 py-4 bg-white/50 backdrop-blur-xl border-b border-[#1E3A8A]/5">
+      <header className="fixed top-0 left-0 w-full z-[100] flex items-center justify-start px-5 py-4 bg-white/50 backdrop-blur-xl border-b border-[#1E3A8A]/5">
         <button
           onClick={() => window.history.back()}
           className="text-[#00AEEF] text-lg hover:scale-110 transition-transform"
@@ -306,9 +331,9 @@ export default function FashionSuits() {
           ←
         </button>
         <div className="flex flex-col items-start ml-4">
-  <p className="text-[#00AEEF] text-[10px] tracking-[0.7em] uppercase font-bold">Suits Collection</p>
-  <span className="text-[#1E3A8A]/30 text-[8px] tracking-[0.3em] uppercase">XCM Wardrobes</span>
-</div>
+          <p className="text-[#00AEEF] text-[10px] tracking-[0.7em] uppercase font-bold">Suits Collection</p>
+          <span className="text-[#1E3A8A]/30 text-[8px] tracking-[0.3em] uppercase">XCM Wardrobes</span>
+        </div>
         <FashionMenu onOpenAction={() => setMenuOpen(true)} onCloseAction={() => setMenuOpen(false)} />
       </header>
 

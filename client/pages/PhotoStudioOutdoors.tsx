@@ -58,11 +58,16 @@ export default function PhotoStudioOutdoors() {
   const [selectedItem, setSelectedItem] = useState<PhotoItem | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "studio" | "outdoors">("all");
 
+  // ─── FETCH FROM CORRECT ENDPOINT ──────────────────────────────────────────
   useEffect(() => {
-    fetch(`${API}/api/photo-items`)
+    fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: PhotoItem[]) => {
-        setItems(data.filter((i) => i.category === "studio" || i.category === "outdoors"));
+        // Filter for studio and outdoors
+        const filtered = data.filter(
+          (i) => i.category === "studio" || i.category === "outdoors"
+        );
+        setItems(filtered);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -73,7 +78,7 @@ export default function PhotoStudioOutdoors() {
   return (
     <div className="min-h-screen bg-[#080808] text-white overflow-x-hidden">
 
-      {/* Header — Wedding style */}
+      {/* Header */}
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
         <BackButton />
         <div className="flex flex-col items-center gap-0.5">
@@ -83,7 +88,7 @@ export default function PhotoStudioOutdoors() {
         <PhotoMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} onCloseAction={() => setMenuOpen(false)} />
       </header>
 
-      {/* Title strip — Wedding style */}
+      {/* Title strip */}
       <div className="pt-[72px]">
         <div className="border-b border-white/5 px-6 md:px-16 py-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -143,7 +148,6 @@ export default function PhotoStudioOutdoors() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="py-20 text-center border-t border-white/5">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />

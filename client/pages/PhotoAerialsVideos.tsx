@@ -67,11 +67,16 @@ export default function PhotoAerialsVideos() {
   const [selectedItem, setSelectedItem] = useState<PhotoItem | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "aerials" | "videos">("all");
 
+  // ─── FETCH FROM CORRECT ENDPOINT ──────────────────────────────────────────
   useEffect(() => {
-    fetch(`${API}/api/photo-items`)
+    fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: PhotoItem[]) => {
-        setItems(data.filter((i) => i.category === "aerials" || i.category === "videos"));
+        // Filter for aerials and videos
+        const filtered = data.filter(
+          (i) => i.category === "aerials" || i.category === "videos"
+        );
+        setItems(filtered);
         setLoading(false);
       })
       .catch(() => setLoading(false));
