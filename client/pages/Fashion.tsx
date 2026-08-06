@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
 import { Link } from "react-router-dom";
 
 const API = "https://topxcm-backend-1.onrender.com";
 
-// ─── TYPES ──────────────────────────────────────────────────────────────────
 interface LatestItem {
   id: string;
   title: string;
@@ -17,214 +16,422 @@ interface LatestItem {
   albumName?: string;
 }
 
-// ─── AUTO-SCROLLING IMAGE ROW ──────────────────────────────────────────────
-const ImageRow = ({
-  images,
-  onImageClick,
+type CollectionCard = {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  count: string;
+};
+
+const heroSlides = [
+  "/images/hero1.png",
+  "/images/hero2.png",
+  "/images/hero3.jpeg",
+  "/images/hero4.jpeg",
+  "/images/hero5.png",
+  "/images/hero6.png",
+];
+
+// Update these with your actual image paths from the public folder
+const fallbackCollections: CollectionCard[] = [
+  {
+    id: "heritage-drop",
+    title: "Heritage Drop",
+    description: "Tradition. Reimagined.",
+    image: "/images/hero1.png",
+    count: "12 Items",
+  },
+  {
+    id: "minimal-luxe",
+    title: "Minimal Luxe",
+    description: "Clean. Classy. Timeless.",
+    image: "/images/hero2.png",
+    count: "18 Items",
+  },
+  {
+    id: "street-royalty",
+    title: "Street Royalty",
+    description: "Bold. Urban. Fearless.",
+    image: "/images/hero3.jpeg",
+    count: "10 Items",
+  },
+  {
+    id: "xcm-signature",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/hero4.jpeg",
+    count: "14 Items",
+  },
+  {
+    id: "xcm-signature",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/hero5.png",
+    count: "14 Items",
+  },
+  {
+    id: "xcm-signature",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/hero6.png",
+    count: "14 Items",
+  },
+  {
+    id: "xcm-signature",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/hero7.png",
+    count: "14 Items",
+  },
+  {
+    id: "xcm-signature",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/hero8.png",
+    count: "14 Items",
+  },
+  {
+    id: "xcm-signature",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/hero9.png",
+    count: "14 Items",
+  },
+];
+
+const featureTiles = [
+  {
+    title: "Premium Quality",
+    description: "Top-notch fabrics and clean finishing.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+        <path d="M12 2l2.9 5.9L21 9l-4.5 4.4L17.6 21 12 18l-5.6 3 1.1-7.6L3 9l6.1-1.1L12 2z" />
+      </svg>
+    ),
+  },
+  {
+    title: "Modern Designs",
+    description: "Clean cuts with a fresh edge.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+        <path d="M4 20h16" />
+        <path d="M6 20V8l6-4 6 4v12" />
+        <path d="M9 20v-6h6v6" />
+      </svg>
+    ),
+  },
+  {
+    title: "Exclusive Pieces",
+    description: "Limited drops for bold style.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+        <path d="M6 20h12l-1.5-7H7.5L6 20z" />
+        <path d="M8 13V8a4 4 0 0 1 8 0v5" />
+      </svg>
+    ),
+  },
+  {
+    title: "Fast Delivery",
+    description: "Fast, reliable worldwide shipping.",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+        <path d="M3 7h13v10H3z" />
+        <path d="M16 10h3l2 2v5h-5" />
+        <circle cx="7" cy="19" r="1.75" />
+        <circle cx="18" cy="19" r="1.75" />
+      </svg>
+    ),
+  },
+];
+
+function SectionLabel({
+  eyebrow,
+  title,
+  centered = false,
+  light = false,
+}: {
+  eyebrow: string;
+  title: string;
+  centered?: boolean;
+  light?: boolean;
+}) {
+  return (
+    <div className={centered ? "text-center" : "text-left"}>
+      <p
+        className={`text-[10px] md:text-[11px] uppercase tracking-[0.5em] font-bold ${
+          light ? "text-[#00AEEF]/80" : "text-[#00AEEF]"
+        }`}
+      >
+        {eyebrow}
+      </p>
+      <h2
+        className={`mt-3 text-3xl md:text-5xl leading-[0.95] ${
+          light ? "text-white" : "text-black"
+        } font-serif italic`}
+      >
+        {title}
+      </h2>
+    </div>
+  );
+}
+
+function CollectionCardButton({
+  item,
+  onClick,
+}: {
+  item: CollectionCard;
+  onClick: (image: string) => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      whileHover={{ y: -8, scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 250, damping: 22 }}
+      onClick={() => onClick(item.image)}
+      className="group relative w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/5 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
+    >
+      <div className="relative aspect-[4/5]">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        <div className="absolute inset-0 ring-1 ring-inset ring-[#00AEEF]/10 group-hover:ring-[#00AEEF]/30 transition-colors" />
+
+        <div className="absolute inset-x-0 bottom-0 p-5">
+          <p className="text-[10px] uppercase tracking-[0.45em] text-[#00AEEF] mb-3">
+            Collection
+          </p>
+          <h3 className="text-xl font-semibold text-white">{item.title}</h3>
+          <p className="mt-1 text-sm text-white/70">{item.description}</p>
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-xs uppercase tracking-[0.35em] text-white/55">{item.count}</span>
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/35 text-[#00AEEF] transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </div>
+        </div>
+      </div>
+    </motion.button>
+  );
+}
+
+
+function FeatureBlock({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-start gap-2 px-1 py-2 text-center md:gap-3 md:px-3 md:py-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-[#00AEEF] shadow-[0_0_0_1px_rgba(0,174,239,0.18)] md:h-12 md:w-12">
+        {icon}
+      </div>
+      <div className="space-y-0.5 md:space-y-1">
+        <h3 className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black leading-tight md:text-sm md:tracking-[0.14em]">
+          {title}
+        </h3>
+        <p className="mx-auto hidden max-w-[14rem] text-[9px] leading-relaxed text-black/60 md:block md:text-xs">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Image‑only card for the sliding rails
+function ImageOnlyCard({
+  item,
+  onClick,
+}: {
+  item: CollectionCard;
+  onClick: (image: string) => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 250, damping: 22 }}
+      onClick={() => onClick(item.image)}
+      className="group relative w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
+    >
+      <div className="relative aspect-[4/5]">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+      </div>
+    </motion.button>
+  );
+}
+
+// FIXED SlidingRail using transform for infinite seamless scroll
+function SlidingRail({
+  items,
+  onClick,
   reverse = false,
 }: {
-  images: string[];
-  onImageClick: (url: string) => void;
+  items: CollectionCard[];
+  onClick: (image: string) => void;
   reverse?: boolean;
-}) => {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const animFrameRef = useRef<number | null>(null);
-  const isUserScrolling = useRef(false);
-  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const speed = reverse ? -0.6 : 0.6;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animRef = useRef<number | null>(null);
+  const pauseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isPausedRef = useRef(false);
+  const speed = reverse ? -0.45 : 0.45;
 
-  const shapes = [
-    "w-52 h-72 rounded-2xl",
-    "w-80 h-56 rounded-3xl",
-    "w-60 h-80 rounded-tl-[60px] rounded-br-[60px]",
-    "w-56 h-56 rounded-full",
-    "w-72 h-64 rounded-xl",
-    "w-48 h-80 rounded-[40px]",
-    "w-96 h-60 rounded-lg",
-    "w-64 h-64 rounded-tl-3xl rounded-br-3xl",
-  ];
+  const loopedItems = [...items, ...items];
+  const [translateX, setTranslateX] = useState(0);
+  const setWidthRef = useRef(0);
 
+  // Measure the width of one set after render
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
+    if (containerRef.current) {
+      const totalWidth = containerRef.current.scrollWidth;
+      setWidthRef.current = totalWidth / 2;
+    }
+  }, [items]);
+
+  // Animation loop
+  useEffect(() => {
     const step = () => {
-      if (!isUserScrolling.current && track) {
-        track.scrollLeft += speed;
-        const half = track.scrollWidth / 2;
-        if (speed > 0 && track.scrollLeft >= half) track.scrollLeft -= half;
-        else if (speed < 0 && track.scrollLeft <= 0) track.scrollLeft += half;
+      if (!isPausedRef.current && setWidthRef.current > 0) {
+        setTranslateX((prev) => {
+          let newX = prev + speed;
+          if (newX <= -setWidthRef.current) {
+            newX += setWidthRef.current;
+          } else if (newX > 0) {
+            newX -= setWidthRef.current;
+          }
+          return newX;
+        });
       }
-      animFrameRef.current = requestAnimationFrame(step);
+      animRef.current = requestAnimationFrame(step);
     };
-    animFrameRef.current = requestAnimationFrame(step);
-    return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
+
+    animRef.current = requestAnimationFrame(step);
+    return () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+    };
   }, [speed]);
 
   const pauseAutoScroll = () => {
-    isUserScrolling.current = true;
-    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-    scrollTimeout.current = setTimeout(() => { isUserScrolling.current = false; }, 2000);
+    isPausedRef.current = true;
+    if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+    pauseTimeoutRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+    }, 1800);
   };
 
-  const loopedImages = [...images, ...images];
-
   return (
-    <div className="relative w-full overflow-hidden">
+    <div
+      ref={containerRef}
+      className="relative w-full overflow-hidden"
+      onMouseEnter={pauseAutoScroll}
+      onTouchStart={pauseAutoScroll}
+    >
       <div
-        ref={trackRef}
-        className="flex overflow-x-auto gap-6 py-4 px-8 no-scrollbar select-none items-center"
-        style={{ scrollBehavior: "auto" }}
-        onWheel={pauseAutoScroll}
-        onTouchStart={pauseAutoScroll}
-        onMouseDown={pauseAutoScroll}
+        className="flex gap-4 py-2 px-1 no-scrollbar select-none"
+        style={{
+          transform: `translateX(${translateX}px)`,
+          transition: 'none',
+          width: 'max-content',
+        }}
       >
-        {loopedImages.map((img, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 0.97, y: -6 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            onClick={() => onImageClick(img)}
-            className={`${shapes[i % shapes.length]} shrink-0 relative flex-none p-1.5 rounded-[inherit] blue-mat`}
-          >
-            <div className="w-full h-full overflow-hidden border border-[#00AEEF]/15 cursor-pointer group rounded-[inherit] photo-card">
-              <img
-                src={img}
-                alt="Fashion Showcase"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
-              />
-              <div className="absolute inset-0 bg-[#00AEEF]/0 group-hover:bg-[#00AEEF]/10 transition-colors duration-300 flex items-center justify-center">
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileHover={{ opacity: 1, scale: 1 }}
-                  className="text-white text-xs uppercase tracking-widest font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                >
-                  View
-                </motion.span>
-              </div>
-            </div>
-          </motion.div>
+        {loopedItems.map((item, index) => (
+          <div key={`${item.id}-${index}`} className="w-[220px] shrink-0 sm:w-[250px]">
+            <ImageOnlyCard item={item} onClick={onClick} />
+          </div>
         ))}
       </div>
     </div>
   );
-};
-
-// ─── FEATURED LATEST SECTION ───────────────────────────────────────────────
-function FeaturedLatest({ items }: { items: LatestItem[] }) {
-  if (items.length === 0) return null;
-
-  const featured = items[0];
-  const imageUrl = featured.image;
-  const title = featured.albumName || featured.title || "Latest Collection";
-  const description = featured.description || "Fresh arrivals from our atelier.";
-
-  return (
-    <motion.section
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="relative w-full h-[33vh] min-h-[280px] overflow-hidden group"
-    >
-      <div className="absolute inset-0">
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-      </div>
-
-      <div className="relative h-full flex items-center px-8 md:px-16">
-        <div className="max-w-2xl">
-          <span className="inline-block text-[9px] uppercase tracking-[0.5em] text-[#00AEEF] font-bold border border-[#00AEEF]/30 px-4 py-1.5 mb-4">
-            Latest Collection
-          </span>
-          <h2 className="text-2xl md:text-4xl font-serif italic text-white leading-tight mb-3">
-            {title}
-          </h2>
-          <p className="text-white/70 text-sm md:text-base font-light max-w-md mb-5 line-clamp-2">
-            {description}
-          </p>
-          <Link
-            to="/fashion/latest"
-            className="inline-flex items-center gap-3 group/btn"
-          >
-            <span className="text-[#00AEEF] text-xs uppercase tracking-[0.4em] font-bold border-b border-[#00AEEF]/40 pb-0.5 group-hover/btn:border-[#00AEEF] transition-colors">
-              Explore Collection
-            </span>
-            <span className="text-[#00AEEF] transition-transform duration-300 group-hover/btn:translate-x-2">→</span>
-          </Link>
-        </div>
-      </div>
-    </motion.section>
-  );
 }
 
-// ─── MAIN PAGE ─────────────────────────────────────────────────────────────
 export default function FashionPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [latestItems, setLatestItems] = useState<LatestItem[]>([]);
-  const [loadingLatest, setLoadingLatest] = useState(true);
 
   const WA = "https://wa.me/2348061587993";
 
-  const heroSlides = [
-    "/images/hero1.png",
-    "/images/hero2.png",
-    "/images/hero3.jpeg",
-    "/images/hero4.jpeg",
-    "/images/hero5.png",
-    "/images/hero6.png",
-  ];
-
-  const rowImages = [
-    "/images/hero1.png",
-    "/images/hero2.png",
-    "/images/hero3.jpeg",
-    "/images/hero4.jpeg",
-    "/images/hero5.png",
-    "/images/hero6.png",
-    "/images/hero7.png",
-    "/images/hero8.png",
-    "/images/hero9.png",
-    "/images/hero10.png",
-    "/images/hero11.png",
-  ];
-
-  const sloganText = "...a spice for your wardrobe";
-
-  // ─── FETCH LATEST ITEMS ──────────────────────────────────────────────────
   useEffect(() => {
+    let isMounted = true;
+
     fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: any[]) => {
-        const latest = data.filter((item) => item.category === "latest");
+        if (!isMounted) return;
+        const latest = Array.isArray(data)
+          ? data.filter((item) => item.category === "latest")
+          : [];
         setLatestItems(latest);
-        setLoadingLatest(false);
       })
-      .catch(() => setLoadingLatest(false));
+      .catch(() => {
+        if (!isMounted) return;
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // ─── HERO SLIDESHOW ──────────────────────────────────────────────────────
   useEffect(() => {
-    const timer = setInterval(
-      () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length),
-      8000
-    );
-    return () => clearInterval(timer);
+    const timer = window.setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 7000);
+
+    return () => window.clearInterval(timer);
   }, []);
+
+  const heroCollections = useMemo<CollectionCard[]>(() => {
+    if (!latestItems.length) return fallbackCollections;
+
+    return latestItems.slice(0, 4).map((item, index) => ({
+      id: item.id,
+      title: item.albumName || item.title || `Latest ${index + 1}`,
+      description:
+        item.description ||
+        (index === 0
+          ? "Fresh pieces from the newest drop."
+          : index === 1
+            ? "Clean looks with premium tailoring."
+            : "Style built for presence."),
+      image: item.image || fallbackCollections[index % fallbackCollections.length].image,
+      count: item.price ? item.price : `${10 + index * 2} Items`,
+    }));
+  }, [latestItems]);
+
+  const latestPanelItems = useMemo<CollectionCard[]>(() => {
+    const source = heroCollections.length ? heroCollections : fallbackCollections;
+    return source.slice(0, 3);
+  }, [heroCollections]);
+
+  // --- NEW: always use full fallback for the sliding rails ---
+  const railItems = useMemo<CollectionCard[]>(() => {
+    return fallbackCollections;
+  }, []);
+
+  const heroCopy = "Premium outfits crafted for the bold, the stylish, and the unstoppable.";
 
   return (
     <div
-      className={`relative w-full bg-black select-none overflow-x-hidden ${
+      className={`relative w-full overflow-x-hidden bg-black text-white ${
         selectedImg ? "h-screen overflow-hidden" : ""
       }`}
     >
-      {/* ─── MENU OVERLAY ─── */}
       <FashionMenu
         isFashionLanding={true}
         initialOpen={isMenuOpen}
@@ -232,58 +439,58 @@ export default function FashionPage() {
         onCloseAction={() => setIsMenuOpen(false)}
       />
 
-      {/* ── LIGHTBOX ── */}
       <AnimatePresence>
         {selectedImg && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.35 }}
             className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10"
-            style={{ backdropFilter: "blur(18px)", backgroundColor: "rgba(0,0,0,0.55)" }}
+            style={{
+              backdropFilter: "blur(18px)",
+              backgroundColor: "rgba(0,0,0,0.58)",
+            }}
             onClick={() => setSelectedImg(null)}
           >
             <motion.div
-              initial={{ scale: 0.88, y: 30, opacity: 0 }}
+              initial={{ scale: 0.9, y: 24, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.88, y: 30, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 260, damping: 24 }}
-              className="relative max-w-4xl max-h-[88vh] bg-black/30 border border-[#00AEEF]/20 p-2 rounded-2xl shadow-2xl overflow-hidden"
+              exit={{ scale: 0.9, y: 24, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 250, damping: 24 }}
+              className="relative max-h-[88vh] max-w-5xl overflow-hidden rounded-3xl border border-[#00AEEF]/20 bg-black/45 p-2 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setSelectedImg(null)}
-                className="absolute top-4 right-4 z-10 bg-[#00AEEF]/80 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#00AEEF] transition-colors text-lg font-bold shadow-lg"
+                className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#00AEEF]/90 text-lg font-bold text-white transition-colors hover:bg-[#00AEEF]"
               >
                 ✕
               </button>
               <img
                 src={selectedImg}
                 alt="Enlarged view"
-                className="w-full h-full object-contain rounded-xl max-h-[84vh]"
+                className="max-h-[84vh] w-full rounded-[20px] object-contain"
               />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── PAGE CONTENT ── */}
       <div
         className="transition-all duration-500"
         style={{
-          opacity: isMenuOpen ? 0.15 : 1,
+          opacity: isMenuOpen ? 0.18 : 1,
           filter: isMenuOpen ? "blur(2px)" : "none",
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
-        {/* ─── TOP HEADER ─── */}
-        <header className="relative z-50 flex justify-between items-center p-6 md:p-10 bg-black/80 backdrop-blur-md border-b border-[#00AEEF]/10">
-          <div className="flex flex-col gap-0.5">
-            <span className="font-serif italic text-[#00AEEF] text-lg md:text-xl leading-none">
+        <header className="relative z-50 flex items-center justify-between border-b border-white/5 bg-black/80 px-5 py-5 backdrop-blur-md md:px-10">
+          <div className="flex flex-col gap-1">
+            <span className="font-serif text-lg italic leading-none text-[#00AEEF] md:text-2xl">
               The XCM
             </span>
-            <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light">
+            <span className="text-[9px] uppercase tracking-[0.55em] text-[#00AEEF]/85 md:text-[11px]">
               Fashion Corner
             </span>
           </div>
@@ -291,265 +498,266 @@ export default function FashionPage() {
           <button
             onClick={() => setIsMenuOpen(true)}
             className="flex flex-col gap-[5px] group"
+            aria-label="Open menu"
           >
-            <span className="block w-7 h-[1.5px] bg-[#00AEEF] transition-all group-hover:w-8" />
-            <span className="block w-5 h-[1.5px] bg-[#00AEEF] ml-auto transition-all group-hover:w-8" />
-            <span className="block w-7 h-[1.5px] bg-[#00AEEF] transition-all group-hover:w-8" />
+            <span className="block h-[1.5px] w-7 bg-[#00AEEF] transition-all group-hover:w-8" />
+            <span className="ml-auto block h-[1.5px] w-5 bg-[#00AEEF] transition-all group-hover:w-8" />
+            <span className="block h-[1.5px] w-7 bg-[#00AEEF] transition-all group-hover:w-8" />
           </button>
         </header>
 
-        {/* ─── FEATURED LATEST (BEFORE HERO) ─── */}
-        {!loadingLatest && <FeaturedLatest items={latestItems} />}
-
-        {/* ── HERO SECTION ── */}
-        <section className="relative h-screen w-full overflow-hidden">
+        {/* HERO SECTION */}
+        <section className="relative min-h-screen overflow-visible bg-black">
           <div className="absolute inset-0 z-0">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentSlide}
-                initial={{ opacity: 0, scale: 1.04 }}
-                animate={{ opacity: 0.85, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 3.5, ease: "easeInOut" }}
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
-              />
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-[#00AEEF]/10 to-black/95" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(0,174,239,0.2),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(0,174,239,0.12),transparent_22%)]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-black/85 to-black/95" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/70 to-transparent" />
           </div>
 
-          {/* Hero Content */}
-          <main className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-            <motion.p
+          <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-5 pb-10 pt-8 md:px-10">
+            <div className="grid flex-1 items-stretch gap-4 grid-cols-[1.08fr_0.92fr] sm:gap-6 md:gap-8 overflow-visible">
+              <div className="relative z-10 flex flex-col justify-center max-w-[18rem] sm:max-w-xl md:max-w-[540px]">
+                <motion.p
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1.1, ease: "easeOut" }}
+                  className="text-[10px] font-bold uppercase tracking-[0.48em] text-white/85 md:text-sm"
+                >
+                  New Season • New Energy
+                </motion.p>
+
+                <motion.h1
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1.1, delay: 0.1, ease: "easeOut" }}
+                  className="mt-4 max-w-[11ch] text-4xl font-semibold uppercase leading-[0.9] tracking-[-0.04em] text-white sm:text-5xl md:text-6xl lg:text-7xl"
+                >
+                  <span className="block">Wear</span>
+                  <span className="block text-[#00AEEF]">Assured.</span>
+                  <span className="block">Live XCM.</span>
+                </motion.h1>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1, delay: 0.25, ease: "easeOut" }}
+                  className="mt-4 max-w-md text-[12px] leading-relaxed text-white/72 sm:text-sm md:text-lg"
+                >
+                  {heroCopy}
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1, delay: 0.35, ease: "easeOut" }}
+                  className="mt-6"
+                >
+                  <Link
+                    to="/fashion/latest"
+                    className="inline-flex items-center gap-3 rounded-2xl border border-[#00AEEF]/40 bg-[#00AEEF] px-4 py-3 text-[9px] font-semibold uppercase tracking-[0.26em] text-white shadow-[0_0_28px_rgba(0,174,239,0.32)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_0_40px_rgba(0,174,239,0.42)] sm:px-5 sm:py-3 md:px-6 md:py-4 md:text-xs"
+                  >
+                    Explore Collection
+                    <span className="text-lg">→</span>
+                  </Link>
+                </motion.div>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 36, y: 18 }}
+                animate={{ opacity: 1, x: 0, y: 0 }}
+                transition={{ duration: 1.15, delay: 0.2, ease: "easeOut" }}
+                className="relative w-full h-full overflow-visible flex items-center justify-center bg-black"
+              >
+                <div className="relative w-full h-full overflow-visible flex items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={currentSlide}
+                      src={heroSlides[currentSlide]}
+                      alt="XCM fashion showcase"
+                      initial={{ opacity: 0, scale: 1.8 }}
+                      animate={{ opacity: 0.3, scale: 2.5 }}
+                      exit={{ opacity: 0, scale: 2.2 }}
+                      transition={{ duration: 2.2, ease: "easeInOut" }}
+                      className="w-full h-full object-contain"
+                    />
+                  </AnimatePresence>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                </div>
+              </motion.div>
+            </div>
+
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="text-base md:text-xl uppercase tracking-[0.5em] mb-6 font-bold"
-              style={{
-                color: "#ffffff",
-                WebkitTextStroke: "1.5px #004a70",
-                paintOrder: "stroke fill",
-                textShadow: "0 4px 18px rgba(0,174,239,0.5)",
-              }}
+              transition={{ duration: 1, delay: 0.45, ease: "easeOut" }}
+              className="relative z-20 -mt-6 sm:-mt-10 lg:-mt-14"
             >
-              Welcome to
-            </motion.p>
+              <div className="rounded-[30px] border border-white/12 bg-black/60 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-5">
+                <div className="mb-4 flex items-center justify-between px-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[#00AEEF] text-lg">✦</span>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#00AEEF]">
+                      Latest Collections
+                    </p>
+                  </div>
+                  <Link to="/fashion/latest" className="text-sm font-medium text-[#00AEEF] transition-colors hover:text-white">
+                    View All →
+                  </Link>
+                </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1, duration: 2, ease: "easeOut" }}
-              className="flex flex-col items-center"
-            >
-              <div className="bg-black/40 backdrop-blur-md p-3 px-8 rounded-2xl border border-[#00AEEF]/30 shadow-2xl mb-4">
-                <motion.h1
-                  className="text-5xl md:text-7xl font-black tracking-tighter"
-                  style={{ color: "#00AEEF", textShadow: "0 0 30px rgba(0,174,239,0.3)" }}
-                >
-                  XCM
-                </motion.h1>
+                <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
+                  {latestPanelItems.map((item) => (
+                    <motion.button
+                      key={item.id}
+                      type="button"
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedImg(item.image)}
+                      className="min-w-[220px] overflow-hidden rounded-[24px] border border-white/8 bg-white/5 text-left sm:min-w-[250px]"
+                    >
+                      <div className="relative h-[260px] sm:h-[280px]">
+                        <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0 p-4">
+                          <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                          <p className="mt-1 text-sm text-white/65 line-clamp-2">{item.description}</p>
+                          <span className="mt-2 inline-block text-[10px] uppercase tracking-[0.3em] text-[#00AEEF]">
+                            {item.count}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-
-              <motion.h2
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 2, duration: 1.8 }}
-                className="text-white text-4xl md:text-6xl font-serif italic"
-                style={{
-                  WebkitTextStroke: "1.5px #004a70",
-                  paintOrder: "stroke fill",
-                  textShadow: "0 4px 18px rgba(0,174,239,0.5)",
-                }}
-              >
-                Wardrobes
-              </motion.h2>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 3, duration: 1.5 }}
-              className="mt-10"
-            >
-              <p
-                className="font-serif italic text-base md:text-2xl tracking-widest min-h-[1.5em]"
-                style={{
-                  color: "#00AEEF",
-                  textShadow: "0 4px 18px rgba(0,174,239,0.5), 0 2px 8px rgba(0,174,239,0.45), 0 0 36px rgba(0,174,239,0.35)",
-                  WebkitTextStroke: "1.2px #004a70",
-                  paintOrder: "stroke fill",
-                }}
-              >
-                {sloganText.split("").map((char, index) => (
-                  <motion.span
-                    key={index}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 4 + index * 0.05, duration: 0.3 }}
-                  >
-                    {char}
-                  </motion.span>
-                ))}
-              </p>
-            </motion.div>
-          </main>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 6 }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-          >
-            <span className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-50" style={{ color: "#00AEEF" }}>
-              Scroll
-            </span>
-            <div className="w-[1px] h-12 bg-gradient-to-b from-[#00AEEF] to-transparent relative overflow-hidden">
-              <motion.div
-                animate={{ y: [0, 48] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-0 left-0 w-full h-1/2 bg-[#00AEEF]"
-              />
+            <div className="mt-6 flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-white/45">
+              <span>01</span>
+              <div className="mx-4 h-[1px] flex-1 bg-white/10" />
+              <span>06</span>
             </div>
-          </motion.div>
-        </section>
-
-        {/* ── IMAGE ROWS ── */}
-        <section className="relative py-24 bg-black overflow-hidden">
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage: "radial-gradient(rgba(0,174,239,0.35) 1px, transparent 1px)",
-              backgroundSize: "22px 22px",
-              opacity: 0.4,
-              maskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
-              WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
-            }}
-          />
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#00AEEF]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#00AEEF]/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative text-center mb-14 px-6">
-            <p className="text-[10px] tracking-[0.5em] uppercase font-bold text-[#00AEEF]/60">
-              The Collection
-            </p>
-            <h3 className="font-serif italic text-2xl md:text-4xl text-white/85">
-              Every piece, a statement
-            </h3>
-            <div className="w-16 h-[2px] bg-[#00AEEF]/50 mx-auto mt-5 rounded-full" />
-          </div>
-
-          <div className="relative flex flex-col gap-16">
-            <ImageRow images={rowImages} onImageClick={setSelectedImg} reverse={false} />
-            <ImageRow images={rowImages} onImageClick={setSelectedImg} reverse={true} />
-            <ImageRow images={rowImages} onImageClick={setSelectedImg} reverse={false} />
           </div>
         </section>
 
-        {/* ── ABOUT SECTION ── */}
-        <section className="py-32 px-6 md:px-20 bg-[#0a0a0a] border-t border-[#00AEEF]/10">
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-            <div className="space-y-6">
-              <h3 className="font-serif italic text-3xl text-[#00AEEF]">Our Story</h3>
-              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none text-white">
-                Crafting <br />
-                <span className="text-[#00AEEF]">Excellence</span>
-              </h2>
-              <p className="leading-relaxed text-lg font-light text-white/70">
-                XCM Wardrobes isn't just a fashion house; it's a statement of identity. We believe that
-                every stitch tells a story of confidence, culture, and character. From bespoke suits to
-                traditional Agbada and modern casuals, we spice up your style with precision and passion.
-              </p>
-              <div className="pt-6">
-                <button
-                  className="border border-[#00AEEF] text-[#00AEEF] px-10 py-4 uppercase text-xs font-bold tracking-[0.3em] transition-all hover:bg-[#00AEEF] hover:text-black"
-                >
-                  Learn More
-                </button>
-              </div>
+        <section className="border-y border-black/5 bg-white px-3 py-6 md:px-10 md:py-8">
+          <div className="mx-auto grid max-w-7xl grid-cols-4 gap-1 md:gap-4">
+            {featureTiles.map((feature) => (
+              <FeatureBlock key={feature.title} {...feature} />
+            ))}
+          </div>
+        </section>
 
-              {/* Contact & Social box – dark theme */}
-              <div
-                className="mt-8 rounded-2xl p-6 space-y-6 border border-[#00AEEF]/15 bg-[#0d0d0d]"
+        {/* EXPLORE COLLECTIONS */}
+        <section className="bg-black px-5 py-18 md:px-10 md:py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex items-end justify-between gap-6 pt-12">
+              <SectionLabel
+                eyebrow="Explore Collections"
+                title="Find Your Style"
+                light
+              />
+              <Link
+                to="/fashion/latest"
+                className="hidden border-b border-[#00AEEF]/45 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#00AEEF] transition-colors hover:border-[#00AEEF] md:inline-flex"
               >
-                <div className="space-y-3">
-                  <p className="text-[9px] font-bold tracking-[0.5em] uppercase text-[#00AEEF]">
-                    Inquiries
-                  </p>
+                View all →
+              </Link>
+            </div>
+
+            <div className="mt-8 space-y-5">
+              {/* Use railItems (all 9 images) instead of sectionCards */}
+              <SlidingRail items={railItems} onClick={setSelectedImg} />
+              <SlidingRail items={[...railItems].reverse()} onClick={setSelectedImg} reverse />
+            </div>
+          </div>
+        </section>
+
+        {/* CONTACT SECTION */}
+        <section className="relative overflow-hidden border-t border-[#00AEEF]/10 bg-[#0a0a0a] px-5 py-20 md:px-10 md:py-28">
+          <div className="absolute -left-20 top-12 h-72 w-72 rounded-full bg-[#00AEEF]/10 blur-3xl" />
+          <div className="absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-[#00AEEF]/10 blur-3xl" />
+
+          <div className="mx-auto max-w-4xl">
+            <div className="relative rounded-[34px] border border-[#00AEEF]/14 bg-white p-7 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+              <div className="flex flex-col items-center text-center gap-6">
+                <div className="flex flex-wrap justify-center gap-4 w-full">
                   <a
                     href="tel:+2348061587993"
-                    className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border border-[#00AEEF]/10 bg-[#111] hover:border-[#00AEEF]/40 hover:bg-[#00AEEF]/5"
+                    className="group flex items-center gap-4 rounded-2xl border border-[#00AEEF]/12 bg-black/5 px-6 py-4 transition-all hover:border-[#00AEEF]/35 hover:bg-[#00AEEF]/5 flex-1 min-w-[180px] justify-center"
                   >
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-[#00AEEF]/25 bg-[#00AEEF]/10">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6.08 6.08l1.37-1.37a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                      </svg>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">
+                      ☎
                     </div>
-                    <span className="text-sm font-medium text-white/70 group-hover:text-[#00AEEF] transition-colors">
-                      Call Us
-                    </span>
+                    <div className="text-left">
+                      <p className="text-xs uppercase tracking-[0.35em] text-[#00AEEF]">Call Us</p>
+                      <p className="mt-1 text-sm text-black/70">Speak with our team</p>
+                    </div>
                   </a>
+
                   <a
                     href={WA}
                     target="_blank"
                     rel="noreferrer"
-                    className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border border-[#00AEEF]/10 bg-[#111] hover:border-[#00AEEF]/40 hover:bg-[#00AEEF]/5"
+                    className="group flex items-center gap-4 rounded-2xl border border-[#00AEEF]/12 bg-black/5 px-6 py-4 transition-all hover:border-[#00AEEF]/35 hover:bg-[#00AEEF]/5 flex-1 min-w-[180px] justify-center"
                   >
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-[#00AEEF]/25 bg-[#00AEEF]/10">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#00AEEF">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.126 1.524 5.868L.057 23.5l5.806-1.524A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.18-1.433l-.371-.221-3.844 1.009 1.028-3.752-.242-.386A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-                      </svg>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">
+                      ⌁
                     </div>
-                    <span className="text-sm font-medium text-white/70 group-hover:text-[#00AEEF] transition-colors">
-                      WhatsApp
-                    </span>
+                    <div className="text-left">
+                      <p className="text-xs uppercase tracking-[0.35em] text-[#00AEEF]">WhatsApp</p>
+                      <p className="mt-1 text-sm text-black/70">Chat for quick orders</p>
+                    </div>
                   </a>
                 </div>
 
-                <div className="h-[1px] bg-[#00AEEF]/10" />
+                <a
+                  href="mailto:xcmwardrobes@gmail.com"
+                  className="inline-flex items-center gap-3 rounded-2xl border border-black/10 px-6 py-4 text-xs font-semibold uppercase tracking-[0.28em] text-black transition-colors hover:border-[#00AEEF]/30 hover:text-[#00AEEF]"
+                >
+                  Email Us
+                </a>
 
-                <div>
-                  <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4 text-[#00AEEF]">
+                <div className="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-black/20 to-transparent" />
+
+                <div className="flex flex-wrap justify-center gap-3">
+                  <p className="w-full text-[10px] uppercase tracking-[0.45em] text-[#00AEEF]">
                     Connect With Us
                   </p>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <a href="https://www.facebook.com/share/1KToiX8cS4/" target="_blank" rel="noreferrer"
-                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border border-[#00AEEF]/20 bg-[#0d0d0d] hover:bg-[#00AEEF]/10"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#00AEEF"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#00AEEF] transition-colors">Facebook</span>
-                    </a>
-                    <a href="https://www.instagram.com/xcmwardrobes?igsh=NHJscDd1dTdodmFo" target="_blank" rel="noreferrer"
-                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border border-[#00AEEF]/20 bg-[#0d0d0d] hover:bg-[#00AEEF]/10"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#00AEEF" stroke="none"/></svg>
-                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#00AEEF] transition-colors">Instagram</span>
-                    </a>
-                    <a href="https://x.com/XCMwardrobes" target="_blank" rel="noreferrer"
-                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border border-[#00AEEF]/20 bg-[#0d0d0d] hover:bg-[#00AEEF]/10"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#00AEEF"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.736-8.835L2.25 2.25h6.918l4.265 5.638 4.811-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/></svg>
-                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#00AEEF] transition-colors">Twitter / X</span>
-                    </a>
-                    <a href="mailto:xcmwardrobes@gmail.com"
-                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border border-[#00AEEF]/20 bg-[#0d0d0d] hover:bg-[#00AEEF]/10"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#00AEEF] transition-colors">Email</span>
-                    </a>
-                  </div>
+                  <a
+                    href="https://www.facebook.com/share/1KToiX8cS4/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-full border border-black/10 bg-black/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-black/65 transition-colors hover:bg-[#00AEEF]/10 hover:text-[#00AEEF]"
+                  >
+                    Facebook
+                  </a>
+                  <a
+                    href="https://www.instagram.com/xcmwardrobes?igsh=NHJscDd1dTdodmFo"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-full border border-black/10 bg-black/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-black/65 transition-colors hover:bg-[#00AEEF]/10 hover:text-[#00AEEF]"
+                  >
+                    Instagram
+                  </a>
+                  <a
+                    href="https://x.com/XCMwardrobes"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-full border border-black/10 bg-black/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-black/65 transition-colors hover:bg-[#00AEEF]/10 hover:text-[#00AEEF]"
+                  >
+                    Twitter / X
+                  </a>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
-        <footer className="py-16 text-center border-t border-[#00AEEF]/8 bg-black">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-8 w-[1px] bg-gradient-to-b from-[#00AEEF]/25 to-transparent" />
-            <p className="text-[8px] tracking-[1em] uppercase text-white/20">
-              © 2026 XCM • All Right Reserve
+        <footer className="border-t border-[#00AEEF]/8 bg-black py-14 text-center">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-5">
+            <div className="h-8 w-px bg-gradient-to-b from-[#00AEEF]/35 to-transparent" />
+            <p className="text-[8px] uppercase tracking-[1em] text-white/20">
+              © 2026 XCM • All Rights Reserved
             </p>
           </div>
         </footer>
@@ -558,22 +766,6 @@ export default function FashionPage() {
           @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,500&display=swap');
           .no-scrollbar::-webkit-scrollbar { display: none; }
           .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-          .blue-mat {
-            background: linear-gradient(145deg, rgba(0,174,239,0.12), rgba(0,174,239,0.02));
-            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.6);
-          }
-
-          .photo-card {
-            border: 1px solid rgba(0,174,239,0.2);
-            box-shadow: 0 0 12px rgba(0,174,239,0.15), 0 0 30px rgba(0,174,239,0.06), 0 8px 32px rgba(0,0,0,0.6);
-            transition: box-shadow 0.4s ease, border-color 0.4s ease;
-          }
-
-          .photo-card:hover {
-            border-color: rgba(0,174,239,0.6);
-            box-shadow: 0 0 20px rgba(0,174,239,0.4), 0 0 60px rgba(0,174,239,0.2), 0 0 100px rgba(0,174,239,0.08), 0 12px 40px rgba(0,0,0,0.8);
-          }
         `}</style>
       </div>
     </div>
