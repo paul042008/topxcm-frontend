@@ -22,7 +22,7 @@ interface Album {
   isSingle?: boolean; // flag to identify quick‑upload singles
 }
 
-const API = "https://topxcm-backend.onrender.com";
+const API = "https://topxcm-backend-1.onrender.com";
 
 // ─── ITEM MODAL (shared between albums and singles) ──────────────────────
 

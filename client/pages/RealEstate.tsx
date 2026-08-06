@@ -108,7 +108,7 @@ export default function RealEstate() {
 
   const rowImages = properties.length > 0
     ? properties.map((p: any) =>
-        p.image?.startsWith("http") ? p.image : `https://topxcm-backend.onrender.com${p.image}`
+        p.image?.startsWith("http") ? p.image : `https://topxcm-backend-1.onrender.com${p.image}`
       )
     : [
         "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800",

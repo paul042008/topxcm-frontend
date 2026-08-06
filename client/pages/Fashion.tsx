@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
 import { Link } from "react-router-dom";
 
-const API = "https://topxcm-backend.onrender.com";
+const API = "https://topxcm-backend-1.onrender.com";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 interface LatestItem {
@@ -85,13 +85,9 @@ const ImageRow = ({
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => onImageClick(img)}
-            className={`${shapes[i % shapes.length]} shrink-0 relative flex-none p-1.5 rounded-[inherit]`}
-            style={{
-              background: "linear-gradient(145deg, rgba(0,174,239,0.10), rgba(0,174,239,0.02))",
-              boxShadow: "0 20px 40px -12px rgba(0,74,112,0.18)",
-            }}
+            className={`${shapes[i % shapes.length]} shrink-0 relative flex-none p-1.5 rounded-[inherit] blue-mat`}
           >
-            <div className={`w-full h-full overflow-hidden border border-[#00AEEF]/15 cursor-pointer group rounded-[inherit]`}>
+            <div className="w-full h-full overflow-hidden border border-[#00AEEF]/15 cursor-pointer group rounded-[inherit] photo-card">
               <img
                 src={img}
                 alt="Fashion Showcase"
@@ -136,8 +132,8 @@ function FeaturedLatest({ items }: { items: LatestItem[] }) {
           alt={title}
           className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
       </div>
 
       <div className="relative h-full flex items-center px-8 md:px-16">
@@ -224,7 +220,7 @@ export default function FashionPage() {
 
   return (
     <div
-      className={`relative w-full bg-white select-none overflow-x-hidden ${
+      className={`relative w-full bg-black select-none overflow-x-hidden ${
         selectedImg ? "h-screen overflow-hidden" : ""
       }`}
     >
@@ -253,7 +249,7 @@ export default function FashionPage() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.88, y: 30, opacity: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 24 }}
-              className="relative max-w-4xl max-h-[88vh] bg-white/10 border border-white/20 p-2 rounded-2xl shadow-2xl overflow-hidden"
+              className="relative max-w-4xl max-h-[88vh] bg-black/30 border border-[#00AEEF]/20 p-2 rounded-2xl shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -281,9 +277,8 @@ export default function FashionPage() {
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
-        {/* ─── TOP HEADER (only one) ─── */}
-        <header className="relative z-50 flex justify-between items-center p-6 md:p-10 bg-white/50 backdrop-blur-md border-b border-[#00AEEF]/10">
-          {/* LEFT: Brand */}
+        {/* ─── TOP HEADER ─── */}
+        <header className="relative z-50 flex justify-between items-center p-6 md:p-10 bg-black/80 backdrop-blur-md border-b border-[#00AEEF]/10">
           <div className="flex flex-col gap-0.5">
             <span className="font-serif italic text-[#00AEEF] text-lg md:text-xl leading-none">
               The XCM
@@ -293,7 +288,6 @@ export default function FashionPage() {
             </span>
           </div>
 
-          {/* RIGHT: Hamburger menu button */}
           <button
             onClick={() => setIsMenuOpen(true)}
             className="flex flex-col gap-[5px] group"
@@ -307,7 +301,7 @@ export default function FashionPage() {
         {/* ─── FEATURED LATEST (BEFORE HERO) ─── */}
         {!loadingLatest && <FeaturedLatest items={latestItems} />}
 
-        {/* ── HERO SECTION (without its own header) ── */}
+        {/* ── HERO SECTION ── */}
         <section className="relative h-screen w-full overflow-hidden">
           <div className="absolute inset-0 z-0">
             <AnimatePresence mode="wait">
@@ -321,10 +315,10 @@ export default function FashionPage() {
                 style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
               />
             </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-[#00AEEF]/10 to-white/95" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-[#00AEEF]/10 to-black/95" />
           </div>
 
-          {/* Hero Content (no header) */}
+          {/* Hero Content */}
           <main className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
             <motion.p
               initial={{ opacity: 0, y: 30 }}
@@ -335,7 +329,7 @@ export default function FashionPage() {
                 color: "#ffffff",
                 WebkitTextStroke: "1.5px #004a70",
                 paintOrder: "stroke fill",
-                textShadow: "none",
+                textShadow: "0 4px 18px rgba(0,174,239,0.5)",
               }}
             >
               Welcome to
@@ -347,13 +341,10 @@ export default function FashionPage() {
               transition={{ delay: 1, duration: 2, ease: "easeOut" }}
               className="flex flex-col items-center"
             >
-              <div className="bg-white/15 backdrop-blur-md p-3 px-8 rounded-2xl border border-white/25 shadow-2xl mb-4">
+              <div className="bg-black/40 backdrop-blur-md p-3 px-8 rounded-2xl border border-[#00AEEF]/30 shadow-2xl mb-4">
                 <motion.h1
                   className="text-5xl md:text-7xl font-black tracking-tighter"
-                  style={{
-                    color: "#00AEEF",
-                    textShadow: "none",
-                  }}
+                  style={{ color: "#00AEEF", textShadow: "0 0 30px rgba(0,174,239,0.3)" }}
                 >
                   XCM
                 </motion.h1>
@@ -367,7 +358,7 @@ export default function FashionPage() {
                 style={{
                   WebkitTextStroke: "1.5px #004a70",
                   paintOrder: "stroke fill",
-                  textShadow: "none",
+                  textShadow: "0 4px 18px rgba(0,174,239,0.5)",
                 }}
               >
                 Wardrobes
@@ -423,13 +414,13 @@ export default function FashionPage() {
         </section>
 
         {/* ── IMAGE ROWS ── */}
-        <section className="relative py-24 overflow-hidden bg-gradient-to-b from-white via-[#f0f8ff] to-[#dceaf5]">
+        <section className="relative py-24 bg-black overflow-hidden">
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               backgroundImage: "radial-gradient(rgba(0,174,239,0.35) 1px, transparent 1px)",
               backgroundSize: "22px 22px",
-              opacity: 0.5,
+              opacity: 0.4,
               maskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
               WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
             }}
@@ -438,13 +429,13 @@ export default function FashionPage() {
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#00AEEF]/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative text-center mb-14 px-6">
-            <p className="text-[10px] tracking-[0.5em] uppercase font-bold text-[#00AEEF]/60 mb-3">
+            <p className="text-[10px] tracking-[0.5em] uppercase font-bold text-[#00AEEF]/60">
               The Collection
             </p>
-            <h3 className="font-serif italic text-2xl md:text-4xl text-black/80">
+            <h3 className="font-serif italic text-2xl md:text-4xl text-white/85">
               Every piece, a statement
             </h3>
-            <div className="w-16 h-[2px] bg-[#00AEEF]/40 mx-auto mt-5 rounded-full" />
+            <div className="w-16 h-[2px] bg-[#00AEEF]/50 mx-auto mt-5 rounded-full" />
           </div>
 
           <div className="relative flex flex-col gap-16">
@@ -455,69 +446,45 @@ export default function FashionPage() {
         </section>
 
         {/* ── ABOUT SECTION ── */}
-        <section className="py-32 px-6 md:px-20 bg-[#00AEEF]/8">
+        <section className="py-32 px-6 md:px-20 bg-[#0a0a0a] border-t border-[#00AEEF]/10">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
-              <h3 className="font-serif italic text-3xl text-black">Our Story</h3>
-              <h2
-                className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none"
-                style={{ color: "#00AEEF" }}
-              >
-                Crafting <br /> Excellence
+              <h3 className="font-serif italic text-3xl text-[#00AEEF]">Our Story</h3>
+              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none text-white">
+                Crafting <br />
+                <span className="text-[#00AEEF]">Excellence</span>
               </h2>
-              <p className="leading-relaxed text-lg font-light text-[#00AEEF]" style={{ opacity: 0.8 }}>
+              <p className="leading-relaxed text-lg font-light text-white/70">
                 XCM Wardrobes isn't just a fashion house; it's a statement of identity. We believe that
                 every stitch tells a story of confidence, culture, and character. From bespoke suits to
                 traditional Agbada and modern casuals, we spice up your style with precision and passion.
               </p>
               <div className="pt-6">
                 <button
-                  className="border px-10 py-4 uppercase text-xs font-bold tracking-[0.3em] transition-all"
-                  style={{ borderColor: "#00AEEF", color: "#00AEEF" }}
-                  onMouseEnter={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor = "#00AEEF";
-                    (e.target as HTMLButtonElement).style.color = "#fff";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor = "transparent";
-                    (e.target as HTMLButtonElement).style.color = "#00AEEF";
-                  }}
+                  className="border border-[#00AEEF] text-[#00AEEF] px-10 py-4 uppercase text-xs font-bold tracking-[0.3em] transition-all hover:bg-[#00AEEF] hover:text-black"
                 >
                   Learn More
                 </button>
               </div>
 
-              {/* Contact & Social box */}
+              {/* Contact & Social box – dark theme */}
               <div
-                className="mt-8 rounded-2xl p-6 space-y-6"
-                style={{ border: "1px solid rgba(0,174,239,0.15)", backgroundColor: "rgba(0,174,239,0.03)" }}
+                className="mt-8 rounded-2xl p-6 space-y-6 border border-[#00AEEF]/15 bg-[#0d0d0d]"
               >
                 <div className="space-y-3">
-                  <p className="text-[9px] font-bold tracking-[0.5em] uppercase" style={{ color: "#00AEEF" }}>
+                  <p className="text-[9px] font-bold tracking-[0.5em] uppercase text-[#00AEEF]">
                     Inquiries
                   </p>
                   <a
                     href="tel:+2348061587993"
-                    className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
-                    style={{ border: "1px solid rgba(0,174,239,0.1)", backgroundColor: "rgba(0,174,239,0.03)" }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(0,174,239,0.4)";
-                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.07)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(0,174,239,0.1)";
-                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.03)";
-                    }}
+                    className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border border-[#00AEEF]/10 bg-[#111] hover:border-[#00AEEF]/40 hover:bg-[#00AEEF]/5"
                   >
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                      style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.07)" }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-[#00AEEF]/25 bg-[#00AEEF]/10">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2">
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6.08 6.08l1.37-1.37a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-slate-600 group-hover:text-[#00AEEF] transition-colors">
+                    <span className="text-sm font-medium text-white/70 group-hover:text-[#00AEEF] transition-colors">
                       Call Us
                     </span>
                   </a>
@@ -525,78 +492,50 @@ export default function FashionPage() {
                     href={WA}
                     target="_blank"
                     rel="noreferrer"
-                    className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
-                    style={{ border: "1px solid rgba(0,174,239,0.1)", backgroundColor: "rgba(0,174,239,0.03)" }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(0,174,239,0.4)";
-                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.07)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(0,174,239,0.1)";
-                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.03)";
-                    }}
+                    className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border border-[#00AEEF]/10 bg-[#111] hover:border-[#00AEEF]/40 hover:bg-[#00AEEF]/5"
                   >
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                      style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.07)" }}
-                    >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-[#00AEEF]/25 bg-[#00AEEF]/10">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#00AEEF">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                         <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.126 1.524 5.868L.057 23.5l5.806-1.524A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.18-1.433l-.371-.221-3.844 1.009 1.028-3.752-.242-.386A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-slate-600 group-hover:text-[#00AEEF] transition-colors">
+                    <span className="text-sm font-medium text-white/70 group-hover:text-[#00AEEF] transition-colors">
                       WhatsApp
                     </span>
                   </a>
                 </div>
 
-                <div style={{ height: "1px", backgroundColor: "rgba(0,174,239,0.1)" }} />
+                <div className="h-[1px] bg-[#00AEEF]/10" />
 
                 <div>
-                  <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#00AEEF" }}>
+                  <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4 text-[#00AEEF]">
                     Connect With Us
                   </p>
                   <div className="flex items-center gap-3 flex-wrap">
                     <a href="https://www.facebook.com/share/1KToiX8cS4/" target="_blank" rel="noreferrer"
-                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                      style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.04)" }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.12)"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.04)"; }}
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border border-[#00AEEF]/20 bg-[#0d0d0d] hover:bg-[#00AEEF]/10"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#00AEEF"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                      <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#00AEEF] transition-colors">Facebook</span>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#00AEEF] transition-colors">Facebook</span>
                     </a>
                     <a href="https://www.instagram.com/xcmwardrobes?igsh=NHJscDd1dTdodmFo" target="_blank" rel="noreferrer"
-                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                      style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.04)" }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.12)"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.04)"; }}
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border border-[#00AEEF]/20 bg-[#0d0d0d] hover:bg-[#00AEEF]/10"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#00AEEF" stroke="none"/>
-                      </svg>
-                      <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#00AEEF] transition-colors">Instagram</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#00AEEF" stroke="none"/></svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#00AEEF] transition-colors">Instagram</span>
                     </a>
                     <a href="https://x.com/XCMwardrobes" target="_blank" rel="noreferrer"
-                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                      style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.04)" }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.12)"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.04)"; }}
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border border-[#00AEEF]/20 bg-[#0d0d0d] hover:bg-[#00AEEF]/10"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#00AEEF"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.736-8.835L2.25 2.25h6.918l4.265 5.638 4.811-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/></svg>
-                      <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#00AEEF] transition-colors">Twitter / X</span>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#00AEEF] transition-colors">Twitter / X</span>
                     </a>
                     <a href="mailto:xcmwardrobes@gmail.com"
-                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                      style={{ border: "1px solid rgba(0,174,239,0.25)", backgroundColor: "rgba(0,174,239,0.04)" }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.12)"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(0,174,239,0.04)"; }}
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border border-[#00AEEF]/20 bg-[#0d0d0d] hover:bg-[#00AEEF]/10"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                      </svg>
-                      <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#00AEEF] transition-colors">Email</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#00AEEF] transition-colors">Email</span>
                     </a>
                   </div>
                 </div>
@@ -606,10 +545,10 @@ export default function FashionPage() {
         </section>
 
         {/* ── FOOTER ── */}
-        <footer className="py-16 text-center border-t border-[#00AEEF]/8 bg-white">
+        <footer className="py-16 text-center border-t border-[#00AEEF]/8 bg-black">
           <div className="flex flex-col items-center gap-4">
             <div className="h-8 w-[1px] bg-gradient-to-b from-[#00AEEF]/25 to-transparent" />
-            <p className="text-[8px] tracking-[1em] uppercase" style={{ color: "rgba(0,174,239,0.22)" }}>
+            <p className="text-[8px] tracking-[1em] uppercase text-white/20">
               © 2026 XCM • All Right Reserve
             </p>
           </div>
@@ -619,6 +558,22 @@ export default function FashionPage() {
           @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,500&display=swap');
           .no-scrollbar::-webkit-scrollbar { display: none; }
           .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+          .blue-mat {
+            background: linear-gradient(145deg, rgba(0,174,239,0.12), rgba(0,174,239,0.02));
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.6);
+          }
+
+          .photo-card {
+            border: 1px solid rgba(0,174,239,0.2);
+            box-shadow: 0 0 12px rgba(0,174,239,0.15), 0 0 30px rgba(0,174,239,0.06), 0 8px 32px rgba(0,0,0,0.6);
+            transition: box-shadow 0.4s ease, border-color 0.4s ease;
+          }
+
+          .photo-card:hover {
+            border-color: rgba(0,174,239,0.6);
+            box-shadow: 0 0 20px rgba(0,174,239,0.4), 0 0 60px rgba(0,174,239,0.2), 0 0 100px rgba(0,174,239,0.08), 0 12px 40px rgba(0,0,0,0.8);
+          }
         `}</style>
       </div>
     </div>

@@ -37,7 +37,7 @@ export default function FashionMenu({
 
   return (
     <>
-      {/* ── HAMBURGER (TOP RIGHT) ── */}
+      {/* ── HAMBURGER (TOP RIGHT) ── (unchanged – already blue) */}
       {!open && (
         <button
           onClick={handleOpen}
@@ -51,21 +51,21 @@ export default function FashionMenu({
 
       {/* ── MENU ── */}
       {open && (
-        <div className="fixed inset-0 z-[10000] flex flex-col bg-white w-screen h-screen overflow-hidden animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[10000] flex flex-col bg-black w-screen h-screen overflow-hidden animate-in fade-in duration-300">
 
           {/* ── HEADER ── */}
           <div className="w-full px-8 pt-12 flex justify-between items-center">
-            <div className="flex flex-col gap-0.5 opacity-50">
-              <span className="font-serif italic text-black text-lg md:text-xl leading-none">
+            <div className="flex flex-col gap-0.5">
+              <span className="font-serif italic text-[#00AEEF] text-lg md:text-xl leading-none">
                 The XCM
               </span>
-              <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light">
+              <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light opacity-60">
                 Fashion Corner
               </span>
             </div>
             <button
               onClick={handleClose}
-              className="text-black p-2 hover:rotate-90 transition-transform duration-300"
+              className="text-white p-2 hover:rotate-90 transition-transform duration-300"
             >
               <X size={32} strokeWidth={1.5} />
             </button>
@@ -74,7 +74,6 @@ export default function FashionMenu({
           {/* ── NAV ── */}
           <nav className="flex-grow flex flex-col items-center justify-center gap-8">
             {[
-              // ✅ Added "Latest" link at the top
               { name: "Latest Collection", path: "/fashion/latest" },
               { name: "Suits", path: "/fashion/suits" },
               { name: "Agbada", path: "/fashion/agbada" },
@@ -86,7 +85,7 @@ export default function FashionMenu({
                 key={link.name}
                 to={link.path}
                 onClick={handleClose}
-                className="text-sm font-black uppercase tracking-[0.4em] text-black hover:text-[#00AEEF] transition-all"
+                className="text-sm font-black uppercase tracking-[0.4em] text-white hover:text-[#00AEEF] transition-all"
               >
                 {link.name}
               </Link>
@@ -96,7 +95,7 @@ export default function FashionMenu({
               <Link
                 to="/"
                 onClick={handleClose}
-                className="text-sm font-black uppercase tracking-[0.4em] text-black/40 hover:text-[#00AEEF] transition-all mt-4"
+                className="text-sm font-black uppercase tracking-[0.4em] text-white/40 hover:text-[#00AEEF] transition-all mt-4"
               >
                 Back to Empire
               </Link>
@@ -106,7 +105,7 @@ export default function FashionMenu({
               <Link
                 to="/fashion"
                 onClick={handleClose}
-                className="text-sm font-black uppercase tracking-[0.4em] text-black/40 hover:text-[#00AEEF] transition-all mt-4"
+                className="text-sm font-black uppercase tracking-[0.4em] text-white/40 hover:text-[#00AEEF] transition-all mt-4"
               >
                 Back to Fashion Corner
               </Link>

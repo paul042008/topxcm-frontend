@@ -5,7 +5,7 @@ import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 import LoadingState from "../components/LoadingState";
 
-const API = "https://topxcm-backend.onrender.com";
+const API = "https://topxcm-backend-1.onrender.com";
 
 // ── FEATURED (first) album — full-width cinematic spread
 function FeaturedAlbum({ item }: { item: any }) {

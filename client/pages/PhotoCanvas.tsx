@@ -12,7 +12,7 @@ interface PhotoItem {
   albumId?: string; // present if image belongs to a fashion album
 }
 
-const API = "https://topxcm-backend.onrender.com";
+const API = "https://topxcm-backend-1.onrender.com";
 const WA = "https://wa.me/2348061587993?text=Hi!%20I'd%20like%20to%20order%20a%20frame%20or%20canvas.";
 
 function ItemModal({ item, onClose }: { item: PhotoItem; onClose: () => void }) {

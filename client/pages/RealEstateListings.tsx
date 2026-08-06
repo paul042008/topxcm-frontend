@@ -16,7 +16,7 @@ interface Property {
   albumId?: string; // added to filter out album images
 }
 
-const API = "https://topxcm-backend.onrender.com";
+const API = "https://topxcm-backend-1.onrender.com";
 
 // ─── PROPERTY MODAL ───────────────────────────────────────────────────────────
 
