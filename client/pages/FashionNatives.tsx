@@ -19,7 +19,7 @@ interface Album {
   price: string;
   cover?: string;
   images: AlbumImage[];
-  isSingle?: boolean; // flag for quick‑upload singles
+  isSingle?: boolean;
 }
 
 const API = "https://topxcm-backend-1.onrender.com";
@@ -58,17 +58,17 @@ function ItemModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="relative w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl"
+          className="relative w-full max-w-lg bg-[#111] rounded-2xl overflow-hidden shadow-2xl border border-[#00AEEF]/20"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/20 flex items-center justify-center text-white text-sm hover:bg-black/40 transition"
+            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-white/80 text-sm hover:bg-black/60 transition"
           >
             ✕
           </button>
 
-          <div className="w-full aspect-[4/5] overflow-hidden bg-[#f0f4f8]">
+          <div className="w-full aspect-[4/5] overflow-hidden bg-black/40">
             <img
               src={image.url}
               alt={image.title}
@@ -76,17 +76,17 @@ function ItemModal({
             />
           </div>
 
-          <div className="p-6">
-            <h3 className="text-xl font-serif text-[#1E3A8A] mb-1">{image.title}</h3>
+          <div className="p-6 bg-black/80 backdrop-blur-sm">
+            <h3 className="text-xl font-serif text-white mb-1">{image.title}</h3>
             {image.price && (
-              <p className="text-[#D4AF37] font-bold text-lg mb-3">{image.price}</p>
+              <p className="text-[#00AEEF] font-bold text-lg mb-3">{image.price}</p>
             )}
             {image.description && (
-              <p className="text-slate-500 text-sm leading-relaxed mb-5">{image.description}</p>
+              <p className="text-white/60 text-sm leading-relaxed mb-5">{image.description}</p>
             )}
             <button
               onClick={handleOrder}
-              className="w-full bg-[#1E3A8A] text-white rounded-xl py-3.5 text-sm font-bold uppercase tracking-widest hover:bg-[#162d6e] active:scale-[0.98] transition"
+              className="w-full bg-[#00AEEF] text-black rounded-xl py-3.5 text-sm font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
             >
               Order Now
             </button>
@@ -119,21 +119,21 @@ function GalleryView({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 30 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="fixed inset-0 z-[150] bg-[#D9EAF0] overflow-y-auto"
+      className="fixed inset-0 z-[150] bg-black overflow-y-auto"
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/70 backdrop-blur-xl border-b border-[#1E3A8A]/10 px-5 py-4 flex items-center gap-4">
+      <div className="sticky top-0 z-10 bg-black/70 backdrop-blur-xl border-b border-[#00AEEF]/10 px-5 py-4 flex items-center gap-4">
         <button
           onClick={onClose}
-          className="w-9 h-9 rounded-xl border border-[#1E3A8A]/20 flex items-center justify-center text-[#1E3A8A] hover:bg-[#1E3A8A]/5 transition text-lg"
+          className="w-9 h-9 rounded-xl border border-[#00AEEF]/20 flex items-center justify-center text-[#00AEEF] hover:bg-[#00AEEF]/10 transition text-lg"
         >
           ←
         </button>
         <div>
           <p className="text-[9px] uppercase tracking-[0.4em] text-[#00AEEF] font-bold">Gallery</p>
-          <h2 className="text-base font-serif text-[#1E3A8A] leading-tight">{album.name}</h2>
+          <h2 className="text-base font-serif text-white leading-tight">{album.name}</h2>
         </div>
-        <span className="ml-auto text-xs text-slate-400">{album.images.length} items</span>
+        <span className="ml-auto text-xs text-white/40">{album.images.length} items</span>
       </div>
 
       {/* Grid */}
@@ -141,7 +141,7 @@ function GalleryView({
         {album.images.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <span className="text-4xl mb-3 opacity-30">🖼</span>
-            <p className="text-slate-400 text-sm">No images in this album yet</p>
+            <p className="text-white/40 text-sm">No images in this album yet</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
@@ -151,7 +151,7 @@ function GalleryView({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06, duration: 0.4 }}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#1E3A8A]/5 flex flex-col"
+                className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col"
               >
                 <div
                   className="aspect-[3/4] overflow-hidden cursor-pointer relative group"
@@ -162,33 +162,33 @@ function GalleryView({
                     alt={img.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
-                    <span className="opacity-0 group-hover:opacity-100 transition bg-white/90 text-[#1E3A8A] text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 transition bg-[#00AEEF] text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
                       View
                     </span>
                   </div>
                 </div>
 
                 <div className="p-3 flex flex-col gap-2 flex-1">
-                  <h4 className="text-[#1E3A8A] font-bold text-xs uppercase tracking-wide leading-tight line-clamp-2">
+                  <h4 className="text-white font-bold text-xs uppercase tracking-wide leading-tight line-clamp-2">
                     {img.title || "Untitled"}
                   </h4>
                   {img.price && (
-                    <p className="text-[#D4AF37] font-bold text-sm">{img.price}</p>
+                    <p className="text-[#00AEEF] font-bold text-sm">{img.price}</p>
                   )}
                   {img.description && (
-                    <p className="text-slate-400 text-[11px] leading-relaxed line-clamp-2">{img.description}</p>
+                    <p className="text-white/40 text-[11px] leading-relaxed line-clamp-2">{img.description}</p>
                   )}
                   <div className="mt-auto pt-2 flex flex-col gap-1.5">
                     <button
                       onClick={() => setSelectedImage(img)}
-                      className="w-full border border-[#1E3A8A]/30 text-[#1E3A8A] rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-[#1E3A8A]/5 transition"
+                      className="w-full border border-[#00AEEF]/30 text-[#00AEEF] rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-[#00AEEF]/10 transition"
                     >
                       View Item
                     </button>
                     <button
                       onClick={() => handleOrder(img)}
-                      className="w-full bg-[#1E3A8A] text-white rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-[#162d6e] active:scale-[0.98] transition"
+                      className="w-full bg-[#00AEEF] text-black rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
                     >
                       Order Now
                     </button>
@@ -216,9 +216,9 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#1E3A8A]/5 flex flex-col"
+      className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-[#EEF4F8] relative">
+      <div className="aspect-[4/3] overflow-hidden bg-black/40 relative">
         {album.cover || album.images[0]?.url ? (
           <img
             src={album.cover || album.images[0].url}
@@ -230,7 +230,7 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
             <span className="text-4xl opacity-20">🧵</span>
           </div>
         )}
-        <span className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+        <span className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-[#00AEEF]/20">
           {album.images.length} items
         </span>
       </div>
@@ -240,20 +240,20 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
           <p className="text-[9px] uppercase tracking-[0.4em] text-[#00AEEF] font-bold mb-1">
             {album.category}
           </p>
-          <h3 className="text-lg font-serif text-[#1E3A8A] leading-tight">{album.name}</h3>
+          <h3 className="text-lg font-serif text-white leading-tight">{album.name}</h3>
         </div>
 
         {album.description && (
-          <p className="text-slate-400 text-xs leading-relaxed line-clamp-3">{album.description}</p>
+          <p className="text-white/50 text-xs leading-relaxed line-clamp-3">{album.description}</p>
         )}
 
         {album.price && (
-          <p className="text-[#D4AF37] font-bold text-sm">From {album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">From {album.price}</p>
         )}
 
         <button
           onClick={onViewGallery}
-          className="mt-auto w-full bg-[#1E3A8A] text-white rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#162d6e] active:scale-[0.98] transition flex items-center justify-center gap-2"
+          className="mt-auto w-full bg-[#00AEEF] text-black rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition flex items-center justify-center gap-2"
         >
           <span>View Gallery</span>
           <span className="text-base">→</span>
@@ -273,15 +273,15 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#1E3A8A]/5 flex flex-col"
+      className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-[#EEF4F8] relative">
+      <div className="aspect-[4/3] overflow-hidden bg-black/40 relative">
         <img
           src={image?.url}
           alt={album.name}
           className="w-full h-full object-cover"
         />
-        <span className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+        <span className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-[#00AEEF]/20">
           1 item
         </span>
       </div>
@@ -291,20 +291,20 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
           <p className="text-[9px] uppercase tracking-[0.4em] text-[#00AEEF] font-bold mb-1">
             {album.category}
           </p>
-          <h3 className="text-lg font-serif text-[#1E3A8A] leading-tight">{album.name}</h3>
+          <h3 className="text-lg font-serif text-white leading-tight">{album.name}</h3>
         </div>
 
         {album.description && (
-          <p className="text-slate-400 text-xs leading-relaxed line-clamp-3">{album.description}</p>
+          <p className="text-white/50 text-xs leading-relaxed line-clamp-3">{album.description}</p>
         )}
 
         {album.price && (
-          <p className="text-[#D4AF37] font-bold text-sm">{album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">{album.price}</p>
         )}
 
         <button
           onClick={onViewSingle}
-          className="mt-auto w-full bg-[#1E3A8A] text-white rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#162d6e] active:scale-[0.98] transition flex items-center justify-center gap-2"
+          className="mt-auto w-full bg-[#00AEEF] text-black rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition flex items-center justify-center gap-2"
         >
           <span>View Item</span>
           <span className="text-base">→</span>
@@ -328,23 +328,18 @@ export default function FashionNatives() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch albums
         const albumsRes = await fetch(`${API}/api/fashion-albums`);
         const albumsData: Album[] = await albumsRes.json();
 
-        // 2. Fetch single items (from Quick Upload)
         const itemsRes = await fetch(`${API}/api/items`);
         const itemsData = await itemsRes.json();
 
-        // 3. Filter albums by category
         const filteredAlbums = albumsData.filter((a) => a.category === "natives");
 
-        // 4. Filter standalone items: no albumId and category natives
         const standaloneItems = itemsData.filter(
           (item: any) => !item.albumId && item.category === "natives"
         );
 
-        // 5. Convert standalone items into "fake albums" with isSingle flag
         const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
           id: `single-${item.id}`,
           name: item.title || "Single Item",
@@ -363,7 +358,6 @@ export default function FashionNatives() {
           ],
         }));
 
-        // 6. Combine both
         setAlbums([...filteredAlbums, ...singleItemsAsAlbums]);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -383,83 +377,119 @@ export default function FashionNatives() {
   };
 
   return (
-    <div className="min-h-screen bg-[#D9EAF0] text-slate-800 overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
+      {/* ─── FASHION MENU (overlay) ─────────────────────────────── */}
+      <FashionMenu
+        isFashionLanding={true}
+        initialOpen={menuOpen}
+        onOpenAction={() => setMenuOpen(true)}
+        onCloseAction={() => setMenuOpen(false)}
+      />
 
-      {/* Header */}
-     <header className="fixed top-0 left-0 w-full z-[100] flex items-center justify-start px-5 py-4 bg-white/50 backdrop-blur-xl border-b border-[#1E3A8A]/5">
-        <button
-          onClick={() => window.history.back()}
-          className="text-[#00AEEF] text-lg hover:scale-110 transition-transform"
-        >
-          ←
-        </button>
-        <div className="flex flex-col items-start ml-4">
-          <p className="text-[#00AEEF] text-[10px] tracking-[0.7em] uppercase font-bold">Native Collection</p>
-          <span className="text-[#1E3A8A]/30 text-[8px] tracking-[0.3em] uppercase">XCM Wardrobes</span>
+      {/* ─── MAIN CONTENT (blurred when menu is open) ──────────── */}
+      <div
+        className="transition-all duration-500"
+        style={{
+          opacity: menuOpen ? 0.18 : 1,
+          filter: menuOpen ? "blur(2px)" : "none",
+          pointerEvents: menuOpen ? "none" : "auto",
+        }}
+      >
+        {/* Dark background gradient */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(0,174,239,0.12),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(0,174,239,0.08),transparent_22%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black/90 to-black/95" />
         </div>
-        <FashionMenu onOpenAction={() => setMenuOpen(true)} onCloseAction={() => setMenuOpen(false)} />
-      </header>
 
-      {/* Hero strip */}
-      <div className="pt-24 px-5 py-10 border-b border-[#1E3A8A]/5 bg-white/20">
-        <h1 className="text-3xl md:text-5xl font-serif italic text-[#1E3A8A] mb-2">Natives</h1>
-        <p className="text-slate-500 text-sm font-light max-w-sm leading-relaxed">
-          Honoring roots through impeccable tailoring. Modern silhouettes crafted for the traditional soul.
-        </p>
+        {/* Header with hamburger button */}
+        <header className="relative z-10 flex items-center justify-between border-b border-[#00AEEF]/10 bg-black/80 px-5 py-4 backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => window.history.back()}
+              className="text-[#00AEEF] text-xl hover:scale-110 transition-transform"
+            >
+              ←
+            </button>
+            <div className="flex flex-col">
+              <p className="text-[#00AEEF] text-[10px] tracking-[0.7em] uppercase font-bold">Native Collection</p>
+              <span className="text-[#00AEEF]/40 text-[8px] tracking-[0.3em] uppercase">XCM Wardrobes</span>
+            </div>
+          </div>
+          {/* Hamburger button */}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="flex flex-col gap-[5px] group"
+            aria-label="Open menu"
+          >
+            <span className="block h-[1.5px] w-7 bg-[#00AEEF] transition-all group-hover:w-8" />
+            <span className="ml-auto block h-[1.5px] w-5 bg-[#00AEEF] transition-all group-hover:w-8" />
+            <span className="block h-[1.5px] w-7 bg-[#00AEEF] transition-all group-hover:w-8" />
+          </button>
+        </header>
+
+        {/* Hero strip */}
+        <div className="relative z-10 pt-24 px-5 pb-12 border-b border-[#00AEEF]/10 bg-black/30 backdrop-blur-sm">
+          <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">Natives</h1>
+          <p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
+            Honoring roots through impeccable tailoring. Modern silhouettes crafted for the traditional soul.
+          </p>
+        </div>
+
+        {/* Albums grid */}
+        <main className="relative z-10 px-4 py-8">
+          {loading ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="w-8 h-8 border-2 border-[#00AEEF]/20 border-t-[#00AEEF] rounded-full animate-spin" />
+            </div>
+          ) : albums.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <p className="text-white/40 text-lg font-serif italic">New arrivals coming soon.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {albums.map((album) =>
+                album.isSingle ? (
+                  <SingleCard
+                    key={album.id}
+                    album={album}
+                    onViewSingle={() => handleViewSingle(album)}
+                  />
+                ) : (
+                  <AlbumCard
+                    key={album.id}
+                    album={album}
+                    onViewGallery={() => setOpenAlbum(album)}
+                  />
+                )
+              )}
+            </div>
+          )}
+        </main>
+
+        {/* Footer */}
+        <footer className="relative z-10 border-t border-[#00AEEF]/8 bg-black py-14 text-center">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-5">
+            <div className="h-8 w-px bg-gradient-to-b from-[#00AEEF]/35 to-transparent" />
+            <p className="text-[8px] uppercase tracking-[1em] text-white/20">
+              © 2026 XCM • All Rights Reserved
+            </p>
+          </div>
+        </footer>
+
+        {/* Gallery overlay */}
+        <AnimatePresence>
+          {openAlbum && (
+            <GalleryView album={openAlbum} onClose={() => setOpenAlbum(null)} />
+          )}
+        </AnimatePresence>
+
+        {/* Single item modal */}
+        <AnimatePresence>
+          {singleItem && (
+            <ItemModal image={singleItem} onClose={() => setSingleItem(null)} />
+          )}
+        </AnimatePresence>
       </div>
-
-      {/* Albums grid */}
-      <main className="px-4 py-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="w-8 h-8 border-2 border-[#1E3A8A]/20 border-t-[#1E3A8A] rounded-full animate-spin" />
-          </div>
-        ) : albums.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-[#1E3A8A]/40 text-lg font-serif italic">New arrivals coming soon.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {albums.map((album) =>
-              album.isSingle ? (
-                <SingleCard
-                  key={album.id}
-                  album={album}
-                  onViewSingle={() => handleViewSingle(album)}
-                />
-              ) : (
-                <AlbumCard
-                  key={album.id}
-                  album={album}
-                  onViewGallery={() => setOpenAlbum(album)}
-                />
-              )
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="py-16 text-center bg-white/40">
-        <div className="h-10 w-[1px] bg-[#00AEEF] mx-auto mb-5" />
-        <p className="text-[8px] tracking-[1em] text-[#1E3A8A]/30 uppercase">
-          2026 XCM • All Right Reserve
-        </p>
-      </footer>
-
-      {/* Gallery overlay */}
-      <AnimatePresence>
-        {openAlbum && (
-          <GalleryView album={openAlbum} onClose={() => setOpenAlbum(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* Single item modal */}
-      <AnimatePresence>
-        {singleItem && (
-          <ItemModal image={singleItem} onClose={() => setSingleItem(null)} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
