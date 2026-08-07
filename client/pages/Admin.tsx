@@ -13,7 +13,17 @@ interface FashionAlbum {
   category: FashionCategory;
   description: string;
   price: string;
-  images: { url: string; title: string; description: string; price: string }[];
+  images: { id?: string; url: string; title: string; description: string; price: string }[]; // ✅ changed _id → id
+}
+
+interface SingleItem {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  category: string;
+  price: string;
+  albumId?: string;
 }
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
@@ -28,7 +38,7 @@ const FASHION_CATEGORIES: { value: FashionCategory; label: string; icon: string 
   { value: "natives", label: "Natives", icon: "🪡" },
   { value: "agbadas", label: "Agbada", icon: "✨" },
   { value: "suits", label: "Suits", icon: "🤵" },
-  { value: "latest", label: "Latest Collection", icon: "✨" }, // <-- add this
+  { value: "latest", label: "Latest Collection", icon: "✨" },
 ];
 
 const PHOTO_CATEGORIES: { value: PhotoCategory; label: string; icon: string }[] = [
@@ -41,15 +51,13 @@ const PHOTO_CATEGORIES: { value: PhotoCategory; label: string; icon: string }[] 
 ];
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
-// FIX: added explicit color-scheme and text color so native inputs/selects
-// render dark on all browsers (Chrome, Safari, Firefox on any OS).
 
 const inputCls = [
   "w-full rounded-xl border border-white/10 px-4 py-3 text-sm",
   "bg-[#111] text-white placeholder:text-white/30",
   "outline-none transition",
   "focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20",
-  "[color-scheme:dark]",   // ← key fix for date/select native chrome
+  "[color-scheme:dark]",
 ].join(" ");
 
 const textareaCls = [
@@ -68,11 +76,6 @@ const btnGold =
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-/**
- * pingServer: hits the lightweight GET /api/items endpoint to wake Render's
- * free-tier dyno before we send the real request. Waits up to 90s.
- * Returns true once the server responds (even with an error status).
- */
 async function pingServer(onStatus: (msg: string) => void): Promise<boolean> {
   onStatus("⏳ Waking up server… (this takes ~30s on first use)");
   const start = Date.now();
@@ -82,9 +85,9 @@ async function pingServer(onStatus: (msg: string) => void): Promise<boolean> {
         signal: AbortSignal.timeout(10_000),
         cache: "no-store",
       });
-      if (res.ok || res.status < 500) return true; // server is alive
+      if (res.ok || res.status < 500) return true;
     } catch {
-      // still sleeping — wait a beat and retry
+      // still sleeping
     }
     await new Promise((r) => setTimeout(r, 3000));
     const elapsed = Math.round((Date.now() - start) / 1000);
@@ -93,17 +96,11 @@ async function pingServer(onStatus: (msg: string) => void): Promise<boolean> {
   return false;
 }
 
-/**
- * fetchWithWakeup: pings the server first so it's warm, then sends the real
- * request. On Render free tier the cold start takes 20–60s; this makes the
- * wait visible and friendly instead of a blunt "Network error".
- */
 async function fetchWithWakeup(
   url: string,
   options: RequestInit,
   onStatus: (msg: string) => void
 ): Promise<Response> {
-  // Quick probe — if server is already warm this resolves in < 1s
   let alive = false;
   try {
     const probe = await fetch(`${API}/api/items`, {
@@ -121,10 +118,9 @@ async function fetchWithWakeup(
       throw new Error("Server did not wake up in time");
     }
     onStatus("✅ Server is ready! Submitting…");
-    await new Promise((r) => setTimeout(r, 300)); // tiny pause so user sees the message
+    await new Promise((r) => setTimeout(r, 300));
   }
 
-  // Now send the real request
   return fetch(url, { ...options, signal: AbortSignal.timeout(60_000) });
 }
 
@@ -208,7 +204,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── FASHION TAB
+// ── FASHION TAB (with delete)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FashionTab() {
@@ -242,6 +238,10 @@ function FashionTab() {
 
   const [mode, setMode] = useState<"albums" | "single">("albums");
 
+  const [singles, setSingles] = useState<SingleItem[]>([]);
+  const [loadingSingles, setLoadingSingles] = useState(false);
+  const [deletingSingleId, setDeletingSingleId] = useState<string | null>(null);
+
   const fetchAlbums = async () => {
     setLoadingAlbums(true);
     try {
@@ -251,15 +251,102 @@ function FashionTab() {
     setLoadingAlbums(false);
   };
 
-  useEffect(() => { fetchAlbums(); }, []);
+  const fetchSingles = async () => {
+    setLoadingSingles(true);
+    try {
+      const res = await fetch(`${API}/api/items`);
+      if (res.ok) {
+        const all = await res.json();
+        const fashionSingles = all.filter(
+          (item: any) => !item.albumId && FASHION_CATEGORIES.some((c) => c.value === item.category)
+        );
+        setSingles(fashionSingles);
+      }
+    } catch {}
+    setLoadingSingles(false);
+  };
 
+  useEffect(() => {
+    fetchAlbums();
+    fetchSingles();
+  }, []);
+
+  // ─── Delete album ──────────────────────────────────────────────────────────
+  const deleteAlbum = async (albumId: string) => {
+    if (!window.confirm("Delete this album and all its images? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`${API}/api/fashion-albums/${albumId}`, {
+        method: "DELETE",
+        headers: AUTH_HEADER,
+      });
+      if (res.status === 404) {
+        alert("Delete endpoint not found. Please implement DELETE /api/fashion-albums/:id on your backend.");
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to delete album");
+      fetchAlbums();
+      if (selectedAlbum?.id === albumId) setSelectedAlbum(null);
+    } catch (err) {
+      alert("Error deleting album. Try again.");
+    }
+  };
+
+  // ─── Delete image from album ──────────────────────────────────────────────
+  const deleteImage = async (albumId: string, imageId: string) => {
+    if (!window.confirm("Delete this image? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`${API}/api/fashion-albums/${albumId}/images/${imageId}`, {
+        method: "DELETE",
+        headers: AUTH_HEADER,
+      });
+      if (res.status === 404) {
+        alert("Delete endpoint not found. Please implement DELETE /api/fashion-albums/:albumId/images/:imageId on your backend.");
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to delete image");
+      fetchAlbums();
+      setSelectedAlbum((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          images: prev.images.filter((img) => img.id !== imageId), // ✅ uses id
+        };
+      });
+    } catch (err) {
+      alert("Error deleting image. Try again.");
+    }
+  };
+
+  // ─── Delete single item ────────────────────────────────────────────────────
+  const deleteSingle = async (itemId: string) => {
+    if (!window.confirm("Delete this single item? This cannot be undone.")) return;
+    setDeletingSingleId(itemId);
+    try {
+      const res = await fetch(`${API}/api/items/${itemId}`, {
+        method: "DELETE",
+        headers: AUTH_HEADER,
+      });
+      if (res.status === 404) {
+        alert("Delete endpoint not found. Please implement DELETE /api/items/:id on your backend.");
+        setDeletingSingleId(null);
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to delete single item");
+      fetchSingles();
+    } catch (err) {
+      alert("Error deleting single item. Try again.");
+    } finally {
+      setDeletingSingleId(null);
+    }
+  };
+
+  // ─── Create album ──────────────────────────────────────────────────────────
   const handleCreateAlbum = async (e: FormEvent) => {
     e.preventDefault();
     if (!newAlbumName.trim()) return setCreateMsg("Album name is required");
     setCreatingAlbum(true);
     setCreateMsg("");
     try {
-      // Send as FormData so we can include the cover image file
       const fd = new FormData();
       fd.append("name", newAlbumName);
       fd.append("category", newAlbumCategory);
@@ -284,6 +371,7 @@ function FashionTab() {
     }
   };
 
+  // ─── Add image ─────────────────────────────────────────────────────────────
   const handleAddImage = async (e: FormEvent) => {
     e.preventDefault();
     if (!imgFile || !selectedAlbum) return setAddImgMsg("Select an image");
@@ -308,7 +396,9 @@ function FashionTab() {
       setAddImgMsg("✅ Image added!");
       setImgFile(null); setImgTitle(""); setImgDesc(""); setImgPrice("");
       fetchAlbums();
-      setSelectedAlbum((prev) => prev ? { ...prev, images: [...prev.images, d.image] } : prev);
+      setSelectedAlbum((prev) =>
+        prev ? { ...prev, images: [...prev.images, d.image] } : prev
+      );
     } catch {
       setAddImgMsg("❌ Could not reach server. Try again.");
     } finally {
@@ -316,6 +406,7 @@ function FashionTab() {
     }
   };
 
+  // ─── Single upload ─────────────────────────────────────────────────────────
   const handleSingleUpload = async (e: FormEvent) => {
     e.preventDefault();
     if (!singleFile) return setSingleMsg("Select an image");
@@ -338,6 +429,7 @@ function FashionTab() {
       if (!res.ok) return setSingleMsg(d.message || "Upload failed");
       setSingleMsg("✅ Uploaded!");
       setSingleFile(null); setSingleTitle(""); setSingleDesc(""); setSinglePrice("");
+      fetchSingles();
     } catch {
       setSingleMsg("❌ Could not reach server. Try again.");
     } finally {
@@ -363,27 +455,73 @@ function FashionTab() {
       </div>
 
       {mode === "single" ? (
-        <form onSubmit={handleSingleUpload} className={`${cardCls} space-y-4`}>
-          <SectionTitle>Quick Single Upload</SectionTitle>
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Category">
-              <select value={singleCat} onChange={(e) => setSingleCat(e.target.value as FashionCategory)} className={inputCls}>
-                {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
-              </select>
+        <div className="space-y-5">
+          <form onSubmit={handleSingleUpload} className={`${cardCls} space-y-4`}>
+            <SectionTitle>Quick Single Upload</SectionTitle>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Category">
+                <select value={singleCat} onChange={(e) => setSingleCat(e.target.value as FashionCategory)} className={inputCls}>
+                  {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                </select>
+              </Field>
+              <Field label="Price (₦)">
+                <input placeholder="e.g. ₦85,000" value={singlePrice} onChange={(e) => setSinglePrice(e.target.value)} className={inputCls} />
+              </Field>
+            </div>
+            <Field label="Title">
+              <input placeholder="Item name" value={singleTitle} onChange={(e) => setSingleTitle(e.target.value)} className={inputCls} />
             </Field>
-            <Field label="Price (₦)">
-              <input placeholder="e.g. ₦85,000" value={singlePrice} onChange={(e) => setSinglePrice(e.target.value)} className={inputCls} />
+            <Field label="Description">
+              <textarea placeholder="Describe the piece…" value={singleDesc} onChange={(e) => setSingleDesc(e.target.value)} className={textareaCls} />
             </Field>
+            <UploadBox label="Image *" single onChange={(f) => setSingleFile(f[0] || null)} previewFiles={singleFile ? [singleFile] : []} />
+            <FormFooter msg={singleMsg} loading={singleLoading} label="Upload Item" />
+          </form>
+
+          {/* Manage Singles */}
+          <div className={cardCls}>
+            <div className="flex items-center justify-between">
+              <SectionTitle>Manage Singles ({singles.length})</SectionTitle>
+              <button onClick={fetchSingles} className="text-xs text-white/30 hover:text-white/60 transition">↻ Refresh</button>
+            </div>
+            {loadingSingles ? (
+              <p className="text-white/30 text-sm py-4 text-center">Loading…</p>
+            ) : singles.length === 0 ? (
+              <p className="text-white/25 text-sm italic py-4 text-center">No single items uploaded yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {singles.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] px-3 py-2"
+                  >
+                    <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover border border-white/10" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
+                      <p className="text-xs text-white/35 truncate">{item.category} {item.price && `· ${item.price}`}</p>
+                    </div>
+                    <button
+                      onClick={() => deleteSingle(item.id)}
+                      disabled={deletingSingleId === item.id}
+                      className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center disabled:opacity-40"
+                    >
+                      {deletingSingleId === item.id ? (
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <Field label="Title">
-            <input placeholder="Item name" value={singleTitle} onChange={(e) => setSingleTitle(e.target.value)} className={inputCls} />
-          </Field>
-          <Field label="Description">
-            <textarea placeholder="Describe the piece…" value={singleDesc} onChange={(e) => setSingleDesc(e.target.value)} className={textareaCls} />
-          </Field>
-          <UploadBox label="Image *" single onChange={(f) => setSingleFile(f[0] || null)} previewFiles={singleFile ? [singleFile] : []} />
-          <FormFooter msg={singleMsg} loading={singleLoading} label="Upload Item" />
-        </form>
+        </div>
       ) : (
         <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
           {/* Left: Create + list */}
@@ -421,23 +559,35 @@ function FashionTab() {
               ) : (
                 <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
                   {albums.map((album) => (
-                    <button
+                    <div
                       key={album.id}
-                      onClick={() => setSelectedAlbum(album)}
-                      className={`w-full text-left rounded-xl px-4 py-3 transition border ${
+                      className={`flex items-center gap-2 rounded-xl px-3 py-2 transition border ${
                         selectedAlbum?.id === album.id
                           ? "border-[#D4AF37]/60 bg-[#D4AF37]/10"
                           : "border-white/[0.07] bg-[#0d0d0d] hover:border-white/20"
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-white text-sm font-medium">{album.name}</p>
-                          <p className="text-white/35 text-xs capitalize mt-0.5">{album.category}</p>
+                      <button
+                        onClick={() => setSelectedAlbum(album)}
+                        className="flex-1 text-left min-w-0"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-white text-sm font-medium truncate">{album.name}</p>
+                            <p className="text-white/35 text-xs capitalize mt-0.5">{album.category}</p>
+                          </div>
+                          <span className="text-[#D4AF37]/60 text-xs shrink-0 tabular-nums">{album.images?.length || 0} imgs</span>
                         </div>
-                        <span className="text-[#D4AF37]/60 text-xs shrink-0 tabular-nums">{album.images?.length || 0} imgs</span>
-                      </div>
-                    </button>
+                      </button>
+                      <button
+                        onClick={() => deleteAlbum(album.id)}
+                        className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                        </svg>
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -486,6 +636,15 @@ function FashionTab() {
                           <p className="text-white text-xs font-medium">{img.title}</p>
                           {img.price && <p className="text-[#D4AF37] text-xs">{img.price}</p>}
                         </div>
+                        <button
+                          onClick={() => img.id && deleteImage(selectedAlbum.id, img.id)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white/80 hover:bg-red-500/80 hover:text-white transition flex items-center justify-center opacity-0 group-hover:opacity-100"
+                          title="Delete image"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -505,7 +664,7 @@ function FashionTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── PHOTO TAB
+// ── PHOTO TAB (unchanged)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function PhotoTab() {
@@ -639,7 +798,7 @@ function PhotoTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── REAL ESTATE TAB
+// ── REAL ESTATE TAB (unchanged)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function RealEstateTab() {
@@ -760,7 +919,6 @@ export default function Admin() {
   if (!isAuthed) {
     return (
       <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
-        {/* subtle grid bg */}
         <div className="pointer-events-none fixed inset-0 opacity-[0.03]"
           style={{ backgroundImage: "linear-gradient(#D4AF37 1px, transparent 1px), linear-gradient(90deg, #D4AF37 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
 
