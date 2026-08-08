@@ -374,8 +374,9 @@ export default function FashionPage() {
       .then((res) => res.json())
       .then((data: any[]) => {
         if (!isMounted) return;
+        // ✅ FIX: show only cover images (items with no album_id)
         const latest = Array.isArray(data)
-          ? data.filter((item) => item.category === "latest")
+          ? data.filter((item) => item.category === "latest" && !item.album_id)
           : [];
         setLatestItems(latest);
       })
@@ -432,11 +433,13 @@ export default function FashionPage() {
         selectedImg ? "h-screen overflow-hidden" : ""
       }`}
     >
+      {/* ─── FASHION MENU (overlay) – with hideHamburger ─────── */}
       <FashionMenu
         isFashionLanding={true}
         initialOpen={isMenuOpen}
         onOpenAction={() => setIsMenuOpen(true)}
         onCloseAction={() => setIsMenuOpen(false)}
+        hideHamburger={true} // ✅ prevents duplicate hamburger
       />
 
       <AnimatePresence>
@@ -495,6 +498,7 @@ export default function FashionPage() {
             </span>
           </div>
 
+          {/* Hamburger button – only this one remains */}
           <button
             onClick={() => setIsMenuOpen(true)}
             className="flex flex-col gap-[5px] group"

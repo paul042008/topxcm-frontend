@@ -13,7 +13,7 @@ interface FashionAlbum {
   category: FashionCategory;
   description: string;
   price: string;
-  images: { id?: string; url: string; title: string; description: string; price: string }[]; // ✅ changed _id → id
+  images: { id?: string; url: string; title: string; description: string; price: string; extra_text?: string }[];
 }
 
 interface SingleItem {
@@ -23,7 +23,7 @@ interface SingleItem {
   image: string;
   category: string;
   price: string;
-  albumId?: string;
+  album_id?: string;
 }
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
@@ -204,7 +204,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── FASHION TAB (with delete)
+// ── FASHION TAB (updated for extra_text support)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FashionTab() {
@@ -216,6 +216,8 @@ function FashionTab() {
   const [newAlbumDesc, setNewAlbumDesc] = useState("");
   const [newAlbumPrice, setNewAlbumPrice] = useState("");
   const [newAlbumCover, setNewAlbumCover] = useState<File | null>(null);
+  const [newAlbumInitialImage, setNewAlbumInitialImage] = useState<File | null>(null);
+  const [newAlbumExtraText, setNewAlbumExtraText] = useState(""); // NEW
   const [creatingAlbum, setCreatingAlbum] = useState(false);
   const [createMsg, setCreateMsg] = useState("");
 
@@ -225,6 +227,7 @@ function FashionTab() {
   const [imgTitle, setImgTitle] = useState("");
   const [imgDesc, setImgDesc] = useState("");
   const [imgPrice, setImgPrice] = useState("");
+  const [imgExtraText, setImgExtraText] = useState(""); // NEW
   const [addingImg, setAddingImg] = useState(false);
   const [addImgMsg, setAddImgMsg] = useState("");
 
@@ -258,7 +261,7 @@ function FashionTab() {
       if (res.ok) {
         const all = await res.json();
         const fashionSingles = all.filter(
-          (item: any) => !item.albumId && FASHION_CATEGORIES.some((c) => c.value === item.category)
+          (item: any) => !item.album_id && FASHION_CATEGORIES.some((c) => c.value === item.category)
         );
         setSingles(fashionSingles);
       }
@@ -309,7 +312,7 @@ function FashionTab() {
         if (!prev) return prev;
         return {
           ...prev,
-          images: prev.images.filter((img) => img.id !== imageId), // ✅ uses id
+          images: prev.images.filter((img) => img.id !== imageId),
         };
       });
     } catch (err) {
@@ -340,10 +343,11 @@ function FashionTab() {
     }
   };
 
-  // ─── Create album ──────────────────────────────────────────────────────────
+  // ─── Create album (now sends initialExtraText) ───────────────────────────
   const handleCreateAlbum = async (e: FormEvent) => {
     e.preventDefault();
     if (!newAlbumName.trim()) return setCreateMsg("Album name is required");
+    if (!newAlbumCover) return setCreateMsg("Cover image is required");
     setCreatingAlbum(true);
     setCreateMsg("");
     try {
@@ -352,7 +356,11 @@ function FashionTab() {
       fd.append("category", newAlbumCategory);
       fd.append("description", newAlbumDesc);
       fd.append("price", newAlbumPrice);
-      if (newAlbumCover) fd.append("cover", newAlbumCover);
+      fd.append("cover", newAlbumCover);
+      if (newAlbumInitialImage) {
+        fd.append("initialImage", newAlbumInitialImage);
+        fd.append("initialExtraText", newAlbumExtraText); // NEW
+      }
 
       const res = await fetchWithWakeup(
         `${API}/api/fashion-albums`,
@@ -362,7 +370,10 @@ function FashionTab() {
       const d = await res.json();
       if (!res.ok) return setCreateMsg(d.message || "Failed to create album");
       setCreateMsg("✅ Album created!");
-      setNewAlbumName(""); setNewAlbumDesc(""); setNewAlbumPrice(""); setNewAlbumCover(null);
+      setNewAlbumName(""); setNewAlbumDesc(""); setNewAlbumPrice("");
+      setNewAlbumCover(null);
+      setNewAlbumInitialImage(null);
+      setNewAlbumExtraText("");
       fetchAlbums();
     } catch {
       setCreateMsg("❌ Server timed out. Wait 30s and try again — Render free tier sleeps.");
@@ -371,7 +382,7 @@ function FashionTab() {
     }
   };
 
-  // ─── Add image ─────────────────────────────────────────────────────────────
+  // ─── Add image (now sends extraText) ─────────────────────────────────────
   const handleAddImage = async (e: FormEvent) => {
     e.preventDefault();
     if (!imgFile || !selectedAlbum) return setAddImgMsg("Select an image");
@@ -385,6 +396,7 @@ function FashionTab() {
       fd.append("price", imgPrice);
       fd.append("albumId", selectedAlbum.id);
       fd.append("category", selectedAlbum.category);
+      fd.append("extraText", imgExtraText); // NEW
 
       const res = await fetchWithWakeup(
         `${API}/api/fashion-albums/${selectedAlbum.id}/images`,
@@ -395,6 +407,7 @@ function FashionTab() {
       if (!res.ok) return setAddImgMsg(d.message || "Failed to add image");
       setAddImgMsg("✅ Image added!");
       setImgFile(null); setImgTitle(""); setImgDesc(""); setImgPrice("");
+      setImgExtraText("");
       fetchAlbums();
       setSelectedAlbum((prev) =>
         prev ? { ...prev, images: [...prev.images, d.image] } : prev
@@ -542,7 +555,17 @@ function FashionTab() {
               <Field label="Default Price (₦)">
                 <input placeholder="e.g. ₦60,000" value={newAlbumPrice} onChange={(e) => setNewAlbumPrice(e.target.value)} className={inputCls} />
               </Field>
-              <UploadBox label="Cover Image (optional)" single onChange={(f) => setNewAlbumCover(f[0] || null)} previewFiles={newAlbumCover ? [newAlbumCover] : []} />
+              <UploadBox label="Cover Image *" single onChange={(f) => setNewAlbumCover(f[0] || null)} previewFiles={newAlbumCover ? [newAlbumCover] : []} />
+              <UploadBox label="Initial Album Image (optional) – will appear inside the album" single onChange={(f) => setNewAlbumInitialImage(f[0] || null)} previewFiles={newAlbumInitialImage ? [newAlbumInitialImage] : []} />
+              <Field label="Extra Text for Initial Image (optional)">
+                <textarea
+                  placeholder="Additional info for this image (e.g., fabric details, size guide)"
+                  value={newAlbumExtraText}
+                  onChange={(e) => setNewAlbumExtraText(e.target.value)}
+                  className={textareaCls}
+                  style={{ minHeight: 60 }}
+                />
+              </Field>
               <FormFooter msg={createMsg} loading={creatingAlbum} label="Create Album" />
             </form>
 
@@ -622,6 +645,15 @@ function FashionTab() {
                   <textarea placeholder="Describe this specific piece…" value={imgDesc} onChange={(e) => setImgDesc(e.target.value)} className={textareaCls} style={{ minHeight: 64 }} />
                 </Field>
                 <UploadBox label="Image File *" single onChange={(f) => setImgFile(f[0] || null)} previewFiles={imgFile ? [imgFile] : []} />
+                <Field label="Extra Text (optional)">
+                  <textarea
+                    placeholder="Additional info for this image"
+                    value={imgExtraText}
+                    onChange={(e) => setImgExtraText(e.target.value)}
+                    className={textareaCls}
+                    style={{ minHeight: 60 }}
+                  />
+                </Field>
                 <FormFooter msg={addImgMsg} loading={addingImg} label="Add Image to Album" />
               </form>
 
@@ -668,6 +700,7 @@ function FashionTab() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function PhotoTab() {
+  // ... (unchanged, keep as is)
   const [photoCategory, setPhotoCategory] = useState<PhotoCategory>("portraits");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

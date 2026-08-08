@@ -7,11 +7,13 @@ export default function FashionMenu({
   initialOpen = false,
   onOpenAction,
   onCloseAction,
+  hideHamburger = false, // ← new prop
 }: {
   isFashionLanding?: boolean;
   initialOpen?: boolean;
   onOpenAction?: () => void;
   onCloseAction?: () => void;
+  hideHamburger?: boolean;
 }) {
   const [open, setOpen] = useState(initialOpen);
 
@@ -37,8 +39,8 @@ export default function FashionMenu({
 
   return (
     <>
-      {/* ── HAMBURGER (TOP RIGHT) ── (unchanged – already blue) */}
-      {!open && (
+      {/* ── HAMBURGER (only if not hidden) ── */}
+      {!open && !hideHamburger && (
         <button
           onClick={handleOpen}
           className="fixed top-6 right-6 z-[9999] flex flex-col gap-[5px]"
@@ -49,10 +51,9 @@ export default function FashionMenu({
         </button>
       )}
 
-      {/* ── MENU ── */}
+      {/* ── MENU OVERLAY ── */}
       {open && (
         <div className="fixed inset-0 z-[10000] flex flex-col bg-black w-screen h-screen overflow-hidden animate-in fade-in duration-300">
-
           {/* ── HEADER ── */}
           <div className="w-full px-8 pt-12 flex justify-between items-center">
             <div className="flex flex-col gap-0.5">
