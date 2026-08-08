@@ -103,7 +103,7 @@ function HeroLightbox({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+        className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -111,7 +111,7 @@ function HeroLightbox({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-[#111] rounded-2xl border border-[#00AEEF]/20 overflow-hidden"
+          className="relative w-full max-w-full sm:max-w-6xl max-h-[95vh] flex flex-col bg-[#111] rounded-2xl border border-[#00AEEF]/20 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between px-4 py-3 bg-[#1a1a1a] border-b border-white/5">
@@ -179,7 +179,7 @@ function HeroLightbox({
   );
 }
 
-// ─── ITEM MODAL (with zoom + pan, full order flow) ─────────────────────────
+// ─── ITEM MODAL (for single items – kept for backwards compatibility) ──────
 
 function ItemModal({
   image,
@@ -344,7 +344,170 @@ function ItemModal({
   );
 }
 
-// ─── GALLERY VIEW ──────────────────────────────────────────────────────────
+// ─── PRODUCT CARD (for grouped images) ─────────────────────────────────────
+
+function ProductCard({
+  productTitle,
+  images,
+  onOrder,
+}: {
+  productTitle: string;
+  images: AlbumImage[];
+  onOrder: (title: string, price: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const firstImage = images[0];
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleOrder = () => {
+    const price = firstImage.price || '';
+    onOrder(productTitle, price);
+  };
+
+  return (
+    <>
+      {/* Card */}
+      <div className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col">
+        <div
+          className="aspect-[4/3] overflow-hidden cursor-pointer relative group"
+          onClick={() => setIsOpen(true)}
+        >
+          <img
+            src={firstImage.url}
+            alt={productTitle}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          {images.length > 1 && (
+            <div className="absolute bottom-2 right-2 bg-black/70 text-white/80 text-[10px] px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+              <span>📷</span> {images.length}
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+            <span className="opacity-0 group-hover:opacity-100 transition bg-[#00AEEF] text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+              View
+            </span>
+          </div>
+        </div>
+
+        <div className="p-4 flex flex-col gap-2 flex-1">
+          <h4 className="text-white font-bold text-sm uppercase tracking-wide leading-tight">
+            {productTitle}
+          </h4>
+          {firstImage.price && (
+            <p className="text-[#00AEEF] font-bold text-base">{firstImage.price}</p>
+          )}
+          {firstImage.description && (
+            <p className="text-white/50 text-xs leading-relaxed line-clamp-2">
+              {firstImage.description}
+            </p>
+          )}
+          <button
+            onClick={handleOrder}
+            className="mt-auto w-full bg-[#00AEEF] text-black rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
+          >
+            Order Now
+          </button>
+        </div>
+      </div>
+
+      {/* Lightbox with carousel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative w-full max-w-full sm:max-w-6xl max-h-[95vh] flex flex-col bg-[#111] rounded-2xl border border-[#00AEEF]/20 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 bg-[#1a1a1a] border-b border-white/5">
+                <h3 className="text-white font-semibold text-sm truncate">
+                  {productTitle}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-white/40 text-xs">
+                    {currentIndex + 1} / {images.length}
+                  </span>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-white/60 hover:text-white transition p-1 text-lg"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative w-full overflow-hidden bg-black/40" style={{ aspectRatio: "4/5" }}>
+                <img
+                  src={images[currentIndex].url}
+                  alt={productTitle}
+                  className="w-full h-full object-contain"
+                />
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={handlePrev}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-black/50 text-white hover:bg-black/80 transition flex items-center justify-center text-2xl sm:text-xl"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={handleNext}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-black/50 text-white hover:bg-black/80 transition flex items-center justify-center text-2xl sm:text-xl"
+                    >
+                      ›
+                    </button>
+                  </>
+                )}
+                {images[currentIndex].extra_text && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm max-w-[80%] text-center">
+                    {images[currentIndex].extra_text}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 bg-black/80 flex gap-3 items-center flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-bold text-sm">{productTitle}</p>
+                  {images[currentIndex].price && (
+                    <p className="text-[#00AEEF] text-sm">{images[currentIndex].price}</p>
+                  )}
+                </div>
+                <button
+                  onClick={handleOrder}
+                  className="bg-[#00AEEF] text-black rounded-xl px-6 py-2.5 text-sm font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition shrink-0"
+                >
+                  Order Now
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// ─── GALLERY VIEW (with grouping) ──────────────────────────────────────────
 
 function GalleryView({
   album,
@@ -356,21 +519,23 @@ function GalleryView({
   const [heroLightbox, setHeroLightbox] = useState<{ url: string; extra_text?: string } | null>(null);
   const [modalImage, setModalImage] = useState<AlbumImage | null>(null);
 
-  const heroImage = album.images.length > 0 ? album.images[0] : null;
-  const productImages = album.images.slice(1);
+  const grouped = album.images.reduce((acc, img) => {
+    const key = img.title || 'untitled';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(img);
+    return acc;
+  }, {} as Record<string, AlbumImage[]>);
 
-  const handleHeroClick = () => {
-    if (heroImage) {
-      setHeroLightbox({ url: heroImage.url, extra_text: heroImage.extra_text });
-    }
-  };
+  const productGroups = Object.entries(grouped).map(([title, images]) => ({
+    title,
+    images,
+  }));
 
-  const handleProductClick = (img: AlbumImage) => {
-    setModalImage(img);
-  };
+  const heroGroup = productGroups.length > 0 ? productGroups[0] : null;
+  const restGroups = productGroups.slice(1);
 
-  const handleOrder = (img: AlbumImage) => {
-    const msg = `Hi! I'm interested in ordering: *${img.title}*${img.price ? ` (${img.price})` : ""}. Please let me know the details.`;
+  const handleOrder = (title: string, price: string) => {
+    const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (${price})` : ""}. Please let me know the details.`;
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -396,25 +561,21 @@ function GalleryView({
         <span className="ml-auto text-xs text-white/40">{album.images.length} items</span>
       </div>
 
-      {heroImage && (
+      {heroGroup && (
         <div className="px-4 pt-4 pb-2">
           <div
             className="relative overflow-hidden rounded-2xl border border-[#00AEEF]/10 cursor-pointer group aspect-[16/9]"
-            onClick={handleHeroClick}
+            onClick={() => setHeroLightbox({ url: heroGroup.images[0].url, extra_text: heroGroup.images[0].extra_text })}
           >
             <img
-              src={heroImage.url}
-              alt={heroImage.title || "Featured"}
+              src={heroGroup.images[0].url}
+              alt={heroGroup.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6">
               <div>
                 <p className="text-[#00AEEF] text-[10px] uppercase tracking-[0.4em] font-bold">Featured</p>
-                {heroImage.extra_text ? (
-                  <p className="text-white text-lg font-bold">{heroImage.extra_text}</p>
-                ) : (
-                  <p className="text-white text-lg font-bold">{heroImage.title}</p>
-                )}
+                <p className="text-white text-lg font-bold">{heroGroup.title}</p>
               </div>
             </div>
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
@@ -437,71 +598,19 @@ function GalleryView({
         </div>
       )}
 
-      {productImages.length > 0 && (
+      {restGroups.length > 0 && (
         <div className="px-4 py-4 max-w-7xl mx-auto">
-          <p className="text-white/40 text-xs uppercase tracking-[0.5em] mb-4">More from this collection</p>
+          <p className="text-white/40 text-xs uppercase tracking-[0.5em] mb-4">
+            More from this collection
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {productImages.map((img, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06, duration: 0.4 }}
-                className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col group relative"
-              >
-                <div
-                  className="aspect-[4/3] overflow-hidden cursor-pointer relative"
-                  onClick={() => handleProductClick(img)}
-                >
-                  <img
-                    src={img.url}
-                    alt={img.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center">
-                    <span className="opacity-0 group-hover:opacity-100 transition bg-[#00AEEF] text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
-                      View
-                    </span>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white/80 p-1.5 rounded-full opacity-60 group-hover:opacity-100 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8" />
-                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      <line x1="11" y1="8" x2="11" y2="14" />
-                      <line x1="8" y1="11" x2="14" y2="11" />
-                    </svg>
-                  </div>
-                  <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white/70 text-[9px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition">
-                    Tap to zoom
-                  </div>
-                </div>
-
-                <div className="p-4 flex flex-col gap-2 flex-1">
-                  <h4 className="text-white font-bold text-sm uppercase tracking-wide leading-tight line-clamp-2">
-                    {img.title || "Untitled"}
-                  </h4>
-                  {img.price && (
-                    <p className="text-[#00AEEF] font-bold text-base">{img.price}</p>
-                  )}
-                  {img.description && (
-                    <p className="text-white/50 text-xs leading-relaxed line-clamp-2">{img.description}</p>
-                  )}
-                  <div className="mt-auto pt-2 flex flex-col gap-2">
-                    <button
-                      onClick={() => handleProductClick(img)}
-                      className="w-full border border-[#00AEEF]/30 text-[#00AEEF] rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#00AEEF]/10 transition"
-                    >
-                      View Item
-                    </button>
-                    <button
-                      onClick={() => handleOrder(img)}
-                      className="w-full bg-[#00AEEF] text-black rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
-                    >
-                      Order Now
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
+            {restGroups.map((group) => (
+              <ProductCard
+                key={group.title}
+                productTitle={group.title}
+                images={group.images}
+                onOrder={handleOrder}
+              />
             ))}
           </div>
         </div>
@@ -678,7 +787,6 @@ export default function FashionCasuals() {
 
         const filteredAlbums = albumsData.filter((a) => a.category === "casuals");
 
-        // ✅ Correct filter: exclude items that belong to an album (album_id) or are album covers (album_name)
         const standaloneItems = itemsData.filter(
           (item: any) => !item.album_id && !item.album_name && item.category === "casuals"
         );
@@ -721,16 +829,14 @@ export default function FashionCasuals() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
-      {/* ─── FASHION MENU (overlay) ─────────────────────────────── */}
       <FashionMenu
         isFashionLanding={true}
         initialOpen={menuOpen}
         onOpenAction={() => setMenuOpen(true)}
         onCloseAction={() => setMenuOpen(false)}
-        hideHamburger={true} // ✅ prevents duplicate hamburger
+        hideHamburger={true}
       />
 
-      {/* ─── MAIN CONTENT (blurred when menu is open) ──────────── */}
       <div
         className="transition-all duration-500"
         style={{
