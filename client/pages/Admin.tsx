@@ -204,7 +204,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── FASHION TAB (updated for extra_text support)
+// ── FASHION TAB (UPDATED for multiple image uploads) ──────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FashionTab() {
@@ -217,17 +217,18 @@ function FashionTab() {
   const [newAlbumPrice, setNewAlbumPrice] = useState("");
   const [newAlbumCover, setNewAlbumCover] = useState<File | null>(null);
   const [newAlbumInitialImage, setNewAlbumInitialImage] = useState<File | null>(null);
-  const [newAlbumExtraText, setNewAlbumExtraText] = useState(""); // NEW
+  const [newAlbumExtraText, setNewAlbumExtraText] = useState("");
   const [creatingAlbum, setCreatingAlbum] = useState(false);
   const [createMsg, setCreateMsg] = useState("");
 
   const [selectedAlbum, setSelectedAlbum] = useState<FashionAlbum | null>(null);
 
-  const [imgFile, setImgFile] = useState<File | null>(null);
+  // ─── MULTIPLE FILES ────────────────────────────────────────────────────────
+  const [imgFiles, setImgFiles] = useState<File[]>([]);
   const [imgTitle, setImgTitle] = useState("");
   const [imgDesc, setImgDesc] = useState("");
   const [imgPrice, setImgPrice] = useState("");
-  const [imgExtraText, setImgExtraText] = useState(""); // NEW
+  const [imgExtraText, setImgExtraText] = useState("");
   const [addingImg, setAddingImg] = useState(false);
   const [addImgMsg, setAddImgMsg] = useState("");
 
@@ -343,7 +344,7 @@ function FashionTab() {
     }
   };
 
-  // ─── Create album (now sends initialExtraText) ───────────────────────────
+  // ─── Create album ──────────────────────────────────────────────────────────
   const handleCreateAlbum = async (e: FormEvent) => {
     e.preventDefault();
     if (!newAlbumName.trim()) return setCreateMsg("Album name is required");
@@ -359,7 +360,7 @@ function FashionTab() {
       fd.append("cover", newAlbumCover);
       if (newAlbumInitialImage) {
         fd.append("initialImage", newAlbumInitialImage);
-        fd.append("initialExtraText", newAlbumExtraText); // NEW
+        fd.append("initialExtraText", newAlbumExtraText);
       }
 
       const res = await fetchWithWakeup(
@@ -382,21 +383,22 @@ function FashionTab() {
     }
   };
 
-  // ─── Add image (now sends extraText) ─────────────────────────────────────
+  // ─── Add multiple images to album ─────────────────────────────────────────
   const handleAddImage = async (e: FormEvent) => {
     e.preventDefault();
-    if (!imgFile || !selectedAlbum) return setAddImgMsg("Select an image");
+    if (imgFiles.length === 0 || !selectedAlbum) return setAddImgMsg("Select at least one image");
     setAddingImg(true);
     setAddImgMsg("");
     try {
       const fd = new FormData();
-      fd.append("image", imgFile);
+      // Append each file with key "images" (matches backend)
+      imgFiles.forEach((file) => fd.append("images", file));
       fd.append("title", imgTitle);
       fd.append("description", imgDesc);
       fd.append("price", imgPrice);
       fd.append("albumId", selectedAlbum.id);
       fd.append("category", selectedAlbum.category);
-      fd.append("extraText", imgExtraText); // NEW
+      fd.append("extraText", imgExtraText);
 
       const res = await fetchWithWakeup(
         `${API}/api/fashion-albums/${selectedAlbum.id}/images`,
@@ -404,13 +406,16 @@ function FashionTab() {
         setAddImgMsg
       );
       const d = await res.json();
-      if (!res.ok) return setAddImgMsg(d.message || "Failed to add image");
-      setAddImgMsg("✅ Image added!");
-      setImgFile(null); setImgTitle(""); setImgDesc(""); setImgPrice("");
+      if (!res.ok) return setAddImgMsg(d.message || "Failed to add images");
+      setAddImgMsg(`✅ ${d.images?.length || 0} images added!`);
+      setImgFiles([]);
+      setImgTitle("");
+      setImgDesc("");
+      setImgPrice("");
       setImgExtraText("");
       fetchAlbums();
       setSelectedAlbum((prev) =>
-        prev ? { ...prev, images: [...prev.images, d.image] } : prev
+        prev ? { ...prev, images: [...prev.images, ...d.images] } : prev
       );
     } catch {
       setAddImgMsg("❌ Could not reach server. Try again.");
@@ -631,8 +636,9 @@ function FashionTab() {
                 </div>
               </div>
 
+              {/* ─── ADD MULTIPLE IMAGES FORM ────────────────────────────── */}
               <form onSubmit={handleAddImage} className={cardCls}>
-                <SectionTitle>Add Image to Album</SectionTitle>
+                <SectionTitle>Add Images to Album</SectionTitle>
                 <div className="grid gap-3 md:grid-cols-2">
                   <Field label="Image Title">
                     <input placeholder="e.g. Royal Blue Casual" value={imgTitle} onChange={(e) => setImgTitle(e.target.value)} className={inputCls} />
@@ -644,17 +650,22 @@ function FashionTab() {
                 <Field label="Description">
                   <textarea placeholder="Describe this specific piece…" value={imgDesc} onChange={(e) => setImgDesc(e.target.value)} className={textareaCls} style={{ minHeight: 64 }} />
                 </Field>
-                <UploadBox label="Image File *" single onChange={(f) => setImgFile(f[0] || null)} previewFiles={imgFile ? [imgFile] : []} />
+                <UploadBox
+                  label="Image Files * (select multiple)"
+                  single={false}
+                  onChange={setImgFiles}
+                  previewFiles={imgFiles}
+                />
                 <Field label="Extra Text (optional)">
                   <textarea
-                    placeholder="Additional info for this image"
+                    placeholder="Additional info for these images"
                     value={imgExtraText}
                     onChange={(e) => setImgExtraText(e.target.value)}
                     className={textareaCls}
                     style={{ minHeight: 60 }}
                   />
                 </Field>
-                <FormFooter msg={addImgMsg} loading={addingImg} label="Add Image to Album" />
+                <FormFooter msg={addImgMsg} loading={addingImg} label="Add Images" />
               </form>
 
               {selectedAlbum.images?.length > 0 && (
@@ -696,11 +707,10 @@ function FashionTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── PHOTO TAB (unchanged)
+// ── PHOTO TAB (unchanged) ──────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function PhotoTab() {
-  // ... (unchanged, keep as is)
   const [photoCategory, setPhotoCategory] = useState<PhotoCategory>("portraits");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -831,7 +841,7 @@ function PhotoTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── REAL ESTATE TAB (unchanged)
+// ── REAL ESTATE TAB (unchanged) ────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function RealEstateTab() {
@@ -919,7 +929,7 @@ function FormFooter({ msg, loading, label }: { msg: string; loading: boolean; la
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── MAIN ADMIN
+// ── MAIN ADMIN ──────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const TAB_CONFIG: { id: MainTab; label: string; icon: string }[] = [
