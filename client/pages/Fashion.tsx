@@ -5,15 +5,16 @@ import { Link } from "react-router-dom";
 
 const API = "https://topxcm-backend-1.onrender.com";
 
-interface LatestItem {
+// ─── TYPES ───────────────────────────────────────────────────────────────────
+
+interface Album {
   id: string;
-  title: string;
-  description: string;
-  image: string;
+  name: string;
   category: string;
+  description: string;
   price: string;
-  albumId?: string;
-  albumName?: string;
+  cover?: string;
+  images: any[];
 }
 
 type CollectionCard = {
@@ -33,7 +34,7 @@ const heroSlides = [
   "/images/hero6.png",
 ];
 
-// Update these with your actual image paths from the public folder
+// Fallback images (used if API fails or returns no albums)
 const fallbackCollections: CollectionCard[] = [
   {
     id: "heritage-drop",
@@ -63,41 +64,7 @@ const fallbackCollections: CollectionCard[] = [
     image: "/images/hero4.jpeg",
     count: "14 Items",
   },
-  {
-    id: "xcm-signature",
-    title: "XCM Signature",
-    description: "Iconic pieces, defining style.",
-    image: "/images/hero5.png",
-    count: "14 Items",
-  },
-  {
-    id: "xcm-signature",
-    title: "XCM Signature",
-    description: "Iconic pieces, defining style.",
-    image: "/images/hero6.png",
-    count: "14 Items",
-  },
-  {
-    id: "xcm-signature",
-    title: "XCM Signature",
-    description: "Iconic pieces, defining style.",
-    image: "/images/hero7.png",
-    count: "14 Items",
-  },
-  {
-    id: "xcm-signature",
-    title: "XCM Signature",
-    description: "Iconic pieces, defining style.",
-    image: "/images/hero8.png",
-    count: "14 Items",
-  },
-  {
-    id: "xcm-signature",
-    title: "XCM Signature",
-    description: "Iconic pieces, defining style.",
-    image: "/images/hero9.png",
-    count: "14 Items",
-  },
+  // ... (you can add more fallback items if needed)
 ];
 
 const featureTiles = [
@@ -363,25 +330,32 @@ export default function FashionPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [latestItems, setLatestItems] = useState<LatestItem[]>([]);
+  const [latestAlbums, setLatestAlbums] = useState<Album[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const WA = "https://wa.me/2348061587993";
 
+  // ─── FETCH ONLY ALBUMS (not items) for the carousel ────────────────────────
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
 
-    fetch(`${API}/api/items`)
+    fetch(`${API}/api/fashion-albums`)
       .then((res) => res.json())
-      .then((data: any[]) => {
+      .then((data: Album[]) => {
         if (!isMounted) return;
-        // ✅ FIX: show only cover images (items with no album_id)
+        // Filter albums by category "latest" and that have a cover image
         const latest = Array.isArray(data)
-          ? data.filter((item) => item.category === "latest" && !item.album_id)
+          ? data.filter((album) => album.category === "latest" && album.cover)
           : [];
-        setLatestItems(latest);
+        setLatestAlbums(latest);
       })
       .catch(() => {
         if (!isMounted) return;
+        setLatestAlbums([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
       });
 
     return () => {
@@ -389,38 +363,32 @@ export default function FashionPage() {
     };
   }, []);
 
+  // ─── HERO SLIDESHOW TIMER ──────────────────────────────────────────────────
   useEffect(() => {
     const timer = window.setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 7000);
-
     return () => window.clearInterval(timer);
   }, []);
 
+  // ─── BUILD CARDS FROM ALBUMS ─────────────────────────────────────────────
   const heroCollections = useMemo<CollectionCard[]>(() => {
-    if (!latestItems.length) return fallbackCollections;
+    if (!latestAlbums.length) return fallbackCollections;
 
-    return latestItems.slice(0, 4).map((item, index) => ({
-      id: item.id,
-      title: item.albumName || item.title || `Latest ${index + 1}`,
-      description:
-        item.description ||
-        (index === 0
-          ? "Fresh pieces from the newest drop."
-          : index === 1
-            ? "Clean looks with premium tailoring."
-            : "Style built for presence."),
-      image: item.image || fallbackCollections[index % fallbackCollections.length].image,
-      count: item.price ? item.price : `${10 + index * 2} Items`,
+    return latestAlbums.slice(0, 4).map((album, index) => ({
+      id: album.id,
+      title: album.name || `Collection ${index + 1}`,
+      description: album.description || "Exclusive pieces",
+      image: album.cover || fallbackCollections[index % fallbackCollections.length].image,
+      count: `${album.images?.length || 0} Items`,
     }));
-  }, [latestItems]);
+  }, [latestAlbums]);
 
   const latestPanelItems = useMemo<CollectionCard[]>(() => {
-    const source = heroCollections.length ? heroCollections : fallbackCollections;
-    return source.slice(0, 3);
+    return heroCollections.slice(0, 3);
   }, [heroCollections]);
 
-  // --- NEW: always use full fallback for the sliding rails ---
+  // ─── SLIDING RAILS (always use fallback) ──────────────────────────────────
   const railItems = useMemo<CollectionCard[]>(() => {
     return fallbackCollections;
   }, []);
@@ -439,7 +407,7 @@ export default function FashionPage() {
         initialOpen={isMenuOpen}
         onOpenAction={() => setIsMenuOpen(true)}
         onCloseAction={() => setIsMenuOpen(false)}
-        hideHamburger={true} // ✅ prevents duplicate hamburger
+        hideHamburger={true}
       />
 
       <AnimatePresence>
@@ -609,28 +577,35 @@ export default function FashionPage() {
                   </Link>
                 </div>
 
+                {/* ─── CAROUSEL (shows only album covers) ─────────────────── */}
                 <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
-                  {latestPanelItems.map((item) => (
-                    <motion.button
-                      key={item.id}
-                      type="button"
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setSelectedImg(item.image)}
-                      className="min-w-[220px] overflow-hidden rounded-[24px] border border-white/8 bg-white/5 text-left sm:min-w-[250px]"
-                    >
-                      <div className="relative h-[260px] sm:h-[280px]">
-                        <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                        <div className="absolute inset-x-0 bottom-0 p-4">
-                          <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                          <p className="mt-1 text-sm text-white/65 line-clamp-2">{item.description}</p>
-                          <span className="mt-2 inline-block text-[10px] uppercase tracking-[0.3em] text-[#00AEEF]">
-                            {item.count}
-                          </span>
+                  {loading ? (
+                    <div className="flex items-center justify-center w-full py-8">
+                      <div className="w-6 h-6 border-2 border-[#00AEEF]/20 border-t-[#00AEEF] rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    latestPanelItems.map((item) => (
+                      <motion.button
+                        key={item.id}
+                        type="button"
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setSelectedImg(item.image)}
+                        className="min-w-[220px] overflow-hidden rounded-[24px] border border-white/8 bg-white/5 text-left sm:min-w-[250px]"
+                      >
+                        <div className="relative h-[260px] sm:h-[280px]">
+                          <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                          <div className="absolute inset-x-0 bottom-0 p-4">
+                            <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                            <p className="mt-1 text-sm text-white/65 line-clamp-2">{item.description}</p>
+                            <span className="mt-2 inline-block text-[10px] uppercase tracking-[0.3em] text-[#00AEEF]">
+                              {item.count}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </motion.button>
-                  ))}
+                      </motion.button>
+                    ))
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -669,7 +644,6 @@ export default function FashionPage() {
             </div>
 
             <div className="mt-8 space-y-5">
-              {/* Use railItems (all 9 images) instead of sectionCards */}
               <SlidingRail items={railItems} onClick={setSelectedImg} />
               <SlidingRail items={[...railItems].reverse()} onClick={setSelectedImg} reverse />
             </div>
