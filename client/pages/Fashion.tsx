@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const API = "https://topxcm-backend-1.onrender.com";
 
@@ -25,6 +25,8 @@ type CollectionCard = {
   count: string;
 };
 
+// ─── STATIC DATA ────────────────────────────────────────────────────────────
+
 const heroSlides = [
   "/images/hero1.png",
   "/images/hero2.png",
@@ -34,7 +36,6 @@ const heroSlides = [
   "/images/hero6.png",
 ];
 
-// Fallback images (used if API fails or returns no albums)
 const fallbackCollections: CollectionCard[] = [
   {
     id: "heritage-drop",
@@ -64,8 +65,24 @@ const fallbackCollections: CollectionCard[] = [
     image: "/images/hero4.jpeg",
     count: "14 Items",
   },
-  // ... (you can add more fallback items if needed)
 ];
+
+// ─── ROUTE MAPPING ──────────────────────────────────────────────────────────
+
+const collectionRouteMap: Record<string, string> = {
+  "heritage-drop": "/fashion/suits",
+  "minimal-luxe": "/fashion/agbada",
+  "street-royalty": "/fashion/natives",
+  "xcm-signature": "/fashion/casuals",
+};
+
+const DEFAULT_ROUTE = "/fashion/latest";
+
+function getRouteForCard(card: CollectionCard): string {
+  return collectionRouteMap[card.id] || DEFAULT_ROUTE;
+}
+
+// ─── FEATURE TILES ──────────────────────────────────────────────────────────
 
 const featureTiles = [
   {
@@ -112,6 +129,8 @@ const featureTiles = [
   },
 ];
 
+// ─── REUSABLE COMPONENTS ────────────────────────────────────────────────────
+
 function SectionLabel({
   eyebrow,
   title,
@@ -143,83 +162,12 @@ function SectionLabel({
   );
 }
 
-function CollectionCardButton({
-  item,
-  onClick,
-}: {
-  item: CollectionCard;
-  onClick: (image: string) => void;
-}) {
-  return (
-    <motion.button
-      type="button"
-      whileHover={{ y: -8, scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 250, damping: 22 }}
-      onClick={() => onClick(item.image)}
-      className="group relative w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/5 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
-    >
-      <div className="relative aspect-[4/5]">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-        <div className="absolute inset-0 ring-1 ring-inset ring-[#00AEEF]/10 group-hover:ring-[#00AEEF]/30 transition-colors" />
-
-        <div className="absolute inset-x-0 bottom-0 p-5">
-          <p className="text-[10px] uppercase tracking-[0.45em] text-[#00AEEF] mb-3">
-            Collection
-          </p>
-          <h3 className="text-xl font-semibold text-white">{item.title}</h3>
-          <p className="mt-1 text-sm text-white/70">{item.description}</p>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-xs uppercase tracking-[0.35em] text-white/55">{item.count}</span>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/35 text-[#00AEEF] transition-transform duration-300 group-hover:translate-x-1">
-              →
-            </span>
-          </div>
-        </div>
-      </div>
-    </motion.button>
-  );
-}
-
-
-function FeatureBlock({
-  title,
-  description,
-  icon,
-}: {
-  title: string;
-  description: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-start gap-2 px-1 py-2 text-center md:gap-3 md:px-3 md:py-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-[#00AEEF] shadow-[0_0_0_1px_rgba(0,174,239,0.18)] md:h-12 md:w-12">
-        {icon}
-      </div>
-      <div className="space-y-0.5 md:space-y-1">
-        <h3 className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black leading-tight md:text-sm md:tracking-[0.14em]">
-          {title}
-        </h3>
-        <p className="mx-auto hidden max-w-[14rem] text-[9px] leading-relaxed text-black/60 md:block md:text-xs">
-          {description}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// Image‑only card for the sliding rails
 function ImageOnlyCard({
   item,
   onClick,
 }: {
   item: CollectionCard;
-  onClick: (image: string) => void;
+  onClick: (card: CollectionCard) => void;
 }) {
   return (
     <motion.button
@@ -227,7 +175,7 @@ function ImageOnlyCard({
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 250, damping: 22 }}
-      onClick={() => onClick(item.image)}
+      onClick={() => onClick(item)}
       className="group relative w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
     >
       <div className="relative aspect-[4/5]">
@@ -241,27 +189,36 @@ function ImageOnlyCard({
   );
 }
 
-// FIXED SlidingRail using transform for infinite seamless scroll
+// ─── SLIDING RAIL (FIXED - direction-aware touch handling) ────────────────
+// Instead of hijacking every touch immediately, we wait until the gesture is
+// clearly horizontal or vertical before deciding whether to drag the rail or
+// let the page scroll natively. This is what makes autoplay reliably resume
+// on mobile after the user scrolls the page past this section.
+
 function SlidingRail({
   items,
   onClick,
   reverse = false,
 }: {
   items: CollectionCard[];
-  onClick: (image: string) => void;
+  onClick: (card: CollectionCard) => void;
   reverse?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [translateX, setTranslateX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [startTranslate, setStartTranslate] = useState(0);
+  const speed = reverse ? -0.45 : 0.45;
+  const setWidthRef = useRef(0);
   const animRef = useRef<number | null>(null);
   const pauseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPausedRef = useRef(false);
-  const speed = reverse ? -0.45 : 0.45;
 
-  const loopedItems = [...items, ...items];
-  const [translateX, setTranslateX] = useState(0);
-  const setWidthRef = useRef(0);
+  // Touch-specific tracking for direction detection
+  const touchStartYRef = useRef(0);
+  const touchDirectionRef = useRef<"undecided" | "horizontal" | "vertical">("undecided");
 
-  // Measure the width of one set after render
   useEffect(() => {
     if (containerRef.current) {
       const totalWidth = containerRef.current.scrollWidth;
@@ -269,10 +226,9 @@ function SlidingRail({
     }
   }, [items]);
 
-  // Animation loop
   useEffect(() => {
     const step = () => {
-      if (!isPausedRef.current && setWidthRef.current > 0) {
+      if (!isPausedRef.current && !isDragging && setWidthRef.current > 0) {
         setTranslateX((prev) => {
           let newX = prev + speed;
           if (newX <= -setWidthRef.current) {
@@ -291,22 +247,130 @@ function SlidingRail({
       if (animRef.current) cancelAnimationFrame(animRef.current);
       if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
     };
-  }, [speed]);
+  }, [speed, isDragging]);
 
   const pauseAutoScroll = () => {
     isPausedRef.current = true;
     if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
     pauseTimeoutRef.current = setTimeout(() => {
       isPausedRef.current = false;
-    }, 1800);
+    }, 50);
   };
+
+  const resumeAutoScroll = () => {
+    isPausedRef.current = false;
+    if (pauseTimeoutRef.current) {
+      clearTimeout(pauseTimeoutRef.current);
+      pauseTimeoutRef.current = null;
+    }
+  };
+
+  // ─── MOUSE DRAG ──────────────────────────────────────────────────────
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setStartX(e.clientX);
+    setStartTranslate(translateX);
+    isPausedRef.current = true;
+    if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const delta = e.clientX - startX;
+    setTranslateX(startTranslate + delta);
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      pauseAutoScroll();
+    }
+  };
+
+  // ─── TOUCH DRAG ──────────────────────────────────────────────────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Don't preventDefault here — we don't yet know if this is a horizontal
+    // drag or a vertical page scroll. Just record the starting point.
+    touchDirectionRef.current = "undecided";
+    setStartX(e.touches[0].clientX);
+    touchStartYRef.current = e.touches[0].clientY;
+    setStartTranslate(translateX);
+    // Pause autoplay optimistically; it resumes on touchend/touchcancel,
+    // or immediately below if this turns out to be a vertical scroll.
+    isPausedRef.current = true;
+    if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - touchStartYRef.current;
+
+    if (touchDirectionRef.current === "undecided") {
+      // Wait for the gesture to become unambiguous (small threshold avoids
+      // false positives from tiny finger jitter)
+      if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) return;
+
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        touchDirectionRef.current = "horizontal";
+        setIsDragging(true);
+      } else {
+        touchDirectionRef.current = "vertical";
+        // This is a page scroll, not a rail drag — let the browser handle
+        // it natively and resume autoplay right away.
+        resumeAutoScroll();
+        return;
+      }
+    }
+
+    if (touchDirectionRef.current === "vertical") return; // let native scroll happen
+
+    // Confirmed horizontal drag — take over the gesture.
+    e.preventDefault();
+    setTranslateX(startTranslate + deltaX);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchDirectionRef.current === "horizontal") {
+      setIsDragging(false);
+      pauseAutoScroll();
+    }
+    touchDirectionRef.current = "undecided";
+  };
+
+  // FIX: Mobile browsers fire touchcancel (not touchend) when the gesture
+  // is taken over by native page scrolling, or interrupted by the OS.
+  // Without this handler, isDragging/isPausedRef could get stuck and the
+  // rail would never resume auto-scrolling after the user scrolled the page.
+  const handleTouchCancel = () => {
+    if (isDragging) {
+      setIsDragging(false);
+    }
+    touchDirectionRef.current = "undecided";
+    // Resume auto-scroll immediately because the gesture was cancelled
+    resumeAutoScroll();
+  };
+
+  const loopedItems = [...items, ...items];
 
   return (
     <div
       ref={containerRef}
       className="relative w-full overflow-hidden"
+      style={{ touchAction: "pan-y" }} // allow native vertical scroll; we handle horizontal ourselves
       onMouseEnter={pauseAutoScroll}
-      onTouchStart={pauseAutoScroll}
+      onMouseLeave={() => {
+        if (!isDragging) {
+          resumeAutoScroll();
+        }
+      }}
+      // Touch events on the container
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
     >
       <div
         className="flex gap-4 py-2 px-1 no-scrollbar select-none"
@@ -314,7 +378,12 @@ function SlidingRail({
           transform: `translateX(${translateX}px)`,
           transition: 'none',
           width: 'max-content',
+          cursor: isDragging ? 'grabbing' : 'grab',
         }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
       >
         {loopedItems.map((item, index) => (
           <div key={`${item.id}-${index}`} className="w-[220px] shrink-0 sm:w-[250px]">
@@ -326,25 +395,31 @@ function SlidingRail({
   );
 }
 
+// ─── MAIN PAGE ──────────────────────────────────────────────────────────────
+
 export default function FashionPage() {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [selectedImg, setSelectedImg] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<CollectionCard | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [latestAlbums, setLatestAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const collectionsRef = useRef<HTMLDivElement>(null);
   const WA = "https://wa.me/2348061587993";
 
-  // ─── FETCH ONLY ALBUMS (not items) for the carousel ────────────────────────
+  // ─── FETCH ALBUMS ─────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
 
     fetch(`${API}/api/fashion-albums`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
       .then((data: Album[]) => {
         if (!isMounted) return;
-        // Filter albums by category "latest" and that have a cover image
         const latest = Array.isArray(data)
           ? data.filter((album) => album.category === "latest" && album.cover)
           : [];
@@ -363,7 +438,7 @@ export default function FashionPage() {
     };
   }, []);
 
-  // ─── HERO SLIDESHOW TIMER ──────────────────────────────────────────────────
+  // ─── HERO SLIDESHOW ──────────────────────────────────────────────────────
   useEffect(() => {
     const timer = window.setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
@@ -371,10 +446,9 @@ export default function FashionPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  // ─── BUILD CARDS FROM ALBUMS ─────────────────────────────────────────────
+  // ─── BUILD CARDS ──────────────────────────────────────────────────────────
   const heroCollections = useMemo<CollectionCard[]>(() => {
     if (!latestAlbums.length) return fallbackCollections;
-
     return latestAlbums.slice(0, 4).map((album, index) => ({
       id: album.id,
       title: album.name || `Collection ${index + 1}`,
@@ -384,24 +458,39 @@ export default function FashionPage() {
     }));
   }, [latestAlbums]);
 
+  // Only the first item for the carousel
   const latestPanelItems = useMemo<CollectionCard[]>(() => {
-    return heroCollections.slice(0, 3);
+    return heroCollections.slice(0, 1);
   }, [heroCollections]);
 
-  // ─── SLIDING RAILS (always use fallback) ──────────────────────────────────
-  const railItems = useMemo<CollectionCard[]>(() => {
-    return fallbackCollections;
-  }, []);
+  const railItems = useMemo<CollectionCard[]>(() => fallbackCollections, []);
+  const heroCopy = "Premium, confident and classic outfit tailored for you.";
 
-  const heroCopy = "Premium outfits crafted for the bold, the stylish, and the unstoppable.";
+  // ─── HANDLERS ──────────────────────────────────────────────────────────────
+  const handleImageClick = (card: CollectionCard) => {
+    setSelectedItem(card);
+  };
+
+  const handleCloseLightbox = () => {
+    setSelectedItem(null);
+  };
+
+  const handleViewMore = (card: CollectionCard) => {
+    const route = getRouteForCard(card);
+    navigate(route);
+    setSelectedItem(null);
+  };
+
+  const scrollToCollections = () => {
+    collectionsRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <div
       className={`relative w-full overflow-x-hidden bg-black text-white ${
-        selectedImg ? "h-screen overflow-hidden" : ""
+        selectedItem ? "h-screen overflow-hidden" : ""
       }`}
     >
-      {/* ─── FASHION MENU (overlay) – with hideHamburger ─────── */}
       <FashionMenu
         isFashionLanding={true}
         initialOpen={isMenuOpen}
@@ -410,8 +499,9 @@ export default function FashionPage() {
         hideHamburger={true}
       />
 
+      {/* LIGHTBOX */}
       <AnimatePresence>
-        {selectedImg && (
+        {selectedItem && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -422,7 +512,7 @@ export default function FashionPage() {
               backdropFilter: "blur(18px)",
               backgroundColor: "rgba(0,0,0,0.58)",
             }}
-            onClick={() => setSelectedImg(null)}
+            onClick={handleCloseLightbox}
           >
             <motion.div
               initial={{ scale: 0.9, y: 24, opacity: 0 }}
@@ -433,21 +523,30 @@ export default function FashionPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                onClick={() => setSelectedImg(null)}
+                onClick={handleCloseLightbox}
                 className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#00AEEF]/90 text-lg font-bold text-white transition-colors hover:bg-[#00AEEF]"
               >
                 ✕
               </button>
               <img
-                src={selectedImg}
-                alt="Enlarged view"
-                className="max-h-[84vh] w-full rounded-[20px] object-contain"
+                src={selectedItem.image}
+                alt={selectedItem.title}
+                className="max-h-[70vh] w-full rounded-[20px] object-contain"
               />
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => handleViewMore(selectedItem)}
+                  className="inline-flex items-center gap-2 rounded-full border border-[#00AEEF] px-6 py-2 text-sm font-semibold uppercase tracking-widest text-white transition-colors hover:bg-[#00AEEF]/20"
+                >
+                  View More →
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* MAIN CONTENT */}
       <div
         className="transition-all duration-500"
         style={{
@@ -456,17 +555,18 @@ export default function FashionPage() {
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
+        {/* HEADER */}
         <header className="relative z-50 flex items-center justify-between border-b border-white/5 bg-black/80 px-5 py-5 backdrop-blur-md md:px-10">
           <div className="flex flex-col gap-1">
-            <span className="font-serif text-lg italic leading-none text-[#00AEEF] md:text-2xl">
-              The XCM
-            </span>
+            <img
+              src="/images/your-logo.png"
+              alt="XCM Logo"
+              className="max-h-8 w-auto md:max-h-10 object-contain -ml-5 -mt-3"
+            />
             <span className="text-[9px] uppercase tracking-[0.55em] text-[#00AEEF]/85 md:text-[11px]">
               Fashion Corner
             </span>
           </div>
-
-          {/* Hamburger button – only this one remains */}
           <button
             onClick={() => setIsMenuOpen(true)}
             className="flex flex-col gap-[5px] group"
@@ -478,8 +578,8 @@ export default function FashionPage() {
           </button>
         </header>
 
-        {/* HERO SECTION */}
-        <section className="relative min-h-screen overflow-visible bg-black">
+        {/* HERO */}
+        <section className="relative min-h-screen overflow-hidden bg-black">
           <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(0,174,239,0.2),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(0,174,239,0.12),transparent_22%)]" />
             <div className="absolute inset-0 bg-gradient-to-b from-black via-black/85 to-black/95" />
@@ -497,7 +597,6 @@ export default function FashionPage() {
                 >
                   New Season • New Energy
                 </motion.p>
-
                 <motion.h1
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -508,7 +607,6 @@ export default function FashionPage() {
                   <span className="block text-[#00AEEF]">Assured.</span>
                   <span className="block">Live XCM.</span>
                 </motion.h1>
-
                 <motion.p
                   initial={{ opacity: 0, y: 18 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -517,20 +615,19 @@ export default function FashionPage() {
                 >
                   {heroCopy}
                 </motion.p>
-
                 <motion.div
                   initial={{ opacity: 0, y: 18 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 1, delay: 0.35, ease: "easeOut" }}
                   className="mt-6"
                 >
-                  <Link
-                    to="/fashion/latest"
+                  <button
+                    onClick={scrollToCollections}
                     className="inline-flex items-center gap-3 rounded-2xl border border-[#00AEEF]/40 bg-[#00AEEF] px-4 py-3 text-[9px] font-semibold uppercase tracking-[0.26em] text-white shadow-[0_0_28px_rgba(0,174,239,0.32)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_0_40px_rgba(0,174,239,0.42)] sm:px-5 sm:py-3 md:px-6 md:py-4 md:text-xs"
                   >
-                    Explore Collection
+                    View Collection
                     <span className="text-lg">→</span>
-                  </Link>
+                  </button>
                 </motion.div>
               </div>
 
@@ -572,39 +669,52 @@ export default function FashionPage() {
                       Latest Collections
                     </p>
                   </div>
-                  <Link to="/fashion/latest" className="text-sm font-medium text-[#00AEEF] transition-colors hover:text-white">
+                  <Link
+                    to="/fashion/latest"
+                    className="text-sm font-medium text-[#00AEEF] transition-colors hover:text-white"
+                  >
                     View All →
                   </Link>
                 </div>
 
-                {/* ─── CAROUSEL (shows only album covers) ─────────────────── */}
-                <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
+                {/* ─── RECTANGULAR CARD WITH EXTRA SPACE ──────────────────── */}
+                <div className="flex justify-center pb-1 mt-6">
                   {loading ? (
                     <div className="flex items-center justify-center w-full py-8">
                       <div className="w-6 h-6 border-2 border-[#00AEEF]/20 border-t-[#00AEEF] rounded-full animate-spin" />
                     </div>
                   ) : (
-                    latestPanelItems.map((item) => (
+                    latestPanelItems.length > 0 && (
                       <motion.button
-                        key={item.id}
+                        key={latestPanelItems[0].id}
                         type="button"
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setSelectedImg(item.image)}
-                        className="min-w-[220px] overflow-hidden rounded-[24px] border border-white/8 bg-white/5 text-left sm:min-w-[250px]"
+                        onClick={() => handleImageClick(latestPanelItems[0])}
+                        className="w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/8 bg-white/5 text-left shadow-lg"
                       >
-                        <div className="relative h-[260px] sm:h-[280px]">
-                          <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                        <div className="relative h-[260px] sm:h-[320px] md:h-[360px]">
+                          <img
+                            src={latestPanelItems[0].image}
+                            alt={latestPanelItems[0].title}
+                            className="h-full w-full object-cover"
+                          />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                          <div className="absolute inset-x-0 bottom-0 p-4">
-                            <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                            <p className="mt-1 text-sm text-white/65 line-clamp-2">{item.description}</p>
-                            <span className="mt-2 inline-block text-[10px] uppercase tracking-[0.3em] text-[#00AEEF]">
-                              {item.count}
-                            </span>
+                          <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                            <div className="space-y-1.5">
+                              <h3 className="text-2xl font-semibold text-white sm:text-3xl">
+                                {latestPanelItems[0].title}
+                              </h3>
+                              <p className="text-sm text-white/75 sm:text-base max-w-xl line-clamp-2">
+                                {latestPanelItems[0].description}
+                              </p>
+                              <span className="inline-block text-xs uppercase tracking-[0.35em] text-[#00AEEF] sm:text-sm">
+                                {latestPanelItems[0].count}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </motion.button>
-                    ))
+                    )
                   )}
                 </div>
               </div>
@@ -618,6 +728,7 @@ export default function FashionPage() {
           </div>
         </section>
 
+        {/* FEATURES */}
         <section className="border-y border-black/5 bg-white px-3 py-6 md:px-10 md:py-8">
           <div className="mx-auto grid max-w-7xl grid-cols-4 gap-1 md:gap-4">
             {featureTiles.map((feature) => (
@@ -627,30 +738,26 @@ export default function FashionPage() {
         </section>
 
         {/* EXPLORE COLLECTIONS */}
-        <section className="bg-black px-5 py-18 md:px-10 md:py-24">
+        <section ref={collectionsRef} className="bg-black px-5 py-18 md:px-10 md:py-24">
           <div className="mx-auto max-w-7xl">
             <div className="flex items-end justify-between gap-6 pt-12">
-              <SectionLabel
-                eyebrow="Explore Collections"
-                title="Find Your Style"
-                light
-              />
-              <Link
-                to="/fashion/latest"
-                className="hidden border-b border-[#00AEEF]/45 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#00AEEF] transition-colors hover:border-[#00AEEF] md:inline-flex"
+              <SectionLabel eyebrow="Featured Collections" title="Find Your Style" light />
+              <button
+                onClick={() => setIsMenuOpen(true)}
+                className="inline-flex border-b border-[#00AEEF]/45 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#00AEEF] transition-colors hover:border-[#00AEEF]"
               >
                 View all →
-              </Link>
+              </button>
             </div>
 
             <div className="mt-8 space-y-5">
-              <SlidingRail items={railItems} onClick={setSelectedImg} />
-              <SlidingRail items={[...railItems].reverse()} onClick={setSelectedImg} reverse />
+              <SlidingRail items={railItems} onClick={handleImageClick} />
+              <SlidingRail items={[...railItems].reverse()} onClick={handleImageClick} reverse />
             </div>
           </div>
         </section>
 
-        {/* CONTACT SECTION */}
+        {/* CONTACT */}
         <section className="relative overflow-hidden border-t border-[#00AEEF]/10 bg-[#0a0a0a] px-5 py-20 md:px-10 md:py-28">
           <div className="absolute -left-20 top-12 h-72 w-72 rounded-full bg-[#00AEEF]/10 blur-3xl" />
           <div className="absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-[#00AEEF]/10 blur-3xl" />
@@ -663,44 +770,34 @@ export default function FashionPage() {
                     href="tel:+2348061587993"
                     className="group flex items-center gap-4 rounded-2xl border border-[#00AEEF]/12 bg-black/5 px-6 py-4 transition-all hover:border-[#00AEEF]/35 hover:bg-[#00AEEF]/5 flex-1 min-w-[180px] justify-center"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">
-                      ☎
-                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">☎</div>
                     <div className="text-left">
                       <p className="text-xs uppercase tracking-[0.35em] text-[#00AEEF]">Call Us</p>
                       <p className="mt-1 text-sm text-black/70">Speak with our team</p>
                     </div>
                   </a>
-
                   <a
                     href={WA}
                     target="_blank"
                     rel="noreferrer"
                     className="group flex items-center gap-4 rounded-2xl border border-[#00AEEF]/12 bg-black/5 px-6 py-4 transition-all hover:border-[#00AEEF]/35 hover:bg-[#00AEEF]/5 flex-1 min-w-[180px] justify-center"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">
-                      ⌁
-                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">⌁</div>
                     <div className="text-left">
                       <p className="text-xs uppercase tracking-[0.35em] text-[#00AEEF]">WhatsApp</p>
                       <p className="mt-1 text-sm text-black/70">Chat for quick orders</p>
                     </div>
                   </a>
                 </div>
-
                 <a
                   href="mailto:xcmwardrobes@gmail.com"
                   className="inline-flex items-center gap-3 rounded-2xl border border-black/10 px-6 py-4 text-xs font-semibold uppercase tracking-[0.28em] text-black transition-colors hover:border-[#00AEEF]/30 hover:text-[#00AEEF]"
                 >
                   Email Us
                 </a>
-
                 <div className="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-black/20 to-transparent" />
-
                 <div className="flex flex-wrap justify-center gap-3">
-                  <p className="w-full text-[10px] uppercase tracking-[0.45em] text-[#00AEEF]">
-                    Connect With Us
-                  </p>
+                  <p className="w-full text-[10px] uppercase tracking-[0.45em] text-[#00AEEF]">Connect With Us</p>
                   <a
                     href="https://www.facebook.com/share/1KToiX8cS4/"
                     target="_blank"
@@ -734,9 +831,7 @@ export default function FashionPage() {
         <footer className="border-t border-[#00AEEF]/8 bg-black py-14 text-center">
           <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-5">
             <div className="h-8 w-px bg-gradient-to-b from-[#00AEEF]/35 to-transparent" />
-            <p className="text-[8px] uppercase tracking-[1em] text-white/20">
-              © 2026 XCM • All Rights Reserved
-            </p>
+            <p className="text-[8px] uppercase tracking-[1em] text-white/20">© 2026 XCM • All Rights Reserved</p>
           </div>
         </footer>
 
@@ -745,6 +840,34 @@ export default function FashionPage() {
           .no-scrollbar::-webkit-scrollbar { display: none; }
           .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
+      </div>
+    </div>
+  );
+}
+
+// ─── FEATURE BLOCK ──────────────────────────────────────────────────────────
+
+function FeatureBlock({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-start gap-2 px-1 py-2 text-center md:gap-3 md:px-3 md:py-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-[#00AEEF] shadow-[0_0_0_1px_rgba(0,174,239,0.18)] md:h-12 md:w-12">
+        {icon}
+      </div>
+      <div className="space-y-0.5 md:space-y-1">
+        <h3 className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black leading-tight md:text-sm md:tracking-[0.14em]">
+          {title}
+        </h3>
+        <p className="mx-auto hidden max-w-[14rem] text-[9px] leading-relaxed text-black/60 md:block md:text-xs">
+          {description}
+        </p>
       </div>
     </div>
   );

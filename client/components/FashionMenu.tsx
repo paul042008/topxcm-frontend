@@ -7,7 +7,7 @@ export default function FashionMenu({
   initialOpen = false,
   onOpenAction,
   onCloseAction,
-  hideHamburger = false, // ← new prop
+  hideHamburger = false,
 }: {
   isFashionLanding?: boolean;
   initialOpen?: boolean;
@@ -56,14 +56,13 @@ export default function FashionMenu({
         <div className="fixed inset-0 z-[10000] flex flex-col bg-black w-screen h-screen overflow-hidden animate-in fade-in duration-300">
           {/* ── HEADER ── */}
           <div className="w-full px-8 pt-12 flex justify-between items-center">
-            <div className="flex flex-col gap-0.5">
-              <span className="font-serif italic text-[#00AEEF] text-lg md:text-xl leading-none">
-                The XCM
-              </span>
-              <span className="text-[#00AEEF] text-[9px] tracking-[0.55em] uppercase font-light opacity-60">
-                Fashion Corner
-              </span>
-            </div>
+            {/* ── LOGO ONLY (replaced text) ── */}
+            <img
+              src="/images/your-logo.png"  // ← CHANGE THIS TO YOUR LOGO PATH
+              alt="XCM Logo"
+              className="h-8 w-auto md:h-10"
+            />
+
             <button
               onClick={handleClose}
               className="text-white p-2 hover:rotate-90 transition-transform duration-300"
