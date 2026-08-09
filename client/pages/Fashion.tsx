@@ -665,7 +665,6 @@ export default function FashionPage() {
               <div className="rounded-[30px] border border-white/12 bg-black/60 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center px-1">
                   <div className="flex items-center gap-3">
-                    {/* ─── REPLACED STAR WITH CIRCLE ICON ─── */}
                     <svg className="text-[#00AEEF] text-lg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                       <circle cx="12" cy="12" r="10" />
                     </svg>
@@ -703,9 +702,13 @@ export default function FashionPage() {
                                 <h3 className="text-2xl font-semibold text-white sm:text-3xl">
                                   {latestPanelItems[0].title}
                                 </h3>
-                                <p className="text-sm text-white/75 sm:text-base max-w-xl line-clamp-2">
-                                  {latestPanelItems[0].description}
-                                </p>
+                                {/* ─── UPDATED: render HTML description ─── */}
+                                <div
+                                  className="text-sm text-white/75 sm:text-base max-w-xl line-clamp-2 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+                                  dangerouslySetInnerHTML={{
+                                    __html: latestPanelItems[0].description,
+                                  }}
+                                />
                                 <Link
                                   to="/fashion/latest"
                                   onClick={(e) => e.stopPropagation()}
@@ -717,15 +720,12 @@ export default function FashionPage() {
                             </div>
                           </div>
                         </motion.button>
- 
                       </div>
                     )
                   )}
                 </div>
               </div>
             </motion.div>
-
- 
           </div>
         </section>
 
