@@ -59,18 +59,53 @@ export default function FashionContact() {
         </div>
 
         <main className="relative z-10 px-6 md:px-16 py-16 max-w-3xl mx-auto space-y-16">
-          {/* About Us */}
+          {/* ─── ABOUT US (full text) ────────────────────────────── */}
           <div>
             <p className="text-[#00AEEF] text-[9px] uppercase tracking-[0.6em] font-bold mb-6">About Us</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-3">
-              XCM Wardrobes isn't just a fashion house — it's a statement of identity.
-            </p>
-            <p className="text-white/50 text-sm leading-relaxed mb-8">
-              We believe every stitch tells a story of confidence, culture, and character. From bespoke suits to traditional Agbada and modern casuals, we spice up your style with precision and passion.
-            </p>
+            
+            <div className="space-y-6 text-white/70 text-sm leading-relaxed">
+              <p>
+                XCM Wardrobes isn’t just a fashion house, it’s a statement of identity.
+              </p>
+              <p>
+                Behind the brand is a designer who believes that clothing should do more than fit the body;
+                it should reflect the person wearing it. With a passion for creativity, craftsmanship and
+                contemporary African style, I started XCM Wardrobes to create pieces that allow people to
+                express who they are with confidence.
+              </p>
+              <p>
+                What began as a passion for creating well-finished outfits has grown into a fashion brand
+                built around one simple idea: <span className="text-white font-medium">your style should speak for you.</span>
+              </p>
+              <p>
+                At XCM Wardrobes, we blend traditional African aesthetics with modern tailoring to create
+                clothing that feels distinctive, confident and effortlessly stylish. From bespoke suits and
+                traditional Agbada to contemporary native wear, casual pieces and our modern interpretations
+                of African fabrics, every outfit is thoughtfully designed and carefully made.
+              </p>
+              <p>
+                We pay attention to the details that make an outfit stand out, the cut, the fabric, the
+                finishing, the fit and, most importantly, <span className="text-white font-medium">how it makes you feel</span> when you put it on.
+              </p>
+              <div className="bg-[#00AEEF]/5 border border-[#00AEEF]/10 rounded-2xl p-6 my-6">
+                <p className="text-[#00AEEF] text-xs uppercase tracking-[0.5em] font-bold mb-2">Our Philosophy</p>
+                <p className="text-white/90 text-sm font-light italic">“We don’t just make clothes; we create a presence.”</p>
+              </div>
+              <p>
+                Whether you’re dressing for a wedding, an important occasion, a business meeting, a celebration
+                or simply want to look your best, XCM Wardrobes brings together culture, craftsmanship and
+                contemporary style to give you something that feels uniquely yours.
+              </p>
+              <p className="text-white/80 text-base font-serif italic">
+                This is XCM Wardrobes — where culture meets confidence, and every outfit tells your story.
+              </p>
+              <p className="text-[#00AEEF] text-sm font-light tracking-wider">
+                We spice up your wardrobe.
+              </p>
+            </div>
 
             {/* Two images */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 mt-8">
               <div className="aspect-[3/4] rounded-2xl overflow-hidden border border-[#00AEEF]/15 bg-[#00AEEF]/5">
                 <img
                   src="/images/1777805031168~2.png"
@@ -94,7 +129,7 @@ export default function FashionContact() {
             </div>
           </div>
 
-          {/* Location */}
+          {/* ─── LOCATION ───────────────────────────────────────────── */}
           <div
             className="flex items-start gap-4 px-6 py-5 rounded-2xl"
             style={{ border: "1px solid rgba(0,174,239,0.15)", backgroundColor: "rgba(0,174,239,0.05)" }}
@@ -113,7 +148,7 @@ export default function FashionContact() {
             </div>
           </div>
 
-          {/* Unified Contact Box */}
+          {/* ─── UNIFIED CONTACT BOX ───────────────────────────────── */}
           <div
             className="rounded-2xl p-6 space-y-6"
             style={{ border: "1px solid rgba(0,174,239,0.15)", backgroundColor: "rgba(0,174,239,0.05)" }}

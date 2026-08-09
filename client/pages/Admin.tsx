@@ -204,13 +204,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── FASHION TAB (UPDATED for multiple image uploads) ──────────────────────
+// ── FASHION TAB (UPDATED with full Edit/Update) ──────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FashionTab() {
   const [albums, setAlbums] = useState<FashionAlbum[]>([]);
   const [loadingAlbums, setLoadingAlbums] = useState(false);
 
+  // ─── CREATE ALBUM STATE ────────────────────────────────────────────────────
   const [newAlbumName, setNewAlbumName] = useState("");
   const [newAlbumCategory, setNewAlbumCategory] = useState<FashionCategory>("casuals");
   const [newAlbumDesc, setNewAlbumDesc] = useState("");
@@ -221,6 +222,36 @@ function FashionTab() {
   const [creatingAlbum, setCreatingAlbum] = useState(false);
   const [createMsg, setCreateMsg] = useState("");
 
+  // ─── EDIT ALBUM STATE ──────────────────────────────────────────────────────
+  const [editingAlbum, setEditingAlbum] = useState<FashionAlbum | null>(null);
+  const [editAlbumName, setEditAlbumName] = useState("");
+  const [editAlbumCategory, setEditAlbumCategory] = useState<FashionCategory>("casuals");
+  const [editAlbumDesc, setEditAlbumDesc] = useState("");
+  const [editAlbumPrice, setEditAlbumPrice] = useState("");
+  const [editAlbumCover, setEditAlbumCover] = useState<File | null>(null);
+  const [editAlbumLoading, setEditAlbumLoading] = useState(false);
+  const [editAlbumMsg, setEditAlbumMsg] = useState("");
+
+  // ─── IMAGE EDIT STATE ──────────────────────────────────────────────────────
+  const [editingImage, setEditingImage] = useState<{ albumId: string; image: FashionAlbum["images"][0] } | null>(null);
+  const [editImageTitle, setEditImageTitle] = useState("");
+  const [editImageDesc, setEditImageDesc] = useState("");
+  const [editImagePrice, setEditImagePrice] = useState("");
+  const [editImageExtra, setEditImageExtra] = useState("");
+  const [editImageLoading, setEditImageLoading] = useState(false);
+  const [editImageMsg, setEditImageMsg] = useState("");
+
+  // ─── SINGLE ITEM EDIT STATE ───────────────────────────────────────────────
+  const [editingSingle, setEditingSingle] = useState<SingleItem | null>(null);
+  const [editSingleTitle, setEditSingleTitle] = useState("");
+  const [editSingleCat, setEditSingleCat] = useState<FashionCategory>("casuals");
+  const [editSingleDesc, setEditSingleDesc] = useState("");
+  const [editSinglePrice, setEditSinglePrice] = useState("");
+  const [editSingleFile, setEditSingleFile] = useState<File | null>(null);
+  const [editSingleLoading, setEditSingleLoading] = useState(false);
+  const [editSingleMsg, setEditSingleMsg] = useState("");
+
+  // ─── SELECTED ALBUM (for viewing/adding images) ──────────────────────────
   const [selectedAlbum, setSelectedAlbum] = useState<FashionAlbum | null>(null);
 
   // ─── MULTIPLE FILES ────────────────────────────────────────────────────────
@@ -275,7 +306,7 @@ function FashionTab() {
     fetchSingles();
   }, []);
 
-  // ─── Delete album ──────────────────────────────────────────────────────────
+  // ─── DELETE FUNCTIONS (unchanged) ──────────────────────────────────────────
   const deleteAlbum = async (albumId: string) => {
     if (!window.confirm("Delete this album and all its images? This cannot be undone.")) return;
     try {
@@ -295,7 +326,6 @@ function FashionTab() {
     }
   };
 
-  // ─── Delete image from album ──────────────────────────────────────────────
   const deleteImage = async (albumId: string, imageId: string) => {
     if (!window.confirm("Delete this image? This cannot be undone.")) return;
     try {
@@ -321,7 +351,6 @@ function FashionTab() {
     }
   };
 
-  // ─── Delete single item ────────────────────────────────────────────────────
   const deleteSingle = async (itemId: string) => {
     if (!window.confirm("Delete this single item? This cannot be undone.")) return;
     setDeletingSingleId(itemId);
@@ -344,7 +373,7 @@ function FashionTab() {
     }
   };
 
-  // ─── Create album ──────────────────────────────────────────────────────────
+  // ─── CREATE ALBUM ──────────────────────────────────────────────────────────
   const handleCreateAlbum = async (e: FormEvent) => {
     e.preventDefault();
     if (!newAlbumName.trim()) return setCreateMsg("Album name is required");
@@ -383,7 +412,7 @@ function FashionTab() {
     }
   };
 
-  // ─── Add multiple images to album ─────────────────────────────────────────
+  // ─── ADD MULTIPLE IMAGES TO ALBUM ─────────────────────────────────────────
   const handleAddImage = async (e: FormEvent) => {
     e.preventDefault();
     if (imgFiles.length === 0 || !selectedAlbum) return setAddImgMsg("Select at least one image");
@@ -391,7 +420,6 @@ function FashionTab() {
     setAddImgMsg("");
     try {
       const fd = new FormData();
-      // Append each file with key "images" (matches backend)
       imgFiles.forEach((file) => fd.append("images", file));
       fd.append("title", imgTitle);
       fd.append("description", imgDesc);
@@ -424,7 +452,7 @@ function FashionTab() {
     }
   };
 
-  // ─── Single upload ─────────────────────────────────────────────────────────
+  // ─── SINGLE UPLOAD ─────────────────────────────────────────────────────────
   const handleSingleUpload = async (e: FormEvent) => {
     e.preventDefault();
     if (!singleFile) return setSingleMsg("Select an image");
@@ -452,6 +480,143 @@ function FashionTab() {
       setSingleMsg("❌ Could not reach server. Try again.");
     } finally {
       setSingleLoading(false);
+    }
+  };
+
+  // ─── ✨ EDIT ALBUM ────────────────────────────────────────────────────────
+  const openEditAlbum = (album: FashionAlbum) => {
+    setEditingAlbum(album);
+    setEditAlbumName(album.name);
+    setEditAlbumCategory(album.category);
+    setEditAlbumDesc(album.description || "");
+    setEditAlbumPrice(album.price || "");
+    setEditAlbumCover(null);
+    setEditAlbumMsg("");
+  };
+
+  const handleEditAlbum = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingAlbum) return;
+    setEditAlbumLoading(true);
+    setEditAlbumMsg("");
+    try {
+      const fd = new FormData();
+      fd.append("name", editAlbumName);
+      fd.append("category", editAlbumCategory);
+      fd.append("description", editAlbumDesc);
+      fd.append("price", editAlbumPrice);
+      if (editAlbumCover) fd.append("cover", editAlbumCover);
+
+      const res = await fetchWithWakeup(
+        `${API}/api/fashion-albums/${editingAlbum.id}`,
+        { method: "PUT", headers: AUTH_HEADER, body: fd },
+        setEditAlbumMsg
+      );
+      const d = await res.json();
+      if (!res.ok) return setEditAlbumMsg(d.message || "Update failed");
+      setEditAlbumMsg("✅ Album updated!");
+      // Update local state
+      setEditingAlbum(null);
+      fetchAlbums();
+      // If the selected album is the one being edited, update it too
+      if (selectedAlbum?.id === editingAlbum.id) {
+        setSelectedAlbum((prev) => prev ? { ...prev, name: editAlbumName, category: editAlbumCategory, description: editAlbumDesc, price: editAlbumPrice } : prev);
+      }
+      setEditAlbumCover(null);
+    } catch {
+      setEditAlbumMsg("❌ Update failed. Try again.");
+    } finally {
+      setEditAlbumLoading(false);
+    }
+  };
+
+  // ─── ✨ EDIT IMAGE ────────────────────────────────────────────────────────
+  const openEditImage = (albumId: string, image: FashionAlbum["images"][0]) => {
+    setEditingImage({ albumId, image });
+    setEditImageTitle(image.title || "");
+    setEditImageDesc(image.description || "");
+    setEditImagePrice(image.price || "");
+    setEditImageExtra(image.extra_text || "");
+    setEditImageMsg("");
+  };
+
+  const handleEditImage = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingImage) return;
+    setEditImageLoading(true);
+    setEditImageMsg("");
+    try {
+      const body = {
+        title: editImageTitle,
+        description: editImageDesc,
+        price: editImagePrice,
+        extra_text: editImageExtra,
+      };
+      const res = await fetchWithWakeup(
+        `${API}/api/fashion-albums/${editingImage.albumId}/images/${editingImage.image.id}`,
+        { method: "PUT", headers: { ...AUTH_HEADER, "Content-Type": "application/json" }, body: JSON.stringify(body) },
+        setEditImageMsg
+      );
+      const d = await res.json();
+      if (!res.ok) return setEditImageMsg(d.message || "Update failed");
+      setEditImageMsg("✅ Image updated!");
+      setEditingImage(null);
+      fetchAlbums();
+      // Update selectedAlbum if applicable
+      if (selectedAlbum?.id === editingImage.albumId) {
+        setSelectedAlbum((prev) => {
+          if (!prev) return prev;
+          const updatedImages = prev.images.map((img) =>
+            img.id === editingImage.image.id ? { ...img, title: editImageTitle, description: editImageDesc, price: editImagePrice, extra_text: editImageExtra } : img
+          );
+          return { ...prev, images: updatedImages };
+        });
+      }
+    } catch {
+      setEditImageMsg("❌ Update failed. Try again.");
+    } finally {
+      setEditImageLoading(false);
+    }
+  };
+
+  // ─── ✨ EDIT SINGLE ITEM ──────────────────────────────────────────────────
+  const openEditSingle = (item: SingleItem) => {
+    setEditingSingle(item);
+    setEditSingleTitle(item.title || "");
+    setEditSingleCat(item.category as FashionCategory || "casuals");
+    setEditSingleDesc(item.description || "");
+    setEditSinglePrice(item.price || "");
+    setEditSingleFile(null);
+    setEditSingleMsg("");
+  };
+
+  const handleEditSingle = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingSingle) return;
+    setEditSingleLoading(true);
+    setEditSingleMsg("");
+    try {
+      const fd = new FormData();
+      fd.append("title", editSingleTitle);
+      fd.append("category", editSingleCat);
+      fd.append("description", editSingleDesc);
+      fd.append("price", editSinglePrice);
+      if (editSingleFile) fd.append("image", editSingleFile);
+
+      const res = await fetchWithWakeup(
+        `${API}/api/items/${editingSingle.id}`,
+        { method: "PUT", headers: AUTH_HEADER, body: fd },
+        setEditSingleMsg
+      );
+      const d = await res.json();
+      if (!res.ok) return setEditSingleMsg(d.message || "Update failed");
+      setEditSingleMsg("✅ Item updated!");
+      setEditingSingle(null);
+      fetchSingles();
+    } catch {
+      setEditSingleMsg("❌ Update failed. Try again.");
+    } finally {
+      setEditSingleLoading(false);
     }
   };
 
@@ -518,6 +683,16 @@ function FashionTab() {
                       <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
                       <p className="text-xs text-white/35 truncate">{item.category} {item.price && `· ${item.price}`}</p>
                     </div>
+                    <button
+                      onClick={() => openEditSingle(item)}
+                      className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
+                      title="Edit item"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
                     <button
                       onClick={() => deleteSingle(item.id)}
                       disabled={deletingSingleId === item.id}
@@ -608,8 +783,19 @@ function FashionTab() {
                         </div>
                       </button>
                       <button
+                        onClick={() => openEditAlbum(album)}
+                        className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
+                        title="Edit album"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button
                         onClick={() => deleteAlbum(album.id)}
                         className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center"
+                        title="Delete album"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
@@ -679,15 +865,27 @@ function FashionTab() {
                           <p className="text-white text-xs font-medium">{img.title}</p>
                           {img.price && <p className="text-[#D4AF37] text-xs">{img.price}</p>}
                         </div>
-                        <button
-                          onClick={() => img.id && deleteImage(selectedAlbum.id, img.id)}
-                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white/80 hover:bg-red-500/80 hover:text-white transition flex items-center justify-center opacity-0 group-hover:opacity-100"
-                          title="Delete image"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                          </svg>
-                        </button>
+                        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                          <button
+                            onClick={() => openEditImage(selectedAlbum.id, img)}
+                            className="w-6 h-6 rounded-full bg-[#D4AF37]/80 text-black hover:bg-[#D4AF37] transition flex items-center justify-center"
+                            title="Edit image"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => img.id && deleteImage(selectedAlbum.id, img.id)}
+                            className="w-6 h-6 rounded-full bg-red-500/80 text-white hover:bg-red-500 transition flex items-center justify-center"
+                            title="Delete image"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -700,6 +898,102 @@ function FashionTab() {
               <p className="text-white/25 text-sm">Select an album on the left to edit it,<br />or create a new one</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ─── EDIT ALBUM MODAL ──────────────────────────────────────────────── */}
+      {editingAlbum && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-[#111] rounded-2xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit Album</h3>
+            <form onSubmit={handleEditAlbum} className="space-y-4">
+              <Field label="Album Name *">
+                <input value={editAlbumName} onChange={(e) => setEditAlbumName(e.target.value)} className={inputCls} required />
+              </Field>
+              <Field label="Category">
+                <select value={editAlbumCategory} onChange={(e) => setEditAlbumCategory(e.target.value as FashionCategory)} className={inputCls}>
+                  {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                </select>
+              </Field>
+              <Field label="Description">
+                <textarea value={editAlbumDesc} onChange={(e) => setEditAlbumDesc(e.target.value)} className={textareaCls} rows={2} />
+              </Field>
+              <Field label="Price (₦)">
+                <input value={editAlbumPrice} onChange={(e) => setEditAlbumPrice(e.target.value)} className={inputCls} />
+              </Field>
+              <UploadBox label="Replace Cover (optional)" single onChange={(f) => setEditAlbumCover(f[0] || null)} previewFiles={editAlbumCover ? [editAlbumCover] : []} />
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setEditingAlbum(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
+                <button type="submit" disabled={editAlbumLoading} className={btnGold}>
+                  {editAlbumLoading ? "Saving…" : "Save Changes"}
+                </button>
+              </div>
+              <StatusMsg msg={editAlbumMsg} />
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── EDIT IMAGE MODAL ──────────────────────────────────────────────── */}
+      {editingImage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-[#111] rounded-2xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit Image</h3>
+            <form onSubmit={handleEditImage} className="space-y-4">
+              <Field label="Title">
+                <input value={editImageTitle} onChange={(e) => setEditImageTitle(e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="Price (₦)">
+                <input value={editImagePrice} onChange={(e) => setEditImagePrice(e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="Description">
+                <textarea value={editImageDesc} onChange={(e) => setEditImageDesc(e.target.value)} className={textareaCls} rows={2} />
+              </Field>
+              <Field label="Extra Text (e.g., Size Chart)">
+                <textarea value={editImageExtra} onChange={(e) => setEditImageExtra(e.target.value)} className={textareaCls} rows={2} />
+              </Field>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setEditingImage(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
+                <button type="submit" disabled={editImageLoading} className={btnGold}>
+                  {editImageLoading ? "Saving…" : "Save Changes"}
+                </button>
+              </div>
+              <StatusMsg msg={editImageMsg} />
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── EDIT SINGLE ITEM MODAL ────────────────────────────────────────── */}
+      {editingSingle && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-[#111] rounded-2xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit Single Item</h3>
+            <form onSubmit={handleEditSingle} className="space-y-4">
+              <Field label="Title *">
+                <input value={editSingleTitle} onChange={(e) => setEditSingleTitle(e.target.value)} className={inputCls} required />
+              </Field>
+              <Field label="Category">
+                <select value={editSingleCat} onChange={(e) => setEditSingleCat(e.target.value as FashionCategory)} className={inputCls}>
+                  {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                </select>
+              </Field>
+              <Field label="Price (₦)">
+                <input value={editSinglePrice} onChange={(e) => setEditSinglePrice(e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="Description">
+                <textarea value={editSingleDesc} onChange={(e) => setEditSingleDesc(e.target.value)} className={textareaCls} rows={2} />
+              </Field>
+              <UploadBox label="Replace Image (optional)" single onChange={(f) => setEditSingleFile(f[0] || null)} previewFiles={editSingleFile ? [editSingleFile] : []} />
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setEditingSingle(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
+                <button type="submit" disabled={editSingleLoading} className={btnGold}>
+                  {editSingleLoading ? "Saving…" : "Save Changes"}
+                </button>
+              </div>
+              <StatusMsg msg={editSingleMsg} />
+            </form>
+          </div>
         </div>
       )}
     </div>

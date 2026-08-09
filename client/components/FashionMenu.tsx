@@ -56,7 +56,7 @@ export default function FashionMenu({
         <div className="fixed inset-0 z-[10000] flex flex-col bg-black w-screen h-screen overflow-hidden animate-in fade-in duration-300">
           {/* ── HEADER ── */}
           <div className="w-full px-8 pt-12 flex justify-between items-center">
-            {/* ── LOGO ONLY (replaced text) ── */}
+            {/* ── LOGO ONLY ── */}
             <img
               src="/images/your-logo.png"  // ← CHANGE THIS TO YOUR LOGO PATH
               alt="XCM Logo"
@@ -80,16 +80,24 @@ export default function FashionMenu({
               { name: "Natives", path: "/fashion/natives" },
               { name: "Casuals", path: "/fashion/casuals" },
               { name: "Contact", path: "/fashion/contact" },
-            ].map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                onClick={handleClose}
-                className="text-sm font-black uppercase tracking-[0.4em] text-white hover:text-[#00AEEF] transition-all"
-              >
-                {link.name}
-              </Link>
-            ))}
+            ].map((link) => {
+              // Conditionally apply brand blue to "Latest Collection"
+              const isLatest = link.name === "Latest Collection";
+              return (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  onClick={handleClose}
+                  className={`text-sm font-black uppercase tracking-[0.4em] transition-all ${
+                    isLatest
+                      ? "text-[#00AEEF]"
+                      : "text-white hover:text-[#00AEEF]"
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
 
             {isFashionHome && (
               <Link

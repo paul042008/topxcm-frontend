@@ -45,24 +45,59 @@ const fallbackCollections: CollectionCard[] = [
     count: "12 Items",
   },
   {
-    id: "minimal-luxe",
-    title: "Minimal Luxe",
+    id: "heritage-drop",
+    title: "Heritage Drop",
     description: "Clean. Classy. Timeless.",
     image: "/images/hero2.png",
     count: "18 Items",
   },
   {
-    id: "street-royalty",
+    id: "heritage-drop",
+    title: "Heritage Drop",
+    description: "Clean. Classy. Timeless.",
+    image: "/images/hero5.png",
+    count: "18 Items",
+  },
+  {
+    id: "minimal-luxe",
     title: "Street Royalty",
     description: "Bold. Urban. Fearless.",
     image: "/images/hero3.jpeg",
     count: "10 Items",
   },
   {
-    id: "xcm-signature",
+    id: "minimal-luxe",
     title: "XCM Signature",
     description: "Iconic pieces, defining style.",
     image: "/images/hero4.jpeg",
+    count: "14 Items",
+  },
+  {
+    id: "xcm-signature",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/row2.jpg",
+    count: "14 Items",
+  },
+  {
+    id: "xcm-signature",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/row1.jpg",
+    count: "14 Items",
+  },
+  {
+    id: "street-royalty",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/row3.jpg",
+    count: "14 Items",
+  },
+  {
+    id: "street-royalty",
+    title: "XCM Signature",
+    description: "Iconic pieces, defining style.",
+    image: "/images/row4.jpg",
     count: "14 Items",
   },
 ];
@@ -189,11 +224,7 @@ function ImageOnlyCard({
   );
 }
 
-// ─── SLIDING RAIL (FIXED - direction-aware touch handling) ────────────────
-// Instead of hijacking every touch immediately, we wait until the gesture is
-// clearly horizontal or vertical before deciding whether to drag the rail or
-// let the page scroll natively. This is what makes autoplay reliably resume
-// on mobile after the user scrolls the page past this section.
+// ─── SLIDING RAIL (direction-aware touch handling) ────────────────────────
 
 function SlidingRail({
   items,
@@ -215,7 +246,6 @@ function SlidingRail({
   const pauseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPausedRef = useRef(false);
 
-  // Touch-specific tracking for direction detection
   const touchStartYRef = useRef(0);
   const touchDirectionRef = useRef<"undecided" | "horizontal" | "vertical">("undecided");
 
@@ -265,7 +295,6 @@ function SlidingRail({
     }
   };
 
-  // ─── MOUSE DRAG ──────────────────────────────────────────────────────
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -289,16 +318,11 @@ function SlidingRail({
     }
   };
 
-  // ─── TOUCH DRAG ──────────────────────────────────────────────────────
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Don't preventDefault here — we don't yet know if this is a horizontal
-    // drag or a vertical page scroll. Just record the starting point.
     touchDirectionRef.current = "undecided";
     setStartX(e.touches[0].clientX);
     touchStartYRef.current = e.touches[0].clientY;
     setStartTranslate(translateX);
-    // Pause autoplay optimistically; it resumes on touchend/touchcancel,
-    // or immediately below if this turns out to be a vertical scroll.
     isPausedRef.current = true;
     if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
   };
@@ -309,25 +333,18 @@ function SlidingRail({
     const deltaY = touch.clientY - touchStartYRef.current;
 
     if (touchDirectionRef.current === "undecided") {
-      // Wait for the gesture to become unambiguous (small threshold avoids
-      // false positives from tiny finger jitter)
       if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) return;
-
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
         touchDirectionRef.current = "horizontal";
         setIsDragging(true);
       } else {
         touchDirectionRef.current = "vertical";
-        // This is a page scroll, not a rail drag — let the browser handle
-        // it natively and resume autoplay right away.
         resumeAutoScroll();
         return;
       }
     }
 
-    if (touchDirectionRef.current === "vertical") return; // let native scroll happen
-
-    // Confirmed horizontal drag — take over the gesture.
+    if (touchDirectionRef.current === "vertical") return;
     e.preventDefault();
     setTranslateX(startTranslate + deltaX);
   };
@@ -340,16 +357,9 @@ function SlidingRail({
     touchDirectionRef.current = "undecided";
   };
 
-  // FIX: Mobile browsers fire touchcancel (not touchend) when the gesture
-  // is taken over by native page scrolling, or interrupted by the OS.
-  // Without this handler, isDragging/isPausedRef could get stuck and the
-  // rail would never resume auto-scrolling after the user scrolled the page.
   const handleTouchCancel = () => {
-    if (isDragging) {
-      setIsDragging(false);
-    }
+    if (isDragging) setIsDragging(false);
     touchDirectionRef.current = "undecided";
-    // Resume auto-scroll immediately because the gesture was cancelled
     resumeAutoScroll();
   };
 
@@ -359,14 +369,11 @@ function SlidingRail({
     <div
       ref={containerRef}
       className="relative w-full overflow-hidden"
-      style={{ touchAction: "pan-y" }} // allow native vertical scroll; we handle horizontal ourselves
+      style={{ touchAction: "pan-y" }}
       onMouseEnter={pauseAutoScroll}
       onMouseLeave={() => {
-        if (!isDragging) {
-          resumeAutoScroll();
-        }
+        if (!isDragging) resumeAutoScroll();
       }}
-      // Touch events on the container
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -408,11 +415,9 @@ export default function FashionPage() {
   const collectionsRef = useRef<HTMLDivElement>(null);
   const WA = "https://wa.me/2348061587993";
 
-  // ─── FETCH ALBUMS ─────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-
     fetch(`${API}/api/fashion-albums`)
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
@@ -432,13 +437,11 @@ export default function FashionPage() {
       .finally(() => {
         if (isMounted) setLoading(false);
       });
-
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // ─── HERO SLIDESHOW ──────────────────────────────────────────────────────
   useEffect(() => {
     const timer = window.setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
@@ -446,7 +449,6 @@ export default function FashionPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  // ─── BUILD CARDS ──────────────────────────────────────────────────────────
   const heroCollections = useMemo<CollectionCard[]>(() => {
     if (!latestAlbums.length) return fallbackCollections;
     return latestAlbums.slice(0, 4).map((album, index) => ({
@@ -458,7 +460,6 @@ export default function FashionPage() {
     }));
   }, [latestAlbums]);
 
-  // Only the first item for the carousel
   const latestPanelItems = useMemo<CollectionCard[]>(() => {
     return heroCollections.slice(0, 1);
   }, [heroCollections]);
@@ -466,7 +467,6 @@ export default function FashionPage() {
   const railItems = useMemo<CollectionCard[]>(() => fallbackCollections, []);
   const heroCopy = "Premium, confident and classic outfit tailored for you.";
 
-  // ─── HANDLERS ──────────────────────────────────────────────────────────────
   const handleImageClick = (card: CollectionCard) => {
     setSelectedItem(card);
   };
@@ -564,7 +564,7 @@ export default function FashionPage() {
               className="max-h-8 w-auto md:max-h-10 object-contain -ml-5 -mt-3"
             />
             <span className="text-[9px] uppercase tracking-[0.55em] text-[#00AEEF]/85 md:text-[11px]">
-              Fashion Corner
+              W a r d r o b e s
             </span>
           </div>
           <button
@@ -605,7 +605,8 @@ export default function FashionPage() {
                 >
                   <span className="block">Wear</span>
                   <span className="block text-[#00AEEF]">Assured.</span>
-                  <span className="block">Live XCM.</span>
+                  <span className="block">Wear</span>
+                  <span className="block text-[#00AEEF]">XCM.</span>
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, y: 18 }}
@@ -625,7 +626,7 @@ export default function FashionPage() {
                     onClick={scrollToCollections}
                     className="inline-flex items-center gap-3 rounded-2xl border border-[#00AEEF]/40 bg-[#00AEEF] px-4 py-3 text-[9px] font-semibold uppercase tracking-[0.26em] text-white shadow-[0_0_28px_rgba(0,174,239,0.32)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_0_40px_rgba(0,174,239,0.42)] sm:px-5 sm:py-3 md:px-6 md:py-4 md:text-xs"
                   >
-                    View Collection
+                    View our works
                     <span className="text-lg">→</span>
                   </button>
                 </motion.div>
@@ -662,22 +663,16 @@ export default function FashionPage() {
               className="relative z-20 -mt-6 sm:-mt-10 lg:-mt-14"
             >
               <div className="rounded-[30px] border border-white/12 bg-black/60 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-5">
-                <div className="mb-4 flex items-center justify-between px-1">
+                <div className="mb-4 flex items-center px-1">
                   <div className="flex items-center gap-3">
                     <span className="text-[#00AEEF] text-lg">✦</span>
                     <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#00AEEF]">
                       Latest Collections
                     </p>
                   </div>
-                  <Link
-                    to="/fashion/latest"
-                    className="text-sm font-medium text-[#00AEEF] transition-colors hover:text-white"
-                  >
-                    View All →
-                  </Link>
                 </div>
 
-                {/* ─── RECTANGULAR CARD WITH EXTRA SPACE ──────────────────── */}
+                {/* ─── CARD WITH INSTRUCTION BELOW ───────────────────────── */}
                 <div className="flex justify-center pb-1 mt-6">
                   {loading ? (
                     <div className="flex items-center justify-center w-full py-8">
@@ -685,35 +680,41 @@ export default function FashionPage() {
                     </div>
                   ) : (
                     latestPanelItems.length > 0 && (
-                      <motion.button
-                        key={latestPanelItems[0].id}
-                        type="button"
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleImageClick(latestPanelItems[0])}
-                        className="w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/8 bg-white/5 text-left shadow-lg"
-                      >
-                        <div className="relative h-[260px] sm:h-[320px] md:h-[360px]">
-                          <img
-                            src={latestPanelItems[0].image}
-                            alt={latestPanelItems[0].title}
-                            className="h-full w-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                          <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-                            <div className="space-y-1.5">
-                              <h3 className="text-2xl font-semibold text-white sm:text-3xl">
-                                {latestPanelItems[0].title}
-                              </h3>
-                              <p className="text-sm text-white/75 sm:text-base max-w-xl line-clamp-2">
-                                {latestPanelItems[0].description}
-                              </p>
-                              <span className="inline-block text-xs uppercase tracking-[0.35em] text-[#00AEEF] sm:text-sm">
-                                {latestPanelItems[0].count}
-                              </span>
+                      <div className="w-full max-w-3xl">
+                        <motion.button
+                          key={latestPanelItems[0].id}
+                          type="button"
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleImageClick(latestPanelItems[0])}
+                          className="w-full overflow-hidden rounded-[28px] border border-white/8 bg-white/5 text-left shadow-lg"
+                        >
+                          <div className="relative h-[250px] sm:h-[240px] md:h-[280px]">
+                            <img
+                              src={latestPanelItems[0].image}
+                              alt={latestPanelItems[0].title}
+                              className="h-full w-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                              <div className="space-y-1.5">
+                                <h3 className="text-2xl font-semibold text-white sm:text-3xl">
+                                  {latestPanelItems[0].title}
+                                </h3>
+                                <p className="text-sm text-white/75 sm:text-base max-w-xl line-clamp-2">
+                                  {latestPanelItems[0].description}
+                                </p>
+                                <span className="inline-block text-xs uppercase tracking-[0.35em] text-[#00AEEF] sm:text-sm">
+                                  {latestPanelItems[0].count}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </motion.button>
+                        </motion.button>
+                        {/* ─── Instruction moved to below the card ─── */}
+                        <p className="text-[8px] uppercase tracking-[0.35em] text-white/25 text-center mt-3">
+                          Tap image to view
+                        </p>
+                      </div>
                     )
                   )}
                 </div>
@@ -770,32 +771,45 @@ export default function FashionPage() {
                     href="tel:+2348061587993"
                     className="group flex items-center gap-4 rounded-2xl border border-[#00AEEF]/12 bg-black/5 px-6 py-4 transition-all hover:border-[#00AEEF]/35 hover:bg-[#00AEEF]/5 flex-1 min-w-[180px] justify-center"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">☎</div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6.08 6.08l1.37-1.37a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                      </svg>
+                    </div>
                     <div className="text-left">
                       <p className="text-xs uppercase tracking-[0.35em] text-[#00AEEF]">Call Us</p>
                       <p className="mt-1 text-sm text-black/70">Speak with our team</p>
                     </div>
                   </a>
+
                   <a
                     href={WA}
                     target="_blank"
                     rel="noreferrer"
                     className="group flex items-center gap-4 rounded-2xl border border-[#00AEEF]/12 bg-black/5 px-6 py-4 transition-all hover:border-[#00AEEF]/35 hover:bg-[#00AEEF]/5 flex-1 min-w-[180px] justify-center"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">⌁</div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366]">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.126 1.524 5.868L.057 23.5l5.806-1.524A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.18-1.433l-.371-.221-3.844 1.009 1.028-3.752-.242-.386A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                      </svg>
+                    </div>
                     <div className="text-left">
                       <p className="text-xs uppercase tracking-[0.35em] text-[#00AEEF]">WhatsApp</p>
                       <p className="mt-1 text-sm text-black/70">Chat for quick orders</p>
                     </div>
                   </a>
                 </div>
+
                 <a
                   href="mailto:xcmwardrobes@gmail.com"
                   className="inline-flex items-center gap-3 rounded-2xl border border-black/10 px-6 py-4 text-xs font-semibold uppercase tracking-[0.28em] text-black transition-colors hover:border-[#00AEEF]/30 hover:text-[#00AEEF]"
                 >
                   Email Us
                 </a>
+
                 <div className="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-black/20 to-transparent" />
+
                 <div className="flex flex-wrap justify-center gap-3">
                   <p className="w-full text-[10px] uppercase tracking-[0.45em] text-[#00AEEF]">Connect With Us</p>
                   <a
