@@ -711,7 +711,7 @@ export default function FashionPage() {
                                   onClick={(e) => e.stopPropagation()}
                                   className="inline-block mt-2 text-xs uppercase tracking-[0.35em] text-[#00AEEF] border border-[#00AEEF]/40 px-4 py-1.5 rounded-full hover:bg-[#00AEEF]/10 transition-colors"
                                 >
-                                  View More →
+                                  See More →
                                 </Link>
                               </div>
                             </div>
