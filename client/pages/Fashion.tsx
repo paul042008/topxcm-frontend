@@ -538,7 +538,7 @@ export default function FashionPage() {
                   onClick={() => handleViewMore(selectedItem)}
                   className="inline-flex items-center gap-2 rounded-full border border-[#00AEEF] px-6 py-2 text-sm font-semibold uppercase tracking-widest text-white transition-colors hover:bg-[#00AEEF]/20"
                 >
-                  View More →
+                  See More →
                 </button>
               </div>
             </motion.div>
@@ -665,14 +665,17 @@ export default function FashionPage() {
               <div className="rounded-[30px] border border-white/12 bg-black/60 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center px-1">
                   <div className="flex items-center gap-3">
-                    <span className="text-[#00AEEF] text-lg">✦</span>
+                    {/* ─── REPLACED STAR WITH CIRCLE ICON ─── */}
+                    <svg className="text-[#00AEEF] text-lg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="12" r="10" />
+                    </svg>
                     <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#00AEEF]">
                       Latest Collections
                     </p>
                   </div>
                 </div>
 
-                {/* ─── CARD WITH VIEW MORE BUTTON (replaced count) ───────── */}
+                {/* ─── CARD WITH VIEW MORE BUTTON ───────── */}
                 <div className="flex justify-center pb-1 mt-6">
                   {loading ? (
                     <div className="flex items-center justify-center w-full py-8">
@@ -703,7 +706,6 @@ export default function FashionPage() {
                                 <p className="text-sm text-white/75 sm:text-base max-w-xl line-clamp-2">
                                   {latestPanelItems[0].description}
                                 </p>
-                                {/* ─── REPLACED count WITH VIEW MORE BUTTON ─── */}
                                 <Link
                                   to="/fashion/latest"
                                   onClick={(e) => e.stopPropagation()}

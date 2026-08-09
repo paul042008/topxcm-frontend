@@ -1,4 +1,8 @@
 import { useEffect, useState, FormEvent } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Placeholder from "@tiptap/extension-placeholder";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -73,6 +77,99 @@ const cardCls = "rounded-2xl border border-white/[0.07] bg-[#111] p-5 space-y-4"
 
 const btnGold =
   "rounded-xl bg-[#D4AF37] px-6 py-2.5 text-sm font-bold text-black transition hover:bg-[#e0c04a] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed";
+
+// ─── RICH TEXT EDITOR ───────────────────────────────────────────────────────
+
+function RichTextEditor({
+  value,
+  onChange,
+  placeholder = "Write something…",
+}: {
+  value: string;
+  onChange: (html: string) => void;
+  placeholder?: string;
+}) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        bold: { HTMLAttributes: { class: "font-bold" } },
+        italic: { HTMLAttributes: { class: "italic" } },
+        strike: { HTMLAttributes: { class: "line-through" } },
+      }),
+      Underline.configure({
+        HTMLAttributes: { class: "underline" },
+      }),
+      Placeholder.configure({
+        placeholder,
+      }),
+    ],
+    content: value,
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class: "prose prose-invert max-w-none focus:outline-none min-h-[80px] px-4 py-3 text-sm text-white bg-[#111] rounded-xl border border-white/10",
+      },
+    },
+  });
+
+  // Update editor content when external value changes
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
+
+  if (!editor) return null;
+
+  const toggleBold = () => editor.chain().focus().toggleBold().run();
+  const toggleItalic = () => editor.chain().focus().toggleItalic().run();
+  const toggleUnderline = () => editor.chain().focus().toggleUnderline().run();
+  const clearFormat = () => editor.chain().focus().clearNodes().unsetAllMarks().run();
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1 bg-[#1a1a1a] p-2 rounded-xl border border-white/10">
+        <button
+          type="button"
+          onClick={toggleBold}
+          className={`px-2 py-1 rounded text-sm transition ${
+            editor.isActive("bold") ? "bg-[#D4AF37] text-black" : "text-white/60 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          <strong>B</strong>
+        </button>
+        <button
+          type="button"
+          onClick={toggleItalic}
+          className={`px-2 py-1 rounded text-sm transition ${
+            editor.isActive("italic") ? "bg-[#D4AF37] text-black" : "text-white/60 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          <em>I</em>
+        </button>
+        <button
+          type="button"
+          onClick={toggleUnderline}
+          className={`px-2 py-1 rounded text-sm transition ${
+            editor.isActive("underline") ? "bg-[#D4AF37] text-black" : "text-white/60 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          <u>U</u>
+        </button>
+        <button
+          type="button"
+          onClick={clearFormat}
+          className="px-2 py-1 rounded text-sm text-white/40 hover:text-white hover:bg-white/10 transition"
+        >
+          ✕
+        </button>
+      </div>
+      <EditorContent editor={editor} className="[&_.ProseMirror]:min-h-[80px] [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:bg-[#111] [&_.ProseMirror]:rounded-xl [&_.ProseMirror]:border [&_.ProseMirror]:border-white/10 [&_.ProseMirror]:text-sm [&_.ProseMirror]:text-white [&_.ProseMirror]:outline-none [&_.ProseMirror]:focus:border-[#D4AF37] [&_.ProseMirror]:focus:ring-2 [&_.ProseMirror]:focus:ring-[#D4AF37]/20 [&_.ProseMirror]:min-h-[80px]" />
+    </div>
+  );
+}
 
 // ─── PRICE INPUT WITH ₦ PREFIX ────────────────────────────────────────────
 
@@ -233,7 +330,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── FASHION TAB (with reordering & ₦ prefix) ──────────────────────────────
+// ── FASHION TAB (with rich text editor) ──────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FashionTab() {
@@ -261,13 +358,14 @@ function FashionTab() {
   const [editAlbumLoading, setEditAlbumLoading] = useState(false);
   const [editAlbumMsg, setEditAlbumMsg] = useState("");
 
-  // ─── IMAGE EDIT STATE ──────────────────────────────────────────────────────
+  // ─── IMAGE EDIT STATE (with file replacement) ────────────────────────────
   const [editingImage, setEditingImage] = useState<{ albumId: string; image: FashionAlbum["images"][0] } | null>(null);
   const [editImageTitle, setEditImageTitle] = useState("");
   const [editImageDesc, setEditImageDesc] = useState("");
   const [editImagePrice, setEditImagePrice] = useState("");
   const [editImageExtra, setEditImageExtra] = useState("");
   const [editImageOrder, setEditImageOrder] = useState<number | undefined>(undefined);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImageLoading, setEditImageLoading] = useState(false);
   const [editImageMsg, setEditImageMsg] = useState("");
 
@@ -488,7 +586,7 @@ function FashionTab() {
       const fd = new FormData();
       fd.append("name", newAlbumName);
       fd.append("category", newAlbumCategory);
-      fd.append("description", newAlbumDesc);
+      fd.append("description", newAlbumDesc); // HTML content
       fd.append("price", newAlbumPrice);
       fd.append("cover", newAlbumCover);
       if (newAlbumInitialImage) {
@@ -527,7 +625,7 @@ function FashionTab() {
       const fd = new FormData();
       imgFiles.forEach((file) => fd.append("images", file));
       fd.append("title", imgTitle);
-      fd.append("description", imgDesc);
+      fd.append("description", imgDesc); // HTML content
       fd.append("price", imgPrice);
       fd.append("albumId", selectedAlbum.id);
       fd.append("category", selectedAlbum.category);
@@ -568,7 +666,7 @@ function FashionTab() {
       const fd = new FormData();
       fd.append("image", singleFile);
       fd.append("title", singleTitle);
-      fd.append("description", singleDesc);
+      fd.append("description", singleDesc); // HTML content
       fd.append("category", singleCat);
       if (singlePrice) fd.append("price", singlePrice);
 
@@ -610,7 +708,7 @@ function FashionTab() {
       const fd = new FormData();
       fd.append("name", editAlbumName);
       fd.append("category", editAlbumCategory);
-      fd.append("description", editAlbumDesc);
+      fd.append("description", editAlbumDesc); // HTML content
       fd.append("price", editAlbumPrice);
       if (editAlbumCover) fd.append("cover", editAlbumCover);
 
@@ -635,7 +733,7 @@ function FashionTab() {
     }
   };
 
-  // ─── EDIT IMAGE ────────────────────────────────────────────────────────────
+  // ─── EDIT IMAGE (with file replacement) ──────────────────────────────────
 
   const openEditImage = (albumId: string, image: FashionAlbum["images"][0]) => {
     setEditingImage({ albumId, image });
@@ -644,6 +742,7 @@ function FashionTab() {
     setEditImagePrice(image.price || "");
     setEditImageExtra(image.extra_text || "");
     setEditImageOrder(image.order !== undefined ? image.order : undefined);
+    setEditImageFile(null);
     setEditImageMsg("");
   };
 
@@ -653,18 +752,42 @@ function FashionTab() {
     setEditImageLoading(true);
     setEditImageMsg("");
     try {
-      const body = {
+      let res: Response;
+      const hasFile = !!editImageFile;
+      // Prepare common metadata (description is HTML)
+      const bodyData = {
         title: editImageTitle,
         description: editImageDesc,
         price: editImagePrice,
         extra_text: editImageExtra,
         order: editImageOrder !== undefined ? editImageOrder : (editingImage.image.order ?? 0),
       };
-      const res = await fetchWithWakeup(
-        `${API}/api/fashion-albums/${editingImage.albumId}/images/${editingImage.image.id}`,
-        { method: "PUT", headers: { ...AUTH_HEADER, "Content-Type": "application/json" }, body: JSON.stringify(body) },
-        setEditImageMsg
-      );
+
+      if (hasFile) {
+        const fd = new FormData();
+        fd.append("image", editImageFile);
+        fd.append("title", editImageTitle);
+        fd.append("description", editImageDesc);
+        fd.append("price", editImagePrice);
+        fd.append("extra_text", editImageExtra);
+        if (editImageOrder !== undefined) fd.append("order", String(editImageOrder));
+        res = await fetchWithWakeup(
+          `${API}/api/fashion-albums/${editingImage.albumId}/images/${editingImage.image.id}`,
+          { method: "PUT", headers: AUTH_HEADER, body: fd },
+          setEditImageMsg
+        );
+      } else {
+        res = await fetchWithWakeup(
+          `${API}/api/fashion-albums/${editingImage.albumId}/images/${editingImage.image.id}`,
+          {
+            method: "PUT",
+            headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
+            body: JSON.stringify(bodyData),
+          },
+          setEditImageMsg
+        );
+      }
+
       const d = await res.json();
       if (!res.ok) return setEditImageMsg(d.message || "Update failed");
       setEditImageMsg("✅ Image updated!");
@@ -674,7 +797,9 @@ function FashionTab() {
         setSelectedAlbum((prev) => {
           if (!prev) return prev;
           const updatedImages = prev.images.map((img) =>
-            img.id === editingImage.image.id ? { ...img, title: editImageTitle, description: editImageDesc, price: editImagePrice, extra_text: editImageExtra, order: body.order } : img
+            img.id === editingImage.image.id
+              ? { ...img, title: editImageTitle, description: editImageDesc, price: editImagePrice, extra_text: editImageExtra, order: bodyData.order }
+              : img
           );
           return { ...prev, images: updatedImages };
         });
@@ -707,7 +832,7 @@ function FashionTab() {
       const fd = new FormData();
       fd.append("title", editSingleTitle);
       fd.append("category", editSingleCat);
-      fd.append("description", editSingleDesc);
+      fd.append("description", editSingleDesc); // HTML content
       fd.append("price", editSinglePrice);
       if (editSingleFile) fd.append("image", editSingleFile);
 
@@ -763,7 +888,7 @@ function FashionTab() {
               <input placeholder="Item name" value={singleTitle} onChange={(e) => setSingleTitle(e.target.value)} className={inputCls} />
             </Field>
             <Field label="Description">
-              <textarea placeholder="Describe the piece…" value={singleDesc} onChange={(e) => setSingleDesc(e.target.value)} className={textareaCls} />
+              <RichTextEditor value={singleDesc} onChange={setSingleDesc} placeholder="Describe the piece…" />
             </Field>
             <UploadBox label="Image *" single onChange={(f) => setSingleFile(f[0] || null)} previewFiles={singleFile ? [singleFile] : []} />
             <FormFooter msg={singleMsg} loading={singleLoading} label="Upload Item" />
@@ -838,7 +963,7 @@ function FashionTab() {
                 </select>
               </Field>
               <Field label="Description">
-                <textarea placeholder="Album description…" value={newAlbumDesc} onChange={(e) => setNewAlbumDesc(e.target.value)} className={textareaCls} style={{ minHeight: 64 }} />
+                <RichTextEditor value={newAlbumDesc} onChange={setNewAlbumDesc} placeholder="Album description…" />
               </Field>
               <Field label="Default Price">
                 <PriceInput value={newAlbumPrice} onChange={setNewAlbumPrice} placeholder="e.g. 60,000" />
@@ -942,7 +1067,7 @@ function FashionTab() {
                   </Field>
                 </div>
                 <Field label="Description">
-                  <textarea placeholder="Describe this specific piece…" value={imgDesc} onChange={(e) => setImgDesc(e.target.value)} className={textareaCls} style={{ minHeight: 64 }} />
+                  <RichTextEditor value={imgDesc} onChange={setImgDesc} placeholder="Describe this specific piece…" />
                 </Field>
                 <UploadBox
                   label="Image Files * (select multiple)"
@@ -1042,7 +1167,7 @@ function FashionTab() {
                 </select>
               </Field>
               <Field label="Description">
-                <textarea value={editAlbumDesc} onChange={(e) => setEditAlbumDesc(e.target.value)} className={textareaCls} rows={2} />
+                <RichTextEditor value={editAlbumDesc} onChange={setEditAlbumDesc} placeholder="Album description…" />
               </Field>
               <Field label="Price">
                 <PriceInput value={editAlbumPrice} onChange={setEditAlbumPrice} placeholder="e.g. 60,000" />
@@ -1060,7 +1185,7 @@ function FashionTab() {
         </div>
       )}
 
-      {/* ─── EDIT IMAGE MODAL ──────────────────────────────────────────────── */}
+      {/* ─── EDIT IMAGE MODAL (with file upload) ───────────────────────────── */}
       {editingImage && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-[#111] rounded-2xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto">
@@ -1073,7 +1198,7 @@ function FashionTab() {
                 <PriceInput value={editImagePrice} onChange={setEditImagePrice} placeholder="e.g. 75,000" />
               </Field>
               <Field label="Description">
-                <textarea value={editImageDesc} onChange={(e) => setEditImageDesc(e.target.value)} className={textareaCls} rows={2} />
+                <RichTextEditor value={editImageDesc} onChange={setEditImageDesc} placeholder="Image description…" />
               </Field>
               <Field label="Extra Text (e.g., Size Chart)">
                 <textarea value={editImageExtra} onChange={(e) => setEditImageExtra(e.target.value)} className={textareaCls} rows={2} />
@@ -1087,6 +1212,12 @@ function FashionTab() {
                   placeholder="e.g. 0"
                 />
               </Field>
+              <UploadBox
+                label="Replace Image (optional)"
+                single
+                onChange={(f) => setEditImageFile(f[0] || null)}
+                previewFiles={editImageFile ? [editImageFile] : []}
+              />
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditingImage(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
                 <button type="submit" disabled={editImageLoading} className={btnGold}>
@@ -1117,7 +1248,7 @@ function FashionTab() {
                 <PriceInput value={editSinglePrice} onChange={setEditSinglePrice} placeholder="e.g. 85,000" />
               </Field>
               <Field label="Description">
-                <textarea value={editSingleDesc} onChange={(e) => setEditSingleDesc(e.target.value)} className={textareaCls} rows={2} />
+                <RichTextEditor value={editSingleDesc} onChange={setEditSingleDesc} placeholder="Describe this item…" />
               </Field>
               <UploadBox label="Replace Image (optional)" single onChange={(f) => setEditSingleFile(f[0] || null)} previewFiles={editSingleFile ? [editSingleFile] : []} />
               <div className="flex gap-3 pt-2">

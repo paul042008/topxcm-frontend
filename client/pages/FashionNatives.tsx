@@ -676,20 +676,19 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
 
         {album.description && (
           <>
-            <p
-              className={`text-white/50 text-xs leading-relaxed ${
-                !expanded ? "line-clamp-3" : ""
-              }`}
-            >
-              {album.description}
-            </p>
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
-            >
-              {expanded ? "Show less" : "Read more"}
-            </button>
-          </>
+  <div
+    className={`text-white/50 text-xs leading-relaxed ${
+      !expanded ? "line-clamp-3" : ""
+    }`}
+    dangerouslySetInnerHTML={{ __html: album.description }}
+  />
+  <button
+    onClick={() => setExpanded(!expanded)}
+    className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
+  >
+    {expanded ? "Show less" : "Read more"}
+  </button>
+</>
         )}
 
         {album.price && (
@@ -743,20 +742,19 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
 
         {album.description && (
           <>
-            <p
-              className={`text-white/50 text-xs leading-relaxed ${
-                !expanded ? "line-clamp-3" : ""
-              }`}
-            >
-              {album.description}
-            </p>
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
-            >
-              {expanded ? "Show less" : "Read more"}
-            </button>
-          </>
+  <div
+    className={`text-white/50 text-xs leading-relaxed ${
+      !expanded ? "line-clamp-3" : ""
+    }`}
+    dangerouslySetInnerHTML={{ __html: album.description }}
+  />
+  <button
+    onClick={() => setExpanded(!expanded)}
+    className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
+  >
+    {expanded ? "Show less" : "Read more"}
+  </button>
+</>
         )}
 
         {album.price && (
