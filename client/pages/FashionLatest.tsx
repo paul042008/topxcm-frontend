@@ -195,7 +195,7 @@ function ItemModal({
   }, [onClose]);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${image.title}*${image.price ? ` (${image.price})` : ""}. Please let me know the details.`;
+    const msg = `Hi! I'm interested in ordering: *${image.title}*${image.price ? ` (₦${image.price})` : ""}. Please let me know the details.`;
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -320,7 +320,7 @@ function ItemModal({
           <div className="p-6 bg-black/80 backdrop-blur-sm">
             <h3 className="text-xl font-serif text-white mb-1">{image.title}</h3>
             {image.price && (
-              <p className="text-[#00AEEF] font-bold text-lg mb-3">{image.price}</p>
+              <p className="text-[#00AEEF] font-bold text-lg mb-3">₦{image.price}</p>
             )}
             <p className="text-white/60 text-sm leading-relaxed mb-5 whitespace-pre-wrap break-words">
               {image.description}
@@ -399,7 +399,7 @@ function ProductCard({
             {productTitle}
           </h4>
           {firstImage.price && (
-            <p className="text-[#00AEEF] font-bold text-base">{firstImage.price}</p>
+            <p className="text-[#00AEEF] font-bold text-base">₦{firstImage.price}</p>
           )}
           {firstImage.description && (
             <p className="text-white/50 text-xs leading-relaxed line-clamp-2">
@@ -479,7 +479,7 @@ function ProductCard({
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold text-sm">{productTitle}</p>
                   {images[currentIndex].price && (
-                    <p className="text-[#00AEEF] text-sm">{images[currentIndex].price}</p>
+                    <p className="text-[#00AEEF] text-sm">₦{images[currentIndex].price}</p>
                   )}
                 </div>
                 <button
@@ -535,7 +535,7 @@ function GalleryView({
   const heroExtraText = heroGroup?.images[0]?.extra_text || null;
 
   const handleOrder = (title: string, price: string) => {
-    const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (${price})` : ""}. Please let me know the details.`;
+    const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (₦${price})` : ""}. Please let me know the details.`;
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -679,7 +679,7 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
         )}
 
         {album.price && (
-          <p className="text-[#00AEEF] font-bold text-sm">From {album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">From ₦{album.price}</p>
         )}
 
         <button
@@ -746,7 +746,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
         )}
 
         {album.price && (
-          <p className="text-[#00AEEF] font-bold text-sm">{album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">₦{album.price}</p>
         )}
 
         <button
@@ -872,7 +872,7 @@ export default function FashionLatest() {
         <div className="relative z-10 pt-24 px-5 pb-12 border-b border-[#00AEEF]/10 bg-black/30 backdrop-blur-sm">
           <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">Latest</h1>
           <p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
-            Fresh arrivals – the most recent pieces from our atelier, crafted for those who lead.
+            Fresh arrivals – the most recent pieces from our atelier, crafted for you.
           </p>
         </div>
 

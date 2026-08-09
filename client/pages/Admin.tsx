@@ -13,7 +13,7 @@ interface FashionAlbum {
   category: FashionCategory;
   description: string;
   price: string;
-  images: { id?: string; url: string; title: string; description: string; price: string; extra_text?: string }[];
+  images: { id?: string; url: string; title: string; description: string; price: string; extra_text?: string; order?: number }[];
 }
 
 interface SingleItem {
@@ -73,6 +73,35 @@ const cardCls = "rounded-2xl border border-white/[0.07] bg-[#111] p-5 space-y-4"
 
 const btnGold =
   "rounded-xl bg-[#D4AF37] px-6 py-2.5 text-sm font-bold text-black transition hover:bg-[#e0c04a] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed";
+
+// ─── PRICE INPUT WITH ₦ PREFIX ────────────────────────────────────────────
+
+function PriceInput({
+  value,
+  onChange,
+  placeholder = "e.g. 85,000",
+  ...props
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="relative">
+      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-medium text-sm">
+        ₦
+      </span>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`${inputCls} pl-8`}
+        {...props}
+      />
+    </div>
+  );
+}
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -204,7 +233,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── FASHION TAB (UPDATED with full Edit/Update) ──────────────────────────
+// ── FASHION TAB (with reordering & ₦ prefix) ──────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FashionTab() {
@@ -238,6 +267,7 @@ function FashionTab() {
   const [editImageDesc, setEditImageDesc] = useState("");
   const [editImagePrice, setEditImagePrice] = useState("");
   const [editImageExtra, setEditImageExtra] = useState("");
+  const [editImageOrder, setEditImageOrder] = useState<number | undefined>(undefined);
   const [editImageLoading, setEditImageLoading] = useState(false);
   const [editImageMsg, setEditImageMsg] = useState("");
 
@@ -281,7 +311,18 @@ function FashionTab() {
     setLoadingAlbums(true);
     try {
       const res = await fetch(`${API}/api/fashion-albums`);
-      if (res.ok) setAlbums(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        // ensure images have order, default to index if missing
+        const withOrder = data.map((album: FashionAlbum) => ({
+          ...album,
+          images: album.images?.map((img, idx) => ({
+            ...img,
+            order: img.order !== undefined ? img.order : idx,
+          })) || [],
+        }));
+        setAlbums(withOrder);
+      }
     } catch {}
     setLoadingAlbums(false);
   };
@@ -306,7 +347,69 @@ function FashionTab() {
     fetchSingles();
   }, []);
 
-  // ─── DELETE FUNCTIONS (unchanged) ──────────────────────────────────────────
+  // ─── REORDER IMAGES ────────────────────────────────────────────────────────
+
+  const moveImage = async (albumId: string, imageId: string, direction: "up" | "down") => {
+    // find the album and image
+    const album = albums.find(a => a.id === albumId);
+    if (!album) return;
+    const images = album.images;
+    const index = images.findIndex(img => img.id === imageId);
+    if (index === -1) return;
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= images.length) return;
+
+    // swap order values
+    const img1 = images[index];
+    const img2 = images[newIndex];
+    const order1 = img1.order ?? index;
+    const order2 = img2.order ?? newIndex;
+
+    // update both images on server
+    const updateOrder = async (img: FashionAlbum["images"][0], newOrder: number) => {
+      if (!img.id) return;
+      const body = {
+        title: img.title || "",
+        description: img.description || "",
+        price: img.price || "",
+        extra_text: img.extra_text || "",
+        order: newOrder,
+      };
+      try {
+        await fetch(`${API}/api/fashion-albums/${albumId}/images/${img.id}`, {
+          method: "PUT",
+          headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } catch (e) {
+        console.error("Failed to update order", e);
+      }
+    };
+
+    // update both orders concurrently
+    await Promise.all([
+      updateOrder(img1, order2),
+      updateOrder(img2, order1),
+    ]);
+
+    // update local state
+    const updatedImages = [...images];
+    [updatedImages[index], updatedImages[newIndex]] = [updatedImages[newIndex], updatedImages[index]];
+    // reassign order values based on new positions
+    updatedImages.forEach((img, idx) => { img.order = idx; });
+
+    // update albums list and selectedAlbum
+    const updatedAlbums = albums.map(a =>
+      a.id === albumId ? { ...a, images: updatedImages } : a
+    );
+    setAlbums(updatedAlbums);
+    if (selectedAlbum?.id === albumId) {
+      setSelectedAlbum({ ...selectedAlbum, images: updatedImages });
+    }
+  };
+
+  // ─── DELETE FUNCTIONS ──────────────────────────────────────────────────────
+
   const deleteAlbum = async (albumId: string) => {
     if (!window.confirm("Delete this album and all its images? This cannot be undone.")) return;
     try {
@@ -374,6 +477,7 @@ function FashionTab() {
   };
 
   // ─── CREATE ALBUM ──────────────────────────────────────────────────────────
+
   const handleCreateAlbum = async (e: FormEvent) => {
     e.preventDefault();
     if (!newAlbumName.trim()) return setCreateMsg("Album name is required");
@@ -413,6 +517,7 @@ function FashionTab() {
   };
 
   // ─── ADD MULTIPLE IMAGES TO ALBUM ─────────────────────────────────────────
+
   const handleAddImage = async (e: FormEvent) => {
     e.preventDefault();
     if (imgFiles.length === 0 || !selectedAlbum) return setAddImgMsg("Select at least one image");
@@ -453,6 +558,7 @@ function FashionTab() {
   };
 
   // ─── SINGLE UPLOAD ─────────────────────────────────────────────────────────
+
   const handleSingleUpload = async (e: FormEvent) => {
     e.preventDefault();
     if (!singleFile) return setSingleMsg("Select an image");
@@ -483,7 +589,8 @@ function FashionTab() {
     }
   };
 
-  // ─── ✨ EDIT ALBUM ────────────────────────────────────────────────────────
+  // ─── EDIT ALBUM ────────────────────────────────────────────────────────────
+
   const openEditAlbum = (album: FashionAlbum) => {
     setEditingAlbum(album);
     setEditAlbumName(album.name);
@@ -515,10 +622,8 @@ function FashionTab() {
       const d = await res.json();
       if (!res.ok) return setEditAlbumMsg(d.message || "Update failed");
       setEditAlbumMsg("✅ Album updated!");
-      // Update local state
       setEditingAlbum(null);
       fetchAlbums();
-      // If the selected album is the one being edited, update it too
       if (selectedAlbum?.id === editingAlbum.id) {
         setSelectedAlbum((prev) => prev ? { ...prev, name: editAlbumName, category: editAlbumCategory, description: editAlbumDesc, price: editAlbumPrice } : prev);
       }
@@ -530,13 +635,15 @@ function FashionTab() {
     }
   };
 
-  // ─── ✨ EDIT IMAGE ────────────────────────────────────────────────────────
+  // ─── EDIT IMAGE ────────────────────────────────────────────────────────────
+
   const openEditImage = (albumId: string, image: FashionAlbum["images"][0]) => {
     setEditingImage({ albumId, image });
     setEditImageTitle(image.title || "");
     setEditImageDesc(image.description || "");
     setEditImagePrice(image.price || "");
     setEditImageExtra(image.extra_text || "");
+    setEditImageOrder(image.order !== undefined ? image.order : undefined);
     setEditImageMsg("");
   };
 
@@ -551,6 +658,7 @@ function FashionTab() {
         description: editImageDesc,
         price: editImagePrice,
         extra_text: editImageExtra,
+        order: editImageOrder !== undefined ? editImageOrder : (editingImage.image.order ?? 0),
       };
       const res = await fetchWithWakeup(
         `${API}/api/fashion-albums/${editingImage.albumId}/images/${editingImage.image.id}`,
@@ -562,12 +670,11 @@ function FashionTab() {
       setEditImageMsg("✅ Image updated!");
       setEditingImage(null);
       fetchAlbums();
-      // Update selectedAlbum if applicable
       if (selectedAlbum?.id === editingImage.albumId) {
         setSelectedAlbum((prev) => {
           if (!prev) return prev;
           const updatedImages = prev.images.map((img) =>
-            img.id === editingImage.image.id ? { ...img, title: editImageTitle, description: editImageDesc, price: editImagePrice, extra_text: editImageExtra } : img
+            img.id === editingImage.image.id ? { ...img, title: editImageTitle, description: editImageDesc, price: editImagePrice, extra_text: editImageExtra, order: body.order } : img
           );
           return { ...prev, images: updatedImages };
         });
@@ -579,7 +686,8 @@ function FashionTab() {
     }
   };
 
-  // ─── ✨ EDIT SINGLE ITEM ──────────────────────────────────────────────────
+  // ─── EDIT SINGLE ITEM ──────────────────────────────────────────────────────
+
   const openEditSingle = (item: SingleItem) => {
     setEditingSingle(item);
     setEditSingleTitle(item.title || "");
@@ -647,8 +755,8 @@ function FashionTab() {
                   {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
                 </select>
               </Field>
-              <Field label="Price (₦)">
-                <input placeholder="e.g. ₦85,000" value={singlePrice} onChange={(e) => setSinglePrice(e.target.value)} className={inputCls} />
+              <Field label="Price">
+                <PriceInput value={singlePrice} onChange={setSinglePrice} placeholder="e.g. 85,000" />
               </Field>
             </div>
             <Field label="Title">
@@ -681,7 +789,7 @@ function FashionTab() {
                     <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover border border-white/10" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
-                      <p className="text-xs text-white/35 truncate">{item.category} {item.price && `· ${item.price}`}</p>
+                      <p className="text-xs text-white/35 truncate">{item.category} {item.price && `· ₦${item.price}`}</p>
                     </div>
                     <button
                       onClick={() => openEditSingle(item)}
@@ -732,8 +840,8 @@ function FashionTab() {
               <Field label="Description">
                 <textarea placeholder="Album description…" value={newAlbumDesc} onChange={(e) => setNewAlbumDesc(e.target.value)} className={textareaCls} style={{ minHeight: 64 }} />
               </Field>
-              <Field label="Default Price (₦)">
-                <input placeholder="e.g. ₦60,000" value={newAlbumPrice} onChange={(e) => setNewAlbumPrice(e.target.value)} className={inputCls} />
+              <Field label="Default Price">
+                <PriceInput value={newAlbumPrice} onChange={setNewAlbumPrice} placeholder="e.g. 60,000" />
               </Field>
               <UploadBox label="Cover Image *" single onChange={(f) => setNewAlbumCover(f[0] || null)} previewFiles={newAlbumCover ? [newAlbumCover] : []} />
               <UploadBox label="Initial Album Image (optional) – will appear inside the album" single onChange={(f) => setNewAlbumInitialImage(f[0] || null)} previewFiles={newAlbumInitialImage ? [newAlbumInitialImage] : []} />
@@ -829,8 +937,8 @@ function FashionTab() {
                   <Field label="Image Title">
                     <input placeholder="e.g. Royal Blue Casual" value={imgTitle} onChange={(e) => setImgTitle(e.target.value)} className={inputCls} />
                   </Field>
-                  <Field label="Price (₦) — overrides album default">
-                    <input placeholder="e.g. ₦75,000" value={imgPrice} onChange={(e) => setImgPrice(e.target.value)} className={inputCls} />
+                  <Field label="Price (overrides album default)">
+                    <PriceInput value={imgPrice} onChange={setImgPrice} placeholder="e.g. 75,000" />
                   </Field>
                 </div>
                 <Field label="Description">
@@ -863,9 +971,27 @@ function FashionTab() {
                         <img src={img.url} alt={img.title} className="w-full aspect-square object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition p-3 flex flex-col justify-end">
                           <p className="text-white text-xs font-medium">{img.title}</p>
-                          {img.price && <p className="text-[#D4AF37] text-xs">{img.price}</p>}
+                          {img.price && <p className="text-[#D4AF37] text-xs">₦{img.price}</p>}
+                          {img.order !== undefined && <p className="text-white/40 text-[10px]">Order: {img.order}</p>}
                         </div>
                         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                          {/* Up/Down arrows */}
+                          <button
+                            onClick={() => img.id && moveImage(selectedAlbum.id, img.id, "up")}
+                            disabled={i === 0}
+                            className="w-6 h-6 rounded-full bg-[#D4AF37]/60 text-black hover:bg-[#D4AF37] transition flex items-center justify-center disabled:opacity-20 disabled:cursor-not-allowed"
+                            title="Move up"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                          </button>
+                          <button
+                            onClick={() => img.id && moveImage(selectedAlbum.id, img.id, "down")}
+                            disabled={i === selectedAlbum.images.length - 1}
+                            className="w-6 h-6 rounded-full bg-[#D4AF37]/60 text-black hover:bg-[#D4AF37] transition flex items-center justify-center disabled:opacity-20 disabled:cursor-not-allowed"
+                            title="Move down"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                          </button>
                           <button
                             onClick={() => openEditImage(selectedAlbum.id, img)}
                             className="w-6 h-6 rounded-full bg-[#D4AF37]/80 text-black hover:bg-[#D4AF37] transition flex items-center justify-center"
@@ -918,8 +1044,8 @@ function FashionTab() {
               <Field label="Description">
                 <textarea value={editAlbumDesc} onChange={(e) => setEditAlbumDesc(e.target.value)} className={textareaCls} rows={2} />
               </Field>
-              <Field label="Price (₦)">
-                <input value={editAlbumPrice} onChange={(e) => setEditAlbumPrice(e.target.value)} className={inputCls} />
+              <Field label="Price">
+                <PriceInput value={editAlbumPrice} onChange={setEditAlbumPrice} placeholder="e.g. 60,000" />
               </Field>
               <UploadBox label="Replace Cover (optional)" single onChange={(f) => setEditAlbumCover(f[0] || null)} previewFiles={editAlbumCover ? [editAlbumCover] : []} />
               <div className="flex gap-3 pt-2">
@@ -943,14 +1069,23 @@ function FashionTab() {
               <Field label="Title">
                 <input value={editImageTitle} onChange={(e) => setEditImageTitle(e.target.value)} className={inputCls} />
               </Field>
-              <Field label="Price (₦)">
-                <input value={editImagePrice} onChange={(e) => setEditImagePrice(e.target.value)} className={inputCls} />
+              <Field label="Price">
+                <PriceInput value={editImagePrice} onChange={setEditImagePrice} placeholder="e.g. 75,000" />
               </Field>
               <Field label="Description">
                 <textarea value={editImageDesc} onChange={(e) => setEditImageDesc(e.target.value)} className={textareaCls} rows={2} />
               </Field>
               <Field label="Extra Text (e.g., Size Chart)">
                 <textarea value={editImageExtra} onChange={(e) => setEditImageExtra(e.target.value)} className={textareaCls} rows={2} />
+              </Field>
+              <Field label="Order (number) – lower = appears first">
+                <input
+                  type="number"
+                  value={editImageOrder !== undefined ? editImageOrder : ""}
+                  onChange={(e) => setEditImageOrder(e.target.value ? parseInt(e.target.value) : undefined)}
+                  className={inputCls}
+                  placeholder="e.g. 0"
+                />
               </Field>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditingImage(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
@@ -978,8 +1113,8 @@ function FashionTab() {
                   {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
                 </select>
               </Field>
-              <Field label="Price (₦)">
-                <input value={editSinglePrice} onChange={(e) => setEditSinglePrice(e.target.value)} className={inputCls} />
+              <Field label="Price">
+                <PriceInput value={editSinglePrice} onChange={setEditSinglePrice} placeholder="e.g. 85,000" />
               </Field>
               <Field label="Description">
                 <textarea value={editSingleDesc} onChange={(e) => setEditSingleDesc(e.target.value)} className={textareaCls} rows={2} />
@@ -1180,7 +1315,7 @@ function RealEstateTab() {
           <input placeholder="e.g. 4-Bedroom Duplex, Lekki" value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
         </Field>
         <Field label="Price">
-          <input placeholder="e.g. ₦85,000,000" value={price} onChange={(e) => setPrice(e.target.value)} className={inputCls} />
+          <PriceInput value={price} onChange={setPrice} placeholder="e.g. 85,000,000" />
         </Field>
       </div>
       <Field label="Location">

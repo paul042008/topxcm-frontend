@@ -29,7 +29,7 @@ interface Album {
 
 const API = "https://topxcm-backend-1.onrender.com";
 
-// ─── HERO LIGHTBOX (with zoom + pan, no order buttons) ─────────────────────
+// ─── HERO LIGHTBOX (with zoom + pan, shows extra_text) ─────────────────────
 
 function HeroLightbox({
   image,
@@ -507,7 +507,7 @@ function ProductCard({
   );
 }
 
-// ─── GALLERY VIEW (UPDATED with grouping) ────────────────────────────────
+// ─── GALLERY VIEW (UPDATED with second‑image exclusion fix) ────────────────
 
 function GalleryView({
   album,
@@ -533,7 +533,15 @@ function GalleryView({
   }));
 
   const heroGroup = productGroups.length > 0 ? productGroups[0] : null;
-  const restGroups = productGroups.slice(1);
+
+  // ─── EXCLUDE SECOND IMAGE (WITH CONDITION) ────────────────────────────
+  const secondImage = album.images[1];
+  const restGroups = productGroups.slice(1).map((group) => ({
+    ...group,
+    images: group.images.length > 1
+      ? group.images.filter((img) => img !== secondImage)
+      : group.images, // keep the group if it only has the second image
+  })).filter((group) => group.images.length > 0);
 
   const handleOrder = (title: string, price: string) => {
     const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (${price})` : ""}. Please let me know the details.`;
@@ -788,7 +796,6 @@ export default function FashionNatives() {
 
         const filteredAlbums = albumsData.filter((a) => a.category === "natives");
 
-        // ✅ Correct filter: exclude items that belong to an album (album_id) or are album covers (album_name)
         const standaloneItems = itemsData.filter(
           (item: any) => !item.album_id && !item.album_name && item.category === "natives"
         );
@@ -831,16 +838,14 @@ export default function FashionNatives() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
-      {/* ─── FASHION MENU (overlay) ─────────────────────────────── */}
       <FashionMenu
         isFashionLanding={true}
         initialOpen={menuOpen}
         onOpenAction={() => setMenuOpen(true)}
         onCloseAction={() => setMenuOpen(false)}
-        hideHamburger={true} // ✅ prevents duplicate hamburger
+        hideHamburger={true}
       />
 
-      {/* ─── MAIN CONTENT (blurred when menu is open) ──────────── */}
       <div
         className="transition-all duration-500"
         style={{

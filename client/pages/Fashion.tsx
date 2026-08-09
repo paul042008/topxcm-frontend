@@ -561,10 +561,10 @@ export default function FashionPage() {
             <img
               src="/images/your-logo.png"
               alt="XCM Logo"
-              className="max-h-8 w-auto md:max-h-10 object-contain -ml-5 -mt-3"
+              className="max-h-8 w-auto md:max-h-10 object-contain -ml-1 -mt-3"
             />
             <span className="text-[9px] uppercase tracking-[0.55em] text-[#00AEEF]/85 md:text-[11px]">
-              W a r d r o b e s
+              Wardrodes
             </span>
           </div>
           <button
@@ -595,7 +595,7 @@ export default function FashionPage() {
                   transition={{ duration: 1.1, ease: "easeOut" }}
                   className="text-[10px] font-bold uppercase tracking-[0.48em] text-white/85 md:text-sm"
                 >
-                  New Season • New Energy
+                 
                 </motion.p>
                 <motion.h1
                   initial={{ opacity: 0, y: 30 }}
@@ -672,7 +672,7 @@ export default function FashionPage() {
                   </div>
                 </div>
 
-                {/* ─── CARD WITH INSTRUCTION BELOW ───────────────────────── */}
+                {/* ─── CARD WITH VIEW MORE BUTTON (replaced count) ───────── */}
                 <div className="flex justify-center pb-1 mt-6">
                   {loading ? (
                     <div className="flex items-center justify-center w-full py-8">
@@ -703,17 +703,19 @@ export default function FashionPage() {
                                 <p className="text-sm text-white/75 sm:text-base max-w-xl line-clamp-2">
                                   {latestPanelItems[0].description}
                                 </p>
-                                <span className="inline-block text-xs uppercase tracking-[0.35em] text-[#00AEEF] sm:text-sm">
-                                  {latestPanelItems[0].count}
-                                </span>
+                                {/* ─── REPLACED count WITH VIEW MORE BUTTON ─── */}
+                                <Link
+                                  to="/fashion/latest"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-block mt-2 text-xs uppercase tracking-[0.35em] text-[#00AEEF] border border-[#00AEEF]/40 px-4 py-1.5 rounded-full hover:bg-[#00AEEF]/10 transition-colors"
+                                >
+                                  View More →
+                                </Link>
                               </div>
                             </div>
                           </div>
                         </motion.button>
-                        {/* ─── Instruction moved to below the card ─── */}
-                        <p className="text-[8px] uppercase tracking-[0.35em] text-white/25 text-center mt-3">
-                          Tap image to view
-                        </p>
+ 
                       </div>
                     )
                   )}
@@ -721,11 +723,7 @@ export default function FashionPage() {
               </div>
             </motion.div>
 
-            <div className="mt-6 flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-white/45">
-              <span>01</span>
-              <div className="mx-4 h-[1px] flex-1 bg-white/10" />
-              <span>06</span>
-            </div>
+ 
           </div>
         </section>
 
