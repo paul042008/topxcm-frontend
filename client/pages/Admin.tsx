@@ -277,7 +277,7 @@ async function fetchWithWakeup(
     await new Promise((r) => setTimeout(r, 300));
   }
 
-  return fetch(url, { ...options, signal: AbortSignal.timeout(60_000) });
+  return fetch(url, { ...options, signal: AbortSignal.timeout(300_000) });
 }
 
 // ─── STATUS MESSAGE ──────────────────────────────────────────────────────────
@@ -298,7 +298,7 @@ function StatusMsg({ msg }: { msg: string }) {
   );
 }
 
-// ─── UPLOAD BOX ──────────────────────────────────────────────────────────────
+// ─── UPLOAD BOX (supports video files) ─────────────────────────────────────
 
 function UploadBox({
   label,
@@ -334,9 +334,17 @@ function UploadBox({
       </label>
       {previewFiles.length > 0 && (
         <div className="grid grid-cols-3 gap-2 mt-1">
-          {previewFiles.slice(0, 6).map((f, i) => (
-            <img key={i} src={URL.createObjectURL(f)} alt="" className="h-20 w-full rounded-lg object-cover border border-white/10" />
-          ))}
+          {previewFiles.slice(0, 6).map((f, i) => {
+            const isVideo = f.type.startsWith("video/");
+            return isVideo ? (
+              <div key={i} className="h-20 w-full rounded-lg border border-white/10 bg-[#0d0d0d] flex flex-col items-center justify-center text-white/60 text-xs">
+                <span className="text-2xl">🎬</span>
+                <span className="truncate w-full text-center px-1">{f.name}</span>
+              </div>
+            ) : (
+              <img key={i} src={URL.createObjectURL(f)} alt="" className="h-20 w-full rounded-lg object-cover border border-white/10" />
+            );
+          })}
           {previewFiles.length > 6 && (
             <div className="h-20 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-white/40 text-xs font-medium">
               +{previewFiles.length - 6} more
@@ -568,15 +576,12 @@ function CategoryManager({
     }
   };
 
-  // ─── REORDER SINGLES (FIXED with index‑based ordering) ───────────────────
+  // ─── REORDER SINGLES ──────────────────────────────────────────────────────
 
   const moveSingle = async (itemId: string, direction: "up" | "down") => {
     console.log(`🔁 moveSingle called: item ${itemId}, direction ${direction}`);
 
-    // Filter by the selected category (same as UI)
     const filtered = singles.filter(s => s.category === selectedCategory);
-    console.log(`📋 Filtered singles (${selectedCategory}):`, filtered.map(s => `${s.id} (${s.title})`));
-
     const index = filtered.findIndex(s => s.id === itemId);
     if (index === -1) {
       console.warn("❌ Item not found in filtered list");
@@ -590,16 +595,12 @@ function CategoryManager({
 
     const item1 = filtered[index];
     const item2 = filtered[newIndex];
-    console.log(`🔄 Swapping: ${item1.title} (${item1.id}) ↔ ${item2.title} (${item2.id})`);
 
-    // ─── Assign new orders based on their new positions ───
-    const newOrder1 = newIndex; // item1 moves to newIndex
-    const newOrder2 = index;    // item2 moves to index
-
-    console.log(`📊 New orders: ${item1.id} → ${newOrder1}, ${item2.id} → ${newOrder2}`);
+    const newOrder1 = newIndex;
+    const newOrder2 = index;
 
     const updateOrder = async (item: SingleItem, newOrder: number) => {
-      console.log(`📤 Updating item ${item.id} (${item.title}) to order ${newOrder}`);
+      console.log(`📤 Updating item ${item.id} to order ${newOrder}`);
       try {
         const res = await fetch(`${API}/api/items/${item.id}`, {
           method: "PUT",
@@ -625,18 +626,13 @@ function CategoryManager({
         updateOrder(item2, newOrder2),
       ]);
 
-      // Update local state immediately
       const updatedSingles = singles.map(s => {
         if (s.id === item1.id) return { ...s, order: newOrder1 };
         if (s.id === item2.id) return { ...s, order: newOrder2 };
         return s;
       });
       setSingles(updatedSingles);
-      console.log("✅ Single item reorder complete (local state updated)");
-
-      // Refetch from server to sync
       await fetchSingles();
-      console.log("🔄 Refetched singles from server to sync");
     } catch (err) {
       console.error("❌ Reorder failed", err);
       alert("❌ Failed to reorder items. Check console for details.");
@@ -751,18 +747,17 @@ function CategoryManager({
     }
   };
 
-  // ─── ADD IMAGES TO ALBUM ──────────────────────────────────────────────────
+  // ─── ADD IMAGES TO ALBUM (supports video) ──────────────────────────────
 
   const handleAddImage = async (e: FormEvent) => {
     e.preventDefault();
-    if (imgFiles.length === 0 || !selectedAlbum) return setAddImgMsg("Select at least one image");
+    if (imgFiles.length === 0 || !selectedAlbum) return setAddImgMsg("Select at least one image or video");
     setAddingImg(true);
     setAddImgMsg("");
     try {
       const fd = new FormData();
       imgFiles.forEach((file) => fd.append("images", file));
       
-      // For photo albums, we don't need text fields – send empty strings
       const isPhoto = type === "photo";
       fd.append("title", isPhoto ? "" : imgTitle);
       fd.append("description", isPhoto ? "" : imgDesc);
@@ -778,7 +773,7 @@ function CategoryManager({
       );
       const d = await res.json();
       if (!res.ok) return setAddImgMsg(d.message || "Failed to add images");
-      setAddImgMsg(`✅ ${d.images?.length || 0} images added!`);
+      setAddImgMsg(`✅ ${d.images?.length || 0} files added!`);
       setImgFiles([]);
       if (!isPhoto) {
         setImgTitle("");
@@ -786,7 +781,6 @@ function CategoryManager({
         setImgPrice("");
         setImgExtraText("");
       }
-      // Refetch albums and update selected album from fresh data
       const updatedAlbums = await fetchAlbums();
       const updatedAlbum = updatedAlbums.find(a => a.id === selectedAlbum.id);
       if (updatedAlbum) {
@@ -799,11 +793,11 @@ function CategoryManager({
     }
   };
 
-  // ─── SINGLE UPLOAD (with showcase target route) ──────────────────────────
+  // ─── SINGLE UPLOAD (with video support) ──────────────────────────────────
 
   const handleSingleUpload = async (e: FormEvent) => {
     e.preventDefault();
-    if (!singleFile) return setSingleMsg("Select an image");
+    if (!singleFile) return setSingleMsg("Select a file");
     setSingleLoading(true);
     setSingleMsg("");
     try {
@@ -814,7 +808,6 @@ function CategoryManager({
       fd.append("category", singleCat);
       if (singlePrice) fd.append("price", singlePrice);
       
-      // ─── Send target route as extra_text for showcase ───
       const isPhoto = type === "photo";
       if (isPhoto && singleCat === "showcase" && singleTargetRoute) {
         fd.append("extra_text", singleTargetRoute);
@@ -1034,6 +1027,18 @@ function CategoryManager({
 
   const isPhoto = type === "photo";
 
+  // Helper: decide accept and label for uploads based on category
+  const getMediaAccept = (cat: string) => {
+    const videoCats = ["videos", "aerials"];
+    return videoCats.includes(cat) ? "video/*,image/*" : "image/*";
+  };
+
+  const getMediaLabel = (cat: string, plural: boolean) => {
+    const videoCats = ["videos", "aerials"];
+    const type = videoCats.includes(cat) ? "Images/Videos" : "Images";
+    return plural ? `${type} * (select multiple)` : `${type} *`;
+  };
+
   return (
     <div className="space-y-5">
       {/* Mode toggle */}
@@ -1092,7 +1097,13 @@ function CategoryManager({
               </Field>
             )}
 
-            <UploadBox label="Image *" single onChange={(f) => setSingleFile(f[0] || null)} previewFiles={singleFile ? [singleFile] : []} />
+            <UploadBox
+              label={getMediaLabel(singleCat, false)}
+              single
+              onChange={(f) => setSingleFile(f[0] || null)}
+              previewFiles={singleFile ? [singleFile] : []}
+              accept={getMediaAccept(singleCat)}
+            />
             <FormFooter msg={singleMsg} loading={singleLoading} label="Upload Item" />
           </form>
 
@@ -1125,7 +1136,7 @@ function CategoryManager({
                   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
                   .map((item, index, arr) => (
                     <div
-                      key={`${item.id}-${item.order}`} // ← force re-render on order change
+                      key={`${item.id}-${item.order}`}
                       className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] px-3 py-2"
                     >
                       <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover border border-white/10" />
@@ -1285,7 +1296,7 @@ function CategoryManager({
                   <div>
                     <p className={labelCls}>Editing Album</p>
                     <h3 className="text-xl font-serif text-[#D4AF37]">{selectedAlbum.name}</h3>
-                    <p className="text-white/35 text-xs capitalize mt-0.5">{selectedAlbum.category} · {selectedAlbum.images?.length || 0} images</p>
+                    <p className="text-white/35 text-xs capitalize mt-0.5">{selectedAlbum.category} · {selectedAlbum.images?.length || 0} files</p>
                   </div>
                   <button onClick={() => setSelectedAlbum(null)} className="text-white/25 hover:text-white/70 transition text-lg leading-none">✕</button>
                 </div>
@@ -1293,7 +1304,7 @@ function CategoryManager({
 
               {/* ─── ADD IMAGES FORM ────────────────────────────────────── */}
               <form onSubmit={handleAddImage} className={cardCls}>
-                <SectionTitle>Add Images to Album</SectionTitle>
+                <SectionTitle>Add Files to Album</SectionTitle>
                 {!isPhoto && (
                   <>
                     <div className="grid gap-3 md:grid-cols-2">
@@ -1319,22 +1330,31 @@ function CategoryManager({
                   </>
                 )}
                 <UploadBox
-                  label={isPhoto ? "Select Images * (multiple allowed)" : "Image Files * (select multiple)"}
+                  label={getMediaLabel(selectedAlbum.category, true)}
                   single={false}
                   onChange={setImgFiles}
                   previewFiles={imgFiles}
+                  accept={getMediaAccept(selectedAlbum.category)}
                 />
-                <FormFooter msg={addImgMsg} loading={addingImg} label="Add Images" />
+                <FormFooter msg={addImgMsg} loading={addingImg} label="Add Files" />
               </form>
 
-              {/* Image Grid with Order Controls */}
+              {/* File Grid with Order Controls */}
               {selectedAlbum.images?.length > 0 && (
                 <div className={cardCls}>
-                  <SectionTitle>Album Images ({selectedAlbum.images.length})</SectionTitle>
+                  <SectionTitle>Album Files ({selectedAlbum.images.length})</SectionTitle>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {selectedAlbum.images.map((img, i) => (
                       <div key={i} className="group relative rounded-xl overflow-hidden border border-white/10">
-                        <img src={img.url} alt={img.title} className="w-full aspect-square object-cover" />
+                        {img.url && (() => {
+                          // Check if it's a video by extension or mime (we only have URL)
+                          const isVideo = /\.(mp4|mov|webm|avi|mkv)$/i.test(img.url);
+                          return isVideo ? (
+                            <video src={img.url} className="w-full aspect-square object-cover" muted />
+                          ) : (
+                            <img src={img.url} alt={img.title} className="w-full aspect-square object-cover" />
+                          );
+                        })()}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition p-3 flex flex-col justify-end">
                           <p className="text-white text-xs font-medium">{img.title}</p>
                           {img.price && <p className="text-[#D4AF37] text-xs">₦{img.price}</p>}
@@ -1360,7 +1380,7 @@ function CategoryManager({
                           <button
                             onClick={() => openEditImage(selectedAlbum.id, img)}
                             className="w-6 h-6 rounded-full bg-[#D4AF37]/80 text-black hover:bg-[#D4AF37] transition flex items-center justify-center"
-                            title="Edit image"
+                            title="Edit file"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -1370,7 +1390,7 @@ function CategoryManager({
                           <button
                             onClick={() => img.id && deleteImage(selectedAlbum.id, img.id)}
                             className="w-6 h-6 rounded-full bg-red-500/80 text-white hover:bg-red-500 transition flex items-center justify-center"
-                            title="Delete image"
+                            title="Delete file"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -1429,7 +1449,7 @@ function CategoryManager({
       {editingImage && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-[#111] rounded-2xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit Image</h3>
+            <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit File</h3>
             <form onSubmit={handleEditImage} className="space-y-4">
               <Field label="Title">
                 <input value={editImageTitle} onChange={(e) => setEditImageTitle(e.target.value)} className={inputCls} />
@@ -1438,7 +1458,7 @@ function CategoryManager({
                 <PriceInput value={editImagePrice} onChange={setEditImagePrice} placeholder="e.g. 75,000" />
               </Field>
               <Field label="Description">
-                <RichTextEditor value={editImageDesc} onChange={setEditImageDesc} placeholder="Image description…" />
+                <RichTextEditor value={editImageDesc} onChange={setEditImageDesc} placeholder="Description…" />
               </Field>
               <Field label="Extra Text">
                 <textarea value={editImageExtra} onChange={(e) => setEditImageExtra(e.target.value)} className={textareaCls} rows={2} />
@@ -1453,10 +1473,11 @@ function CategoryManager({
                 />
               </Field>
               <UploadBox
-                label="Replace Image (optional)"
+                label="Replace File (optional)"
                 single
                 onChange={(f) => setEditImageFile(f[0] || null)}
                 previewFiles={editImageFile ? [editImageFile] : []}
+                accept={getMediaAccept(selectedAlbum?.category || "image")}
               />
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditingImage(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
@@ -1499,7 +1520,13 @@ function CategoryManager({
                   placeholder="e.g. 0"
                 />
               </Field>
-              <UploadBox label="Replace Image (optional)" single onChange={(f) => setEditSingleFile(f[0] || null)} previewFiles={editSingleFile ? [editSingleFile] : []} />
+              <UploadBox
+                label="Replace File (optional)"
+                single
+                onChange={(f) => setEditSingleFile(f[0] || null)}
+                previewFiles={editSingleFile ? [editSingleFile] : []}
+                accept={getMediaAccept(editSingleCat)}
+              />
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditingSingle(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
                 <button type="submit" disabled={editSingleLoading} className={btnGold}>

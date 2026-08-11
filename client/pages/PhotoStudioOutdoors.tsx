@@ -34,7 +34,6 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const images = album.images || [];
   const coverImage = album.cover || (images.length > 0 ? images[0].url : "");
-  const isVideoCategory = album.category === "videos";
 
   const handleShare = () => {
     if (navigator.share) {
@@ -64,9 +63,14 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         <span className="text-white/40 text-xs">{images.length} photos</span>
       </div>
 
-      <div className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-zinc-800">
-        <img src={coverImage} alt={album.name} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      {/* ─── COVER – NO FRAME, NATURAL ASPECT RATIO ─── */}
+      <div className="relative w-full bg-zinc-800">
+        <img
+          src={coverImage}
+          alt={album.name}
+          className="w-full h-auto max-h-[85vh] object-contain mx-auto"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
         <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full">
           <h1 className="text-3xl md:text-5xl font-serif text-white leading-tight">{album.name}</h1>
           {album.description && (
@@ -91,9 +95,9 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         </div>
       </div>
 
-      {/* ─── GALLERY THUMBNAILS – NO FRAME ─── */}
+      {/* ─── GALLERY THUMBNAILS – NO FRAME, MASONRY, NATURAL ASPECT ─── */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 [column-fill:balance]">
           {images.map((img, idx) => (
             <motion.div
               key={img.id || idx}
@@ -101,21 +105,14 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.04 }}
               onClick={() => setSelectedIndex(idx)}
-              className="aspect-square cursor-pointer group relative"
+              className="mb-3 break-inside-avoid cursor-pointer group relative bg-zinc-800"
             >
               <img
                 src={img.url}
                 alt={img.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition" />
-              {isVideoCategory && (
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-black/60 backdrop-blur">
-                    <span className="ml-1 text-[#D4AF37] text-lg">▶</span>
-                  </div>
-                </div>
-              )}
             </motion.div>
           ))}
         </div>
@@ -176,11 +173,6 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                   {images[selectedIndex].title}
                 </div>
               )}
-              {isVideoCategory && (
-                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#D4AF37]/20 text-[#D4AF37] text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-[#D4AF37]/30">
-                  🎬 Video content
-                </div>
-              )}
             </div>
           </motion.div>
         )}
@@ -189,11 +181,10 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   );
 }
 
-// ─── ALBUM CARD ─────────────────────────────────────────────────────────────
+// ─── ALBUM CARD – NO FRAME, NATURAL ASPECT RATIO ──────────────────────────
 
 function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
   const displayImage = album.cover || (album.images.length > 0 ? album.images[0].url : null);
-  const isVideoCategory = album.category === "videos";
 
   return (
     <motion.div
@@ -201,37 +192,26 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6 }}
-      className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group"
+      className="cursor-pointer group"
       onClick={onClick}
     >
-      <div className="relative h-64 md:h-72 overflow-hidden bg-zinc-800">
+      <div className="relative w-full overflow-hidden bg-zinc-900">
         {displayImage ? (
-          <>
-            <img
-              src={displayImage}
-              alt={album.name}
-              className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
-            />
-            {isVideoCategory && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-black/60 backdrop-blur">
-                  <span className="ml-1 text-[#D4AF37] text-2xl">▶</span>
-                </div>
-              </div>
-            )}
-          </>
+          <img
+            src={displayImage}
+            alt={album.name}
+            className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">
-            {isVideoCategory ? "🎬" : "📷"}
-          </div>
+          <div className="w-full aspect-[4/3] flex items-center justify-center text-4xl opacity-20">📷</div>
         )}
         <span className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">
           {album.images.length} items
         </span>
       </div>
-      <div className="p-5">
+      <div className="p-4">
         <p className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-1">
-          {album.category === "aerials" ? "Aerials" : "Hand Held Videos"}
+          {album.category}
         </p>
         <h3 className="text-lg font-serif text-white leading-tight">{album.name}</h3>
         {album.description && (
@@ -247,18 +227,18 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
 
 // ─── MAIN PAGE ──────────────────────────────────────────────────────────────
 
-export default function PhotoAerialsVideos() {
+export default function PhotoStudioOutdoors() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
-  const [activeTab, setActiveTab] = useState<"all" | "aerials" | "videos">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "studio" | "outdoors">("all");
 
   useEffect(() => {
     fetch(`${API}/api/fashion-albums`)
       .then((res) => res.json())
       .then((data: Album[]) => {
-        const photoCategories = ["aerials", "videos"];
+        const photoCategories = ["studio", "outdoors"];
         const filtered = data.filter((album) => photoCategories.includes(album.category));
         setAlbums(filtered);
         setLoading(false);
@@ -275,7 +255,7 @@ export default function PhotoAerialsVideos() {
         <BackButton />
         <div className="flex flex-col items-center gap-0.5">
           <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">
-            Drone Aerials & Videos
+            Studio & Outdoors
           </p>
           <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">
             The Official Photography
@@ -294,17 +274,17 @@ export default function PhotoAerialsVideos() {
               className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none"
               style={{ fontFamily: "Impact, 'Arial Black', sans-serif" }}
             >
-              Drone Aerials &<br />Videos
+              Studio &<br />Outdoors
             </h1>
           </div>
           <p className="text-white/30 text-sm font-light max-w-sm leading-relaxed">
-            Cinematic drone perspectives and premium motion content — storytelling from every angle.
+            From controlled studio setups to open-air natural light — every frame crafted with intention.
           </p>
         </div>
       </div>
 
       <div className="px-6 md:px-16 py-6 flex gap-6 border-b border-white/5 overflow-x-auto">
-        {(["all", "aerials", "videos"] as const).map((tab) => (
+        {(["all", "studio", "outdoors"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -314,7 +294,7 @@ export default function PhotoAerialsVideos() {
                 : "text-white/30 border-transparent hover:text-white/60"
             }`}
           >
-            {tab === "all" ? "All" : tab === "aerials" ? "Aerials" : "Hand Held Videos"}
+            {tab === "all" ? "All" : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -329,20 +309,22 @@ export default function PhotoAerialsVideos() {
             <p className="text-white/20 text-lg font-serif italic">No collections uploaded yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 [column-fill:balance]">
             {filteredAlbums.map((album) => (
-              <AlbumCard key={album.id} album={album} onClick={() => setSelectedAlbum(album)} />
+              <div key={album.id} className="mb-5 break-inside-avoid">
+                <AlbumCard album={album} onClick={() => setSelectedAlbum(album)} />
+              </div>
             ))}
           </div>
         )}
       </main>
 
-      {/* ─── UPDATED FOOTER with Instagram & Facebook icons ─── */}
+      {/* ─── FOOTER with Instagram & Facebook icons ─── */}
       <footer className="py-16 text-center border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
             <a
-              href="https://www.instagram.com/topstudios1?igsh=YmxrMGN0dGdnbWgy" // Replace with your Instagram URL
+              href="https://www.instagram.com/topstudios1?igsh=YmxrMGN0dGdnbWgy"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"
@@ -355,7 +337,7 @@ export default function PhotoAerialsVideos() {
               </svg>
             </a>
             <a
-              href="https://www.facebook.com/Topweddings1" // Replace with your Facebook URL
+              href="https://www.facebook.com/Topweddings1"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"

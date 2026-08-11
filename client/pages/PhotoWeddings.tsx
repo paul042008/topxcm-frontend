@@ -64,9 +64,14 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         <span className="text-white/40 text-xs">{images.length} photos</span>
       </div>
 
-      <div className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-zinc-800">
-        <img src={coverImage} alt={album.name} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      {/* ─── COVER – NO FRAME, NATURAL ASPECT RATIO ─── */}
+      <div className="relative w-full bg-zinc-800">
+        <img
+          src={coverImage}
+          alt={album.name}
+          className="w-full h-auto max-h-[85vh] object-contain mx-auto"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
         <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full">
           <h1 className="text-3xl md:text-5xl font-serif text-white leading-tight">{album.name}</h1>
           {album.description && (
@@ -91,9 +96,9 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         </div>
       </div>
 
-      {/* ─── GALLERY THUMBNAILS – NO FRAME ─── */}
+      {/* ─── GALLERY THUMBNAILS – NO FRAME, MASONRY, NATURAL ASPECT ─── */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 [column-fill:balance]">
           {images.map((img, idx) => (
             <motion.div
               key={img.id || idx}
@@ -101,12 +106,12 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.04 }}
               onClick={() => setSelectedIndex(idx)}
-              className="aspect-square cursor-pointer group relative"
+              className="mb-3 break-inside-avoid cursor-pointer group relative"
             >
               <img
                 src={img.url}
                 alt={img.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition" />
             </motion.div>
@@ -179,26 +184,26 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
 
 // ─── COMPONENTS FOR LISTING ────────────────────────────────────────────────
 
-// Featured Album – full‑width cinematic hero
+// Featured Album – full‑width cinematic hero, NO FRAME, natural aspect ratio
 function FeaturedAlbum({ item, onClick }: { item: Album; onClick: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 1, ease: "easeOut" }}
-      className="relative w-full h-[85vh] overflow-hidden group cursor-pointer"
+      className="relative w-full overflow-hidden group cursor-pointer bg-zinc-900"
       onClick={onClick}
     >
       <img
         src={item.cover || (item.images.length > 0 ? item.images[0].url : "")}
         alt={item.name}
-        className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105"
+        className="w-full h-auto max-h-[85vh] object-contain mx-auto transition-transform duration-[2s] ease-out group-hover:scale-105"
         onContextMenu={(e) => e.preventDefault()}
         draggable={false}
       />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent pointer-events-none" />
 
       <div className="absolute top-8 left-8 md:left-16">
         <span className="text-[#D4AF37] text-[10px] uppercase tracking-[0.5em] font-bold border border-[#D4AF37]/30 px-4 py-1.5">
@@ -227,7 +232,7 @@ function FeaturedAlbum({ item, onClick }: { item: Album; onClick: () => void }) 
   );
 }
 
-// Editorial Card – alternating left/right layout
+// Editorial Card – alternating left/right layout, NO FRAME, natural aspect ratio
 function EditorialCard({ item, index, onClick }: { item: Album; index: number; onClick: () => void }) {
   const isEven = index % 2 === 0;
 
@@ -240,15 +245,15 @@ function EditorialCard({ item, index, onClick }: { item: Album; index: number; o
       className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} gap-0 group border border-white/5 hover:border-[#D4AF37]/20 transition-colors duration-700 cursor-pointer`}
       onClick={onClick}
     >
-      <div className="relative md:w-[60%] h-[55vw] md:h-[520px] overflow-hidden">
+      <div className="relative md:w-[60%] overflow-hidden bg-zinc-900 flex items-center justify-center">
         <img
           src={item.cover || (item.images.length > 0 ? item.images[0].url : "")}
           alt={item.name}
-          className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+          className="w-full h-auto max-h-[520px] object-contain transition-transform duration-[1.5s] ease-out group-hover:scale-105"
           onContextMenu={(e) => e.preventDefault()}
           draggable={false}
         />
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-700" />
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-700 pointer-events-none" />
         <span
           className="absolute top-5 left-5 text-[#D4AF37]/20 font-black"
           style={{ fontSize: "clamp(60px, 10vw, 100px)", fontFamily: "Impact, sans-serif", lineHeight: 1 }}
@@ -284,7 +289,7 @@ function EditorialCard({ item, index, onClick }: { item: Album; index: number; o
   );
 }
 
-// Compact Card – small grid item (this one keeps the frame)
+// Compact Card – small grid item, NO FRAME, natural aspect ratio
 function CompactCard({ item, index, onClick }: { item: Album; index: number; onClick: () => void }) {
   return (
     <motion.div
@@ -295,15 +300,15 @@ function CompactCard({ item, index, onClick }: { item: Album; index: number; onC
       className="group relative overflow-hidden border border-white/5 hover:border-[#D4AF37]/30 transition-colors duration-500 cursor-pointer"
       onClick={onClick}
     >
-      <div className="relative h-72 overflow-hidden bg-zinc-800">
+      <div className="relative overflow-hidden bg-zinc-800">
         <img
           src={item.cover || (item.images.length > 0 ? item.images[0].url : "")}
           alt={item.name}
-          className="w-full h-full object-contain transition-transform duration-[1.2s] group-hover:scale-110"
+          className="w-full h-auto object-contain transition-transform duration-[1.2s] group-hover:scale-110"
           onContextMenu={(e) => e.preventDefault()}
           draggable={false}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
       </div>
 
       <div className="p-6 bg-[#0d0d0d]">

@@ -13,7 +13,7 @@ interface Product {
   image: string;
   category: string;
   price: string;
-  albumId?: string; // <-- ADDED
+  albumId?: string;
   tag?: "BEST SELLER" | "PREMIUM";
 }
 
@@ -47,7 +47,12 @@ function ItemModal({ item, onClose }: { item: Product; onClose: () => void }) {
             {item.category === "canvas" ? "Canvas Print" : "Luxury Frame"}
           </p>
           <h3 className="text-xl font-serif text-white mb-2">{item.title}</h3>
-          {item.description && <p className="text-white/50 text-sm leading-relaxed mb-4">{item.description}</p>}
+          {item.description && (
+            <div
+              className="text-white/50 text-sm leading-relaxed mb-4 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+              dangerouslySetInnerHTML={{ __html: item.description }}
+            />
+          )}
           {item.price && (
             <p className="text-[#D4AF37] text-2xl font-bold mb-4">₦{parseInt(item.price).toLocaleString()}</p>
           )}
@@ -192,9 +197,10 @@ export default function PhotoCanvas() {
                       </p>
                     )}
                     {product.description && (
-                      <p className="text-white/40 text-sm line-clamp-2">
-                        {product.description}
-                      </p>
+                      <div
+                        className="text-white/40 text-sm line-clamp-2 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+                        dangerouslySetInnerHTML={{ __html: product.description }}
+                      />
                     )}
                     <button
                       onClick={(e) => {
