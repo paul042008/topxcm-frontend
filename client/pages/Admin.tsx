@@ -1,4 +1,4 @@
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent, useCallback } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -9,15 +9,27 @@ import Placeholder from "@tiptap/extension-placeholder";
 type MainTab = "fashion" | "photo" | "realestate";
 
 type FashionCategory = "casuals" | "natives" | "agbadas" | "suits" | "latest";
-type PhotoCategory = "weddings" | "portraits" | "videos" | "aerials" | "studio" | "outdoors";
+type PhotoCategory = "weddings" | "portraits" | "videos" | "aerials" | "studio" | "outdoors" | "showcase" | "canvas" | "frames";
+type RealEstateCategory = "properties";
 
-interface FashionAlbum {
-  id: string;
-  name: string;
-  category: FashionCategory;
+interface AlbumImage {
+  id?: string;
+  url: string;
+  title: string;
   description: string;
   price: string;
-  images: { id?: string; url: string; title: string; description: string; price: string; extra_text?: string; order?: number }[];
+  extra_text?: string;
+  order?: number;
+}
+
+interface Album {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  price: string;
+  cover?: string;
+  images: AlbumImage[];
 }
 
 interface SingleItem {
@@ -27,7 +39,9 @@ interface SingleItem {
   image: string;
   category: string;
   price: string;
+  order?: number;
   album_id?: string;
+  extra_text?: string; // <-- ADDED
 }
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
@@ -52,6 +66,23 @@ const PHOTO_CATEGORIES: { value: PhotoCategory; label: string; icon: string }[] 
   { value: "aerials", label: "Aerials", icon: "🚁" },
   { value: "studio", label: "Studio", icon: "🎞" },
   { value: "outdoors", label: "Outdoors", icon: "🌿" },
+  { value: "showcase", label: "Showcase", icon: "✨" },
+  { value: "canvas", label: "Canvas", icon: "🖼️" },
+  { value: "frames", label: "Frames", icon: "🖼️" },
+];
+
+const REAL_ESTATE_CATEGORIES: { value: RealEstateCategory; label: string; icon: string }[] = [
+  { value: "properties", label: "Properties", icon: "🏠" },
+];
+
+// ─── SHOWCASE ROUTE OPTIONS ────────────────────────────────────────────────
+
+const SHOWCASE_ROUTE_OPTIONS = [
+  { value: "weddings", label: "Weddings" },
+  { value: "studio-outdoors", label: "Studio & Outdoors" },
+  { value: "aerials-videos", label: "Drone Aerials & Videos" },
+  { value: "canvas", label: "Canvas & Frames" },
+  { value: "portraits", label: "Portraits" },
 ];
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
@@ -114,7 +145,6 @@ function RichTextEditor({
     },
   });
 
-  // Update editor content when external value changes
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
       editor.commands.setContent(value);
@@ -330,16 +360,30 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── FASHION TAB (with rich text editor) ──────────────────────────────────
+// ── REUSABLE CATEGORY MANAGER ──────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function FashionTab() {
-  const [albums, setAlbums] = useState<FashionAlbum[]>([]);
+function CategoryManager({
+  type,
+  categoryOptions,
+  albumEndpoint = `${API}/api/fashion-albums`,
+}: {
+  type: string;
+  categoryOptions: { value: string; label: string; icon: string }[];
+  albumEndpoint?: string;
+}) {
+  // ─── STATE ──────────────────────────────────────────────────────────────────
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [singles, setSingles] = useState<SingleItem[]>([]);
   const [loadingAlbums, setLoadingAlbums] = useState(false);
+  const [loadingSingles, setLoadingSingles] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryOptions[0]?.value || "");
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [mode, setMode] = useState<"albums" | "single">("albums");
 
   // ─── CREATE ALBUM STATE ────────────────────────────────────────────────────
   const [newAlbumName, setNewAlbumName] = useState("");
-  const [newAlbumCategory, setNewAlbumCategory] = useState<FashionCategory>("casuals");
+  const [newAlbumCategory, setNewAlbumCategory] = useState<string>(categoryOptions[0]?.value || "");
   const [newAlbumDesc, setNewAlbumDesc] = useState("");
   const [newAlbumPrice, setNewAlbumPrice] = useState("");
   const [newAlbumCover, setNewAlbumCover] = useState<File | null>(null);
@@ -349,17 +393,17 @@ function FashionTab() {
   const [createMsg, setCreateMsg] = useState("");
 
   // ─── EDIT ALBUM STATE ──────────────────────────────────────────────────────
-  const [editingAlbum, setEditingAlbum] = useState<FashionAlbum | null>(null);
+  const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
   const [editAlbumName, setEditAlbumName] = useState("");
-  const [editAlbumCategory, setEditAlbumCategory] = useState<FashionCategory>("casuals");
+  const [editAlbumCategory, setEditAlbumCategory] = useState<string>("");
   const [editAlbumDesc, setEditAlbumDesc] = useState("");
   const [editAlbumPrice, setEditAlbumPrice] = useState("");
   const [editAlbumCover, setEditAlbumCover] = useState<File | null>(null);
   const [editAlbumLoading, setEditAlbumLoading] = useState(false);
   const [editAlbumMsg, setEditAlbumMsg] = useState("");
 
-  // ─── IMAGE EDIT STATE (with file replacement) ────────────────────────────
-  const [editingImage, setEditingImage] = useState<{ albumId: string; image: FashionAlbum["images"][0] } | null>(null);
+  // ─── IMAGE EDIT STATE ──────────────────────────────────────────────────────
+  const [editingImage, setEditingImage] = useState<{ albumId: string; image: AlbumImage } | null>(null);
   const [editImageTitle, setEditImageTitle] = useState("");
   const [editImageDesc, setEditImageDesc] = useState("");
   const [editImagePrice, setEditImagePrice] = useState("");
@@ -369,20 +413,29 @@ function FashionTab() {
   const [editImageLoading, setEditImageLoading] = useState(false);
   const [editImageMsg, setEditImageMsg] = useState("");
 
-  // ─── SINGLE ITEM EDIT STATE ───────────────────────────────────────────────
+  // ─── SINGLE ITEM STATE ────────────────────────────────────────────────────
+  const [singleFile, setSingleFile] = useState<File | null>(null);
+  const [singleTitle, setSingleTitle] = useState("");
+  const [singleDesc, setSingleDesc] = useState("");
+  const [singlePrice, setSinglePrice] = useState("");
+  const [singleCat, setSingleCat] = useState<string>(categoryOptions[0]?.value || "");
+  const [singleTargetRoute, setSingleTargetRoute] = useState<string>("");
+  const [singleLoading, setSingleLoading] = useState(false);
+  const [singleMsg, setSingleMsg] = useState("");
+  const [deletingSingleId, setDeletingSingleId] = useState<string | null>(null);
+
+  // ─── EDIT SINGLE ITEM STATE ──────────────────────────────────────────────
   const [editingSingle, setEditingSingle] = useState<SingleItem | null>(null);
   const [editSingleTitle, setEditSingleTitle] = useState("");
-  const [editSingleCat, setEditSingleCat] = useState<FashionCategory>("casuals");
+  const [editSingleCat, setEditSingleCat] = useState<string>("");
   const [editSingleDesc, setEditSingleDesc] = useState("");
   const [editSinglePrice, setEditSinglePrice] = useState("");
+  const [editSingleOrder, setEditSingleOrder] = useState<number | undefined>(undefined);
   const [editSingleFile, setEditSingleFile] = useState<File | null>(null);
   const [editSingleLoading, setEditSingleLoading] = useState(false);
   const [editSingleMsg, setEditSingleMsg] = useState("");
 
-  // ─── SELECTED ALBUM (for viewing/adding images) ──────────────────────────
-  const [selectedAlbum, setSelectedAlbum] = useState<FashionAlbum | null>(null);
-
-  // ─── MULTIPLE FILES ────────────────────────────────────────────────────────
+  // ─── ADD IMAGES TO ALBUM STATE ──────────────────────────────────────────
   const [imgFiles, setImgFiles] = useState<File[]>([]);
   const [imgTitle, setImgTitle] = useState("");
   const [imgDesc, setImgDesc] = useState("");
@@ -391,28 +444,15 @@ function FashionTab() {
   const [addingImg, setAddingImg] = useState(false);
   const [addImgMsg, setAddImgMsg] = useState("");
 
-  const [singleFile, setSingleFile] = useState<File | null>(null);
-  const [singleTitle, setSingleTitle] = useState("");
-  const [singleDesc, setSingleDesc] = useState("");
-  const [singlePrice, setSinglePrice] = useState("");
-  const [singleCat, setSingleCat] = useState<FashionCategory>("casuals");
-  const [singleLoading, setSingleLoading] = useState(false);
-  const [singleMsg, setSingleMsg] = useState("");
+  // ─── FETCH FUNCTIONS ───────────────────────────────────────────────────────
 
-  const [mode, setMode] = useState<"albums" | "single">("albums");
-
-  const [singles, setSingles] = useState<SingleItem[]>([]);
-  const [loadingSingles, setLoadingSingles] = useState(false);
-  const [deletingSingleId, setDeletingSingleId] = useState<string | null>(null);
-
-  const fetchAlbums = async () => {
+  const fetchAlbums = useCallback(async () => {
     setLoadingAlbums(true);
     try {
-      const res = await fetch(`${API}/api/fashion-albums`);
+      const res = await fetch(albumEndpoint);
       if (res.ok) {
         const data = await res.json();
-        // ensure images have order, default to index if missing
-        const withOrder = data.map((album: FashionAlbum) => ({
+        const withOrder = data.map((album: Album) => ({
           ...album,
           images: album.images?.map((img, idx) => ({
             ...img,
@@ -420,35 +460,37 @@ function FashionTab() {
           })) || [],
         }));
         setAlbums(withOrder);
+        setLoadingAlbums(false);
+        return withOrder;
       }
-    } catch {}
+    } catch {
+      // error silently
+    }
     setLoadingAlbums(false);
-  };
+    return [];
+  }, [albumEndpoint]);
 
-  const fetchSingles = async () => {
+  const fetchSingles = useCallback(async () => {
     setLoadingSingles(true);
     try {
       const res = await fetch(`${API}/api/items`);
       if (res.ok) {
         const all = await res.json();
-        const fashionSingles = all.filter(
-          (item: any) => !item.album_id && FASHION_CATEGORIES.some((c) => c.value === item.category)
-        );
-        setSingles(fashionSingles);
+        const filtered = all.filter((item: any) => !item.album_id && categoryOptions.some(c => c.value === item.category));
+        setSingles(filtered);
       }
     } catch {}
     setLoadingSingles(false);
-  };
+  }, [categoryOptions]);
 
   useEffect(() => {
     fetchAlbums();
     fetchSingles();
-  }, []);
+  }, [fetchAlbums, fetchSingles]);
 
   // ─── REORDER IMAGES ────────────────────────────────────────────────────────
 
   const moveImage = async (albumId: string, imageId: string, direction: "up" | "down") => {
-    // find the album and image
     const album = albums.find(a => a.id === albumId);
     if (!album) return;
     const images = album.images;
@@ -457,14 +499,12 @@ function FashionTab() {
     const newIndex = direction === "up" ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= images.length) return;
 
-    // swap order values
     const img1 = images[index];
     const img2 = images[newIndex];
     const order1 = img1.order ?? index;
     const order2 = img2.order ?? newIndex;
 
-    // update both images on server
-    const updateOrder = async (img: FashionAlbum["images"][0], newOrder: number) => {
+    const updateOrder = async (img: AlbumImage, newOrder: number) => {
       if (!img.id) return;
       const body = {
         title: img.title || "",
@@ -474,7 +514,7 @@ function FashionTab() {
         order: newOrder,
       };
       try {
-        await fetch(`${API}/api/fashion-albums/${albumId}/images/${img.id}`, {
+        await fetch(`${albumEndpoint}/${albumId}/images/${img.id}`, {
           method: "PUT",
           headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -484,19 +524,15 @@ function FashionTab() {
       }
     };
 
-    // update both orders concurrently
     await Promise.all([
       updateOrder(img1, order2),
       updateOrder(img2, order1),
     ]);
 
-    // update local state
     const updatedImages = [...images];
     [updatedImages[index], updatedImages[newIndex]] = [updatedImages[newIndex], updatedImages[index]];
-    // reassign order values based on new positions
     updatedImages.forEach((img, idx) => { img.order = idx; });
 
-    // update albums list and selectedAlbum
     const updatedAlbums = albums.map(a =>
       a.id === albumId ? { ...a, images: updatedImages } : a
     );
@@ -506,17 +542,56 @@ function FashionTab() {
     }
   };
 
+  // ─── REORDER SINGLES ──────────────────────────────────────────────────────
+
+  const moveSingle = async (itemId: string, direction: "up" | "down") => {
+    const filtered = singles.filter(s => s.category === selectedCategory);
+    const index = filtered.findIndex(s => s.id === itemId);
+    if (index === -1) return;
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= filtered.length) return;
+
+    const item1 = filtered[index];
+    const item2 = filtered[newIndex];
+    const order1 = item1.order ?? index;
+    const order2 = item2.order ?? newIndex;
+
+    const updateOrder = async (item: SingleItem, newOrder: number) => {
+      try {
+        await fetch(`${API}/api/items/${item.id}`, {
+          method: "PUT",
+          headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
+          body: JSON.stringify({ order: newOrder }),
+        });
+      } catch (e) {
+        console.error("Failed to update single order", e);
+      }
+    };
+
+    await Promise.all([
+      updateOrder(item1, order2),
+      updateOrder(item2, order1),
+    ]);
+
+    const updatedSingles = singles.map(s => {
+      if (s.id === item1.id) return { ...s, order: order2 };
+      if (s.id === item2.id) return { ...s, order: order1 };
+      return s;
+    });
+    setSingles(updatedSingles);
+  };
+
   // ─── DELETE FUNCTIONS ──────────────────────────────────────────────────────
 
   const deleteAlbum = async (albumId: string) => {
     if (!window.confirm("Delete this album and all its images? This cannot be undone.")) return;
     try {
-      const res = await fetch(`${API}/api/fashion-albums/${albumId}`, {
+      const res = await fetch(`${albumEndpoint}/${albumId}`, {
         method: "DELETE",
         headers: AUTH_HEADER,
       });
       if (res.status === 404) {
-        alert("Delete endpoint not found. Please implement DELETE /api/fashion-albums/:id on your backend.");
+        alert("Delete endpoint not found.");
         return;
       }
       if (!res.ok) throw new Error("Failed to delete album");
@@ -530,12 +605,12 @@ function FashionTab() {
   const deleteImage = async (albumId: string, imageId: string) => {
     if (!window.confirm("Delete this image? This cannot be undone.")) return;
     try {
-      const res = await fetch(`${API}/api/fashion-albums/${albumId}/images/${imageId}`, {
+      const res = await fetch(`${albumEndpoint}/${albumId}/images/${imageId}`, {
         method: "DELETE",
         headers: AUTH_HEADER,
       });
       if (res.status === 404) {
-        alert("Delete endpoint not found. Please implement DELETE /api/fashion-albums/:albumId/images/:imageId on your backend.");
+        alert("Delete endpoint not found.");
         return;
       }
       if (!res.ok) throw new Error("Failed to delete image");
@@ -561,7 +636,7 @@ function FashionTab() {
         headers: AUTH_HEADER,
       });
       if (res.status === 404) {
-        alert("Delete endpoint not found. Please implement DELETE /api/items/:id on your backend.");
+        alert("Delete endpoint not found.");
         setDeletingSingleId(null);
         return;
       }
@@ -586,7 +661,7 @@ function FashionTab() {
       const fd = new FormData();
       fd.append("name", newAlbumName);
       fd.append("category", newAlbumCategory);
-      fd.append("description", newAlbumDesc); // HTML content
+      fd.append("description", newAlbumDesc);
       fd.append("price", newAlbumPrice);
       fd.append("cover", newAlbumCover);
       if (newAlbumInitialImage) {
@@ -595,7 +670,7 @@ function FashionTab() {
       }
 
       const res = await fetchWithWakeup(
-        `${API}/api/fashion-albums`,
+        albumEndpoint,
         { method: "POST", headers: AUTH_HEADER, body: fd },
         setCreateMsg
       );
@@ -608,13 +683,13 @@ function FashionTab() {
       setNewAlbumExtraText("");
       fetchAlbums();
     } catch {
-      setCreateMsg("❌ Server timed out. Wait 30s and try again — Render free tier sleeps.");
+      setCreateMsg("❌ Server timed out. Wait 30s and try again.");
     } finally {
       setCreatingAlbum(false);
     }
   };
 
-  // ─── ADD MULTIPLE IMAGES TO ALBUM ─────────────────────────────────────────
+  // ─── ADD IMAGES TO ALBUM ──────────────────────────────────────────────────
 
   const handleAddImage = async (e: FormEvent) => {
     e.preventDefault();
@@ -624,15 +699,18 @@ function FashionTab() {
     try {
       const fd = new FormData();
       imgFiles.forEach((file) => fd.append("images", file));
-      fd.append("title", imgTitle);
-      fd.append("description", imgDesc); // HTML content
-      fd.append("price", imgPrice);
+      
+      // For photo albums, we don't need text fields – send empty strings
+      const isPhoto = type === "photo";
+      fd.append("title", isPhoto ? "" : imgTitle);
+      fd.append("description", isPhoto ? "" : imgDesc);
+      fd.append("price", isPhoto ? "" : imgPrice);
       fd.append("albumId", selectedAlbum.id);
       fd.append("category", selectedAlbum.category);
-      fd.append("extraText", imgExtraText);
+      fd.append("extraText", isPhoto ? "" : imgExtraText);
 
       const res = await fetchWithWakeup(
-        `${API}/api/fashion-albums/${selectedAlbum.id}/images`,
+        `${albumEndpoint}/${selectedAlbum.id}/images`,
         { method: "POST", headers: AUTH_HEADER, body: fd },
         setAddImgMsg
       );
@@ -640,14 +718,18 @@ function FashionTab() {
       if (!res.ok) return setAddImgMsg(d.message || "Failed to add images");
       setAddImgMsg(`✅ ${d.images?.length || 0} images added!`);
       setImgFiles([]);
-      setImgTitle("");
-      setImgDesc("");
-      setImgPrice("");
-      setImgExtraText("");
-      fetchAlbums();
-      setSelectedAlbum((prev) =>
-        prev ? { ...prev, images: [...prev.images, ...d.images] } : prev
-      );
+      if (!isPhoto) {
+        setImgTitle("");
+        setImgDesc("");
+        setImgPrice("");
+        setImgExtraText("");
+      }
+      // Refetch albums and update selected album from fresh data
+      const updatedAlbums = await fetchAlbums();
+      const updatedAlbum = updatedAlbums.find(a => a.id === selectedAlbum.id);
+      if (updatedAlbum) {
+        setSelectedAlbum(updatedAlbum);
+      }
     } catch {
       setAddImgMsg("❌ Could not reach server. Try again.");
     } finally {
@@ -655,7 +737,7 @@ function FashionTab() {
     }
   };
 
-  // ─── SINGLE UPLOAD ─────────────────────────────────────────────────────────
+  // ─── SINGLE UPLOAD (with showcase target route) ──────────────────────────
 
   const handleSingleUpload = async (e: FormEvent) => {
     e.preventDefault();
@@ -666,9 +748,15 @@ function FashionTab() {
       const fd = new FormData();
       fd.append("image", singleFile);
       fd.append("title", singleTitle);
-      fd.append("description", singleDesc); // HTML content
+      fd.append("description", singleDesc);
       fd.append("category", singleCat);
       if (singlePrice) fd.append("price", singlePrice);
+      
+      // ─── Send target route as extra_text for showcase ───
+      const isPhoto = type === "photo";
+      if (isPhoto && singleCat === "showcase" && singleTargetRoute) {
+        fd.append("extra_text", singleTargetRoute);
+      }
 
       const res = await fetchWithWakeup(
         `${API}/api/upload`,
@@ -678,7 +766,11 @@ function FashionTab() {
       const d = await res.json();
       if (!res.ok) return setSingleMsg(d.message || "Upload failed");
       setSingleMsg("✅ Uploaded!");
-      setSingleFile(null); setSingleTitle(""); setSingleDesc(""); setSinglePrice("");
+      setSingleFile(null); 
+      setSingleTitle(""); 
+      setSingleDesc(""); 
+      setSinglePrice("");
+      setSingleTargetRoute("");
       fetchSingles();
     } catch {
       setSingleMsg("❌ Could not reach server. Try again.");
@@ -689,7 +781,7 @@ function FashionTab() {
 
   // ─── EDIT ALBUM ────────────────────────────────────────────────────────────
 
-  const openEditAlbum = (album: FashionAlbum) => {
+  const openEditAlbum = (album: Album) => {
     setEditingAlbum(album);
     setEditAlbumName(album.name);
     setEditAlbumCategory(album.category);
@@ -708,12 +800,12 @@ function FashionTab() {
       const fd = new FormData();
       fd.append("name", editAlbumName);
       fd.append("category", editAlbumCategory);
-      fd.append("description", editAlbumDesc); // HTML content
+      fd.append("description", editAlbumDesc);
       fd.append("price", editAlbumPrice);
       if (editAlbumCover) fd.append("cover", editAlbumCover);
 
       const res = await fetchWithWakeup(
-        `${API}/api/fashion-albums/${editingAlbum.id}`,
+        `${albumEndpoint}/${editingAlbum.id}`,
         { method: "PUT", headers: AUTH_HEADER, body: fd },
         setEditAlbumMsg
       );
@@ -733,9 +825,9 @@ function FashionTab() {
     }
   };
 
-  // ─── EDIT IMAGE (with file replacement) ──────────────────────────────────
+  // ─── EDIT IMAGE ────────────────────────────────────────────────────────────
 
-  const openEditImage = (albumId: string, image: FashionAlbum["images"][0]) => {
+  const openEditImage = (albumId: string, image: AlbumImage) => {
     setEditingImage({ albumId, image });
     setEditImageTitle(image.title || "");
     setEditImageDesc(image.description || "");
@@ -754,7 +846,6 @@ function FashionTab() {
     try {
       let res: Response;
       const hasFile = !!editImageFile;
-      // Prepare common metadata (description is HTML)
       const bodyData = {
         title: editImageTitle,
         description: editImageDesc,
@@ -772,13 +863,13 @@ function FashionTab() {
         fd.append("extra_text", editImageExtra);
         if (editImageOrder !== undefined) fd.append("order", String(editImageOrder));
         res = await fetchWithWakeup(
-          `${API}/api/fashion-albums/${editingImage.albumId}/images/${editingImage.image.id}`,
+          `${albumEndpoint}/${editingImage.albumId}/images/${editingImage.image.id}`,
           { method: "PUT", headers: AUTH_HEADER, body: fd },
           setEditImageMsg
         );
       } else {
         res = await fetchWithWakeup(
-          `${API}/api/fashion-albums/${editingImage.albumId}/images/${editingImage.image.id}`,
+          `${albumEndpoint}/${editingImage.albumId}/images/${editingImage.image.id}`,
           {
             method: "PUT",
             headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
@@ -816,9 +907,10 @@ function FashionTab() {
   const openEditSingle = (item: SingleItem) => {
     setEditingSingle(item);
     setEditSingleTitle(item.title || "");
-    setEditSingleCat(item.category as FashionCategory || "casuals");
+    setEditSingleCat(item.category);
     setEditSingleDesc(item.description || "");
     setEditSinglePrice(item.price || "");
+    setEditSingleOrder(item.order !== undefined ? item.order : undefined);
     setEditSingleFile(null);
     setEditSingleMsg("");
   };
@@ -829,18 +921,41 @@ function FashionTab() {
     setEditSingleLoading(true);
     setEditSingleMsg("");
     try {
-      const fd = new FormData();
-      fd.append("title", editSingleTitle);
-      fd.append("category", editSingleCat);
-      fd.append("description", editSingleDesc); // HTML content
-      fd.append("price", editSinglePrice);
-      if (editSingleFile) fd.append("image", editSingleFile);
+      let res: Response;
+      const hasFile = !!editSingleFile;
+      const bodyData = {
+        title: editSingleTitle,
+        category: editSingleCat,
+        description: editSingleDesc,
+        price: editSinglePrice,
+        order: editSingleOrder !== undefined ? editSingleOrder : (editingSingle.order ?? 0),
+      };
 
-      const res = await fetchWithWakeup(
-        `${API}/api/items/${editingSingle.id}`,
-        { method: "PUT", headers: AUTH_HEADER, body: fd },
-        setEditSingleMsg
-      );
+      if (hasFile) {
+        const fd = new FormData();
+        fd.append("image", editSingleFile);
+        fd.append("title", editSingleTitle);
+        fd.append("category", editSingleCat);
+        fd.append("description", editSingleDesc);
+        fd.append("price", editSinglePrice);
+        if (editSingleOrder !== undefined) fd.append("order", String(editSingleOrder));
+        res = await fetchWithWakeup(
+          `${API}/api/items/${editingSingle.id}`,
+          { method: "PUT", headers: AUTH_HEADER, body: fd },
+          setEditSingleMsg
+        );
+      } else {
+        res = await fetchWithWakeup(
+          `${API}/api/items/${editingSingle.id}`,
+          {
+            method: "PUT",
+            headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
+            body: JSON.stringify(bodyData),
+          },
+          setEditSingleMsg
+        );
+      }
+
       const d = await res.json();
       if (!res.ok) return setEditSingleMsg(d.message || "Update failed");
       setEditSingleMsg("✅ Item updated!");
@@ -852,6 +967,10 @@ function FashionTab() {
       setEditSingleLoading(false);
     }
   };
+
+  // ─── RENDER ─────────────────────────────────────────────────────────────────
+
+  const isPhoto = type === "photo";
 
   return (
     <div className="space-y-5">
@@ -872,12 +991,13 @@ function FashionTab() {
 
       {mode === "single" ? (
         <div className="space-y-5">
+          {/* Upload Form */}
           <form onSubmit={handleSingleUpload} className={`${cardCls} space-y-4`}>
             <SectionTitle>Quick Single Upload</SectionTitle>
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Category">
-                <select value={singleCat} onChange={(e) => setSingleCat(e.target.value as FashionCategory)} className={inputCls}>
-                  {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                <select value={singleCat} onChange={(e) => setSingleCat(e.target.value)} className={inputCls}>
+                  {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
                 </select>
               </Field>
               <Field label="Price">
@@ -890,60 +1010,112 @@ function FashionTab() {
             <Field label="Description">
               <RichTextEditor value={singleDesc} onChange={setSingleDesc} placeholder="Describe the piece…" />
             </Field>
+
+            {/* ─── Showcase Target Route Dropdown ─── */}
+            {isPhoto && singleCat === "showcase" && (
+              <Field label="Link to Category (for 'View More' button)">
+                <select
+                  value={singleTargetRoute}
+                  onChange={(e) => setSingleTargetRoute(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">Select a category…</option>
+                  {SHOWCASE_ROUTE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <p className="text-[9px] text-white/40 mt-1">
+                  This determines where the "View More" button on the showcase image will navigate.
+                </p>
+              </Field>
+            )}
+
             <UploadBox label="Image *" single onChange={(f) => setSingleFile(f[0] || null)} previewFiles={singleFile ? [singleFile] : []} />
             <FormFooter msg={singleMsg} loading={singleLoading} label="Upload Item" />
           </form>
 
-          {/* Manage Singles */}
+          {/* Manage Singles with Category Filter */}
           <div className={cardCls}>
-            <div className="flex items-center justify-between">
-              <SectionTitle>Manage Singles ({singles.length})</SectionTitle>
-              <button onClick={fetchSingles} className="text-xs text-white/30 hover:text-white/60 transition">↻ Refresh</button>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <SectionTitle>Manage Singles ({singles.filter(s => s.category === selectedCategory).length})</SectionTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-white/40 uppercase tracking-wider">Filter:</span>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="bg-[#0d0d0d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:border-[#D4AF37] outline-none"
+                >
+                  {categoryOptions.map((c) => (
+                    <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
+                  ))}
+                </select>
+                <button onClick={fetchSingles} className="text-xs text-white/30 hover:text-white/60 transition">↻ Refresh</button>
+              </div>
             </div>
             {loadingSingles ? (
               <p className="text-white/30 text-sm py-4 text-center">Loading…</p>
-            ) : singles.length === 0 ? (
-              <p className="text-white/25 text-sm italic py-4 text-center">No single items uploaded yet.</p>
+            ) : singles.filter(s => s.category === selectedCategory).length === 0 ? (
+              <p className="text-white/25 text-sm italic py-4 text-center">No items in this category.</p>
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-                {singles.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] px-3 py-2"
-                  >
-                    <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover border border-white/10" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
-                      <p className="text-xs text-white/35 truncate">{item.category} {item.price && `· ₦${item.price}`}</p>
+                {singles
+                  .filter(s => s.category === selectedCategory)
+                  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                  .map((item, index, arr) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] px-3 py-2"
+                    >
+                      <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover border border-white/10" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
+                        <p className="text-xs text-white/35 truncate">{item.category} {item.price && `· ₦${item.price}`}</p>
+                        {item.category === "showcase" && item.extra_text && (
+                          <p className="text-[9px] text-[#D4AF37]/60 mt-0.5">→ {item.extra_text}</p>
+                        )}
+                      </div>
+                      {/* Order buttons */}
+                      <button
+                        onClick={() => moveSingle(item.id, "up")}
+                        disabled={index === 0}
+                        className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center disabled:opacity-20"
+                        title="Move up"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                      </button>
+                      <button
+                        onClick={() => moveSingle(item.id, "down")}
+                        disabled={index === arr.length - 1}
+                        className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center disabled:opacity-20"
+                        title="Move down"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                      </button>
+                      <button
+                        onClick={() => openEditSingle(item)}
+                        className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
+                        title="Edit item"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => deleteSingle(item.id)}
+                        disabled={deletingSingleId === item.id}
+                        className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center disabled:opacity-40"
+                      >
+                        {deletingSingleId === item.id ? (
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                          </svg>
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => openEditSingle(item)}
-                      className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
-                      title="Edit item"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => deleteSingle(item.id)}
-                      disabled={deletingSingleId === item.id}
-                      className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center disabled:opacity-40"
-                    >
-                      {deletingSingleId === item.id ? (
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>
@@ -955,11 +1127,11 @@ function FashionTab() {
             <form onSubmit={handleCreateAlbum} className={cardCls}>
               <SectionTitle>Create Album</SectionTitle>
               <Field label="Album Name *">
-                <input placeholder="e.g. Summer Casuals 2025" value={newAlbumName} onChange={(e) => setNewAlbumName(e.target.value)} className={inputCls} />
+                <input placeholder="e.g. Summer Collection 2025" value={newAlbumName} onChange={(e) => setNewAlbumName(e.target.value)} className={inputCls} />
               </Field>
               <Field label="Category">
-                <select value={newAlbumCategory} onChange={(e) => setNewAlbumCategory(e.target.value as FashionCategory)} className={inputCls}>
-                  {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                <select value={newAlbumCategory} onChange={(e) => setNewAlbumCategory(e.target.value)} className={inputCls}>
+                  {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
                 </select>
               </Field>
               <Field label="Description">
@@ -969,10 +1141,10 @@ function FashionTab() {
                 <PriceInput value={newAlbumPrice} onChange={setNewAlbumPrice} placeholder="e.g. 60,000" />
               </Field>
               <UploadBox label="Cover Image *" single onChange={(f) => setNewAlbumCover(f[0] || null)} previewFiles={newAlbumCover ? [newAlbumCover] : []} />
-              <UploadBox label="Initial Album Image (optional) – will appear inside the album" single onChange={(f) => setNewAlbumInitialImage(f[0] || null)} previewFiles={newAlbumInitialImage ? [newAlbumInitialImage] : []} />
+              <UploadBox label="Initial Album Image (optional)" single onChange={(f) => setNewAlbumInitialImage(f[0] || null)} previewFiles={newAlbumInitialImage ? [newAlbumInitialImage] : []} />
               <Field label="Extra Text for Initial Image (optional)">
                 <textarea
-                  placeholder="Additional info for this image (e.g., fabric details, size guide)"
+                  placeholder="Additional info for this image"
                   value={newAlbumExtraText}
                   onChange={(e) => setNewAlbumExtraText(e.target.value)}
                   className={textareaCls}
@@ -985,57 +1157,59 @@ function FashionTab() {
             {/* Album list */}
             <div className={cardCls}>
               <div className="flex items-center justify-between">
-                <SectionTitle>Albums ({albums.length})</SectionTitle>
+                <SectionTitle>Albums ({albums.filter(a => categoryOptions.some(c => c.value === a.category)).length})</SectionTitle>
                 <button onClick={fetchAlbums} className="text-xs text-white/30 hover:text-white/60 transition">↻ Refresh</button>
               </div>
               {loadingAlbums ? (
                 <p className="text-white/30 text-sm py-4 text-center">Loading…</p>
-              ) : albums.length === 0 ? (
+              ) : albums.filter(a => categoryOptions.some(c => c.value === a.category)).length === 0 ? (
                 <p className="text-white/25 text-sm italic py-4 text-center">No albums yet</p>
               ) : (
                 <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
-                  {albums.map((album) => (
-                    <div
-                      key={album.id}
-                      className={`flex items-center gap-2 rounded-xl px-3 py-2 transition border ${
-                        selectedAlbum?.id === album.id
-                          ? "border-[#D4AF37]/60 bg-[#D4AF37]/10"
-                          : "border-white/[0.07] bg-[#0d0d0d] hover:border-white/20"
-                      }`}
-                    >
-                      <button
-                        onClick={() => setSelectedAlbum(album)}
-                        className="flex-1 text-left min-w-0"
+                  {albums
+                    .filter(a => categoryOptions.some(c => c.value === a.category))
+                    .map((album) => (
+                      <div
+                        key={album.id}
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2 transition border ${
+                          selectedAlbum?.id === album.id
+                            ? "border-[#D4AF37]/60 bg-[#D4AF37]/10"
+                            : "border-white/[0.07] bg-[#0d0d0d] hover:border-white/20"
+                        }`}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <p className="text-white text-sm font-medium truncate">{album.name}</p>
-                            <p className="text-white/35 text-xs capitalize mt-0.5">{album.category}</p>
+                        <button
+                          onClick={() => setSelectedAlbum(album)}
+                          className="flex-1 text-left min-w-0"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-white text-sm font-medium truncate">{album.name}</p>
+                              <p className="text-white/35 text-xs capitalize mt-0.5">{album.category}</p>
+                            </div>
+                            <span className="text-[#D4AF37]/60 text-xs shrink-0 tabular-nums">{album.images?.length || 0} imgs</span>
                           </div>
-                          <span className="text-[#D4AF37]/60 text-xs shrink-0 tabular-nums">{album.images?.length || 0} imgs</span>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => openEditAlbum(album)}
-                        className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
-                        title="Edit album"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => deleteAlbum(album.id)}
-                        className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center"
-                        title="Delete album"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+                        </button>
+                        <button
+                          onClick={() => openEditAlbum(album)}
+                          className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
+                          title="Edit album"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => deleteAlbum(album.id)}
+                          className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center"
+                          title="Delete album"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
@@ -1055,38 +1229,43 @@ function FashionTab() {
                 </div>
               </div>
 
-              {/* ─── ADD MULTIPLE IMAGES FORM ────────────────────────────── */}
+              {/* ─── ADD IMAGES FORM ────────────────────────────────────── */}
               <form onSubmit={handleAddImage} className={cardCls}>
                 <SectionTitle>Add Images to Album</SectionTitle>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Field label="Image Title">
-                    <input placeholder="e.g. Royal Blue Casual" value={imgTitle} onChange={(e) => setImgTitle(e.target.value)} className={inputCls} />
-                  </Field>
-                  <Field label="Price (overrides album default)">
-                    <PriceInput value={imgPrice} onChange={setImgPrice} placeholder="e.g. 75,000" />
-                  </Field>
-                </div>
-                <Field label="Description">
-                  <RichTextEditor value={imgDesc} onChange={setImgDesc} placeholder="Describe this specific piece…" />
-                </Field>
+                {!isPhoto && (
+                  <>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Field label="Image Title">
+                        <input placeholder="e.g. Royal Blue" value={imgTitle} onChange={(e) => setImgTitle(e.target.value)} className={inputCls} />
+                      </Field>
+                      <Field label="Price (overrides album default)">
+                        <PriceInput value={imgPrice} onChange={setImgPrice} placeholder="e.g. 75,000" />
+                      </Field>
+                    </div>
+                    <Field label="Description">
+                      <RichTextEditor value={imgDesc} onChange={setImgDesc} placeholder="Describe this specific piece…" />
+                    </Field>
+                    <Field label="Extra Text (optional)">
+                      <textarea
+                        placeholder="Additional info for these images"
+                        value={imgExtraText}
+                        onChange={(e) => setImgExtraText(e.target.value)}
+                        className={textareaCls}
+                        style={{ minHeight: 60 }}
+                      />
+                    </Field>
+                  </>
+                )}
                 <UploadBox
-                  label="Image Files * (select multiple)"
+                  label={isPhoto ? "Select Images * (multiple allowed)" : "Image Files * (select multiple)"}
                   single={false}
                   onChange={setImgFiles}
                   previewFiles={imgFiles}
                 />
-                <Field label="Extra Text (optional)">
-                  <textarea
-                    placeholder="Additional info for these images"
-                    value={imgExtraText}
-                    onChange={(e) => setImgExtraText(e.target.value)}
-                    className={textareaCls}
-                    style={{ minHeight: 60 }}
-                  />
-                </Field>
                 <FormFooter msg={addImgMsg} loading={addingImg} label="Add Images" />
               </form>
 
+              {/* Image Grid with Order Controls */}
               {selectedAlbum.images?.length > 0 && (
                 <div className={cardCls}>
                   <SectionTitle>Album Images ({selectedAlbum.images.length})</SectionTitle>
@@ -1100,7 +1279,6 @@ function FashionTab() {
                           {img.order !== undefined && <p className="text-white/40 text-[10px]">Order: {img.order}</p>}
                         </div>
                         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                          {/* Up/Down arrows */}
                           <button
                             onClick={() => img.id && moveImage(selectedAlbum.id, img.id, "up")}
                             disabled={i === 0}
@@ -1162,8 +1340,8 @@ function FashionTab() {
                 <input value={editAlbumName} onChange={(e) => setEditAlbumName(e.target.value)} className={inputCls} required />
               </Field>
               <Field label="Category">
-                <select value={editAlbumCategory} onChange={(e) => setEditAlbumCategory(e.target.value as FashionCategory)} className={inputCls}>
-                  {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                <select value={editAlbumCategory} onChange={(e) => setEditAlbumCategory(e.target.value)} className={inputCls}>
+                  {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
                 </select>
               </Field>
               <Field label="Description">
@@ -1185,7 +1363,7 @@ function FashionTab() {
         </div>
       )}
 
-      {/* ─── EDIT IMAGE MODAL (with file upload) ───────────────────────────── */}
+      {/* ─── EDIT IMAGE MODAL ──────────────────────────────────────────────── */}
       {editingImage && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-[#111] rounded-2xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto">
@@ -1200,7 +1378,7 @@ function FashionTab() {
               <Field label="Description">
                 <RichTextEditor value={editImageDesc} onChange={setEditImageDesc} placeholder="Image description…" />
               </Field>
-              <Field label="Extra Text (e.g., Size Chart)">
+              <Field label="Extra Text">
                 <textarea value={editImageExtra} onChange={(e) => setEditImageExtra(e.target.value)} className={textareaCls} rows={2} />
               </Field>
               <Field label="Order (number) – lower = appears first">
@@ -1240,8 +1418,8 @@ function FashionTab() {
                 <input value={editSingleTitle} onChange={(e) => setEditSingleTitle(e.target.value)} className={inputCls} required />
               </Field>
               <Field label="Category">
-                <select value={editSingleCat} onChange={(e) => setEditSingleCat(e.target.value as FashionCategory)} className={inputCls}>
-                  {FASHION_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                <select value={editSingleCat} onChange={(e) => setEditSingleCat(e.target.value)} className={inputCls}>
+                  {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
                 </select>
               </Field>
               <Field label="Price">
@@ -1249,6 +1427,15 @@ function FashionTab() {
               </Field>
               <Field label="Description">
                 <RichTextEditor value={editSingleDesc} onChange={setEditSingleDesc} placeholder="Describe this item…" />
+              </Field>
+              <Field label="Order (number) – lower = appears first">
+                <input
+                  type="number"
+                  value={editSingleOrder !== undefined ? editSingleOrder : ""}
+                  onChange={(e) => setEditSingleOrder(e.target.value ? parseInt(e.target.value) : undefined)}
+                  className={inputCls}
+                  placeholder="e.g. 0"
+                />
               </Field>
               <UploadBox label="Replace Image (optional)" single onChange={(f) => setEditSingleFile(f[0] || null)} previewFiles={editSingleFile ? [editSingleFile] : []} />
               <div className="flex gap-3 pt-2">
@@ -1267,201 +1454,22 @@ function FashionTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── PHOTO TAB (unchanged) ──────────────────────────────────────────────────
+// ── SECTION TABS (wrappers for CategoryManager) ────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
+
+function FashionTab() {
+  return <CategoryManager type="fashion" categoryOptions={FASHION_CATEGORIES} albumEndpoint={`${API}/api/fashion-albums`} />;
+}
 
 function PhotoTab() {
-  const [photoCategory, setPhotoCategory] = useState<PhotoCategory>("portraits");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-
-  const [couple, setCouple] = useState("");
-  const [weddingDate, setWeddingDate] = useState("");
-  const [weddingLocation, setWeddingLocation] = useState("");
-  const [cover, setCover] = useState<File | null>(null);
-  const [thumbnails, setThumbnails] = useState<File[]>([]);
-  const [album, setAlbum] = useState<File[]>([]);
-
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState("");
-
-  const isWedding = photoCategory === "weddings";
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMsg("");
-    try {
-      let res: Response;
-      if (isWedding) {
-        if (!cover) { setMsg("Cover image is required"); setLoading(false); return; }
-        const fd = new FormData();
-        fd.append("category", "weddings");
-        fd.append("couple", couple);
-        fd.append("title", title);
-        fd.append("date", weddingDate);
-        fd.append("location", weddingLocation);
-        fd.append("description", description);
-        fd.append("cover", cover);
-        thumbnails.forEach((f) => fd.append("thumbnails", f));
-        album.forEach((f) => fd.append("album", f));
-        res = await fetchWithWakeup(`${API}/api/upload-wedding`, { method: "POST", headers: AUTH_HEADER, body: fd }, setMsg);
-      } else {
-        if (!file) { setMsg("Select an image"); setLoading(false); return; }
-        const fd = new FormData();
-        fd.append("image", file);
-        fd.append("title", title);
-        fd.append("description", description);
-        fd.append("category", photoCategory);
-        res = await fetchWithWakeup(`${API}/api/upload`, { method: "POST", headers: AUTH_HEADER, body: fd }, setMsg);
-      }
-      const d = await res.json();
-      if (!res.ok) { setMsg(d.message || "Upload failed"); return; }
-      setMsg("✅ Uploaded successfully!");
-      setTitle(""); setDescription(""); setFile(null);
-      setCouple(""); setWeddingDate(""); setWeddingLocation("");
-      setCover(null); setThumbnails([]); setAlbum([]);
-    } catch {
-      setMsg("❌ Could not reach server. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className={cardCls}>
-        <SectionTitle>Photo Category</SectionTitle>
-        <div className="flex flex-wrap gap-2">
-          {PHOTO_CATEGORIES.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              onClick={() => setPhotoCategory(c.value)}
-              className={`rounded-xl px-4 py-2 text-sm transition font-medium ${
-                photoCategory === c.value
-                  ? "bg-[#D4AF37] text-black"
-                  : "border border-white/10 text-white/50 hover:text-white hover:border-white/25"
-              }`}
-            >
-              {c.icon} {c.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {isWedding ? (
-        <>
-          <div className={cardCls}>
-            <SectionTitle>Wedding Details</SectionTitle>
-            <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Couple Name *">
-                <input placeholder="e.g. Adaeze & Emeka" value={couple} onChange={(e) => setCouple(e.target.value)} className={inputCls} />
-              </Field>
-              <Field label="Date">
-                <input placeholder="e.g. Lagos, 2025" value={weddingDate} onChange={(e) => setWeddingDate(e.target.value)} className={inputCls} />
-              </Field>
-            </div>
-            <Field label="Location">
-              <input placeholder="e.g. Eko Hotel, Lagos" value={weddingLocation} onChange={(e) => setWeddingLocation(e.target.value)} className={inputCls} />
-            </Field>
-            <Field label="Title">
-              <input placeholder="Album title" value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
-            </Field>
-            <Field label="Story Description">
-              <textarea placeholder="Tell the story of this wedding…" value={description} onChange={(e) => setDescription(e.target.value)} className={textareaCls} />
-            </Field>
-          </div>
-          <div className={cardCls}>
-            <SectionTitle>Images</SectionTitle>
-            <div className="grid gap-5 md:grid-cols-3">
-              <UploadBox label="Cover Image *" single onChange={(f) => setCover(f[0] || null)} previewFiles={cover ? [cover] : []} />
-              <UploadBox label="Thumbnails" onChange={setThumbnails} previewFiles={thumbnails} />
-              <UploadBox label="Full Album" onChange={setAlbum} previewFiles={album} />
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className={cardCls}>
-          <SectionTitle>Photo Details — {PHOTO_CATEGORIES.find((c) => c.value === photoCategory)?.label}</SectionTitle>
-          <Field label="Title *">
-            <input placeholder="Photo title" value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
-          </Field>
-          <Field label="Description">
-            <textarea placeholder="Describe this photo or session…" value={description} onChange={(e) => setDescription(e.target.value)} className={textareaCls} />
-          </Field>
-          <UploadBox label="Image *" single onChange={(f) => setFile(f[0] || null)} previewFiles={file ? [file] : []} />
-        </div>
-      )}
-
-      <FormFooter msg={msg} loading={loading} label={isWedding ? "Upload Wedding" : "Upload Photo"} />
-    </form>
-  );
+  return <CategoryManager type="photo" categoryOptions={PHOTO_CATEGORIES} albumEndpoint={`${API}/api/fashion-albums`} />;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── REAL ESTATE TAB (unchanged) ────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════════════════
 
 function RealEstateTab() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [location, setLocation] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState("");
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!file) return setMsg("Select an image");
-    setLoading(true);
-    setMsg("");
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      fd.append("title", title);
-      fd.append("description", description);
-      fd.append("category", "realestate");
-      if (price) fd.append("price", price);
-      if (location) fd.append("location", location);
-      const res = await fetchWithWakeup(`${API}/api/upload`, { method: "POST", headers: AUTH_HEADER, body: fd }, setMsg);
-      const d = await res.json();
-      if (!res.ok) return setMsg(d.message || "Upload failed");
-      setMsg("✅ Property listed!");
-      setTitle(""); setDescription(""); setPrice(""); setLocation(""); setFile(null);
-    } catch {
-      setMsg("❌ Could not reach server. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className={`${cardCls} space-y-4`}>
-      <SectionTitle>New Property Listing</SectionTitle>
-      <div className="grid gap-3 md:grid-cols-2">
-        <Field label="Property Title *">
-          <input placeholder="e.g. 4-Bedroom Duplex, Lekki" value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
-        </Field>
-        <Field label="Price">
-          <PriceInput value={price} onChange={setPrice} placeholder="e.g. 85,000,000" />
-        </Field>
-      </div>
-      <Field label="Location">
-        <input placeholder="e.g. Lekki Phase 1, Lagos" value={location} onChange={(e) => setLocation(e.target.value)} className={inputCls} />
-      </Field>
-      <Field label="Description">
-        <textarea placeholder="Describe the property…" value={description} onChange={(e) => setDescription(e.target.value)} className={textareaCls} />
-      </Field>
-      <UploadBox label="Property Image *" single onChange={(f) => setFile(f[0] || null)} previewFiles={file ? [file] : []} />
-      <FormFooter msg={msg} loading={loading} label="List Property" />
-    </form>
-  );
+  return <CategoryManager type="realestate" categoryOptions={REAL_ESTATE_CATEGORIES} albumEndpoint={`${API}/api/fashion-albums`} />;
 }
 
-// ─── SMALL SHARED COMPONENTS ─────────────────────────────────────────────────
+// ─── SHARED COMPONENTS ───────────────────────────────────────────────────────
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]/80 mb-1">{children}</p>;
@@ -1524,7 +1532,6 @@ export default function Admin() {
       <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
         <div className="pointer-events-none fixed inset-0 opacity-[0.03]"
           style={{ backgroundImage: "linear-gradient(#D4AF37 1px, transparent 1px), linear-gradient(90deg, #D4AF37 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-
         <form onSubmit={handleLogin} className="relative w-full max-w-sm">
           <div className="rounded-2xl border border-white/10 bg-[#111]/90 p-8 backdrop-blur-xl shadow-2xl">
             <div className="text-center mb-8">
@@ -1533,21 +1540,10 @@ export default function Admin() {
               <h1 className="text-2xl font-serif text-white">Admin Panel</h1>
             </div>
             <div className="space-y-3">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                autoFocus
-                className={inputCls}
-              />
-              <button type="submit" className={`${btnGold} w-full py-3 text-base`}>
-                Unlock Dashboard
-              </button>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" autoFocus className={inputCls} />
+              <button type="submit" className={`${btnGold} w-full py-3 text-base`}>Unlock Dashboard</button>
             </div>
-            {loginError && (
-              <p className="mt-4 text-center text-sm text-red-400">{loginError}</p>
-            )}
+            {loginError && <p className="mt-4 text-center text-sm text-red-400">{loginError}</p>}
           </div>
         </form>
       </div>
@@ -1556,7 +1552,6 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#080808] text-white">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#0a0a0a]/90 backdrop-blur-xl px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/25 flex items-center justify-center text-sm">✦</div>
@@ -1565,35 +1560,19 @@ export default function Admin() {
             <h1 className="text-sm font-semibold text-white leading-none">TOPXCM Control Panel</h1>
           </div>
         </div>
-        <button
-          onClick={() => { localStorage.removeItem(AUTH_KEY); setIsAuthed(false); }}
-          className="text-xs text-white/30 hover:text-white/60 transition border border-white/10 rounded-lg px-3 py-1.5"
-        >
-          Sign out
-        </button>
+        <button onClick={() => { localStorage.removeItem(AUTH_KEY); setIsAuthed(false); }} className="text-xs text-white/30 hover:text-white/60 transition border border-white/10 rounded-lg px-3 py-1.5">Sign out</button>
       </header>
 
-      {/* Tabs */}
       <div className="border-b border-white/[0.07] px-5 bg-[#0a0a0a]">
         <div className="flex max-w-5xl mx-auto">
           {TAB_CONFIG.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`px-5 py-3.5 text-sm font-medium transition-all border-b-2 ${
-                tab === t.id
-                  ? "border-[#D4AF37] text-[#D4AF37]"
-                  : "border-transparent text-white/35 hover:text-white/65"
-              }`}
-            >
-              <span className="mr-1.5">{t.icon}</span>
-              {t.label}
+            <button key={t.id} onClick={() => setTab(t.id)} className={`px-5 py-3.5 text-sm font-medium transition-all border-b-2 ${tab === t.id ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-white/35 hover:text-white/65"}`}>
+              <span className="mr-1.5">{t.icon}</span>{t.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Content */}
       <main className="max-w-5xl mx-auto px-5 py-8">
         {tab === "fashion" && <FashionTab />}
         {tab === "photo" && <PhotoTab />}

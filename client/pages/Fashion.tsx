@@ -588,7 +588,7 @@ export default function FashionPage() {
 
           <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-5 pb-10 pt-8 md:px-10">
             <div className="grid flex-1 items-stretch gap-4 grid-cols-[1.08fr_0.92fr] sm:gap-6 md:gap-8 overflow-visible">
-              <div className="relative z-10 flex flex-col justify-center max-w-[18rem] sm:max-w-xl md:max-w-[540px]">
+            <div className="relative z-10 flex flex-col justify-start pt-16 max-w-[18rem] sm:max-w-xl md:max-w-[540px]">
                 <motion.p
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -665,9 +665,9 @@ export default function FashionPage() {
               <div className="rounded-[30px] border border-white/12 bg-black/60 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center px-1">
                   <div className="flex items-center gap-3">
-                    <svg className="text-[#00AEEF] text-lg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="12" r="10" />
-                    </svg>
+<svg className="text-[#00AEEF] w-2 h-2" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+  <circle cx="12" cy="12" r="10" />
+</svg>
                     <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#00AEEF]">
                       Latest Collections
                     </p>

@@ -3,22 +3,32 @@ import { motion, AnimatePresence } from "framer-motion";
 import RealEstateMenu from "../components/RealEstateMenu";
 import { useNavigate } from "react-router-dom";
 
-// ─── TYPES ────────────────────────────────────────────────────────────────────
+const API = "https://topxcm-backend-1.onrender.com";
+
+// ─── TYPES ───────────────────────────────────────────────────────────────────
+
+interface PropertyImage {
+  id?: string;
+  url: string;
+  title: string;
+  description: string;
+  price: string;
+  extra_text?: string;
+  order?: number;
+}
 
 interface Property {
   id: string;
-  title: string;
+  name: string;
   category: string;
+  description: string;
+  price: string;
+  cover?: string;
+  images: PropertyImage[];
   location?: string;
-  price?: string;
-  image?: string;
-  description?: string;
-  albumId?: string; // added to filter out album images
 }
 
-const API = "https://topxcm-backend-1.onrender.com";
-
-// ─── PROPERTY MODAL ───────────────────────────────────────────────────────────
+// ─── PROPERTY MODAL (with image carousel, dark theme) ──────────────────────
 
 function PropertyModal({
   property,
@@ -27,20 +37,33 @@ function PropertyModal({
   property: Property;
   onClose: () => void;
 }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const images = property.images || [];
+  const coverImage = property.cover || (images.length > 0 ? images[0].url : "");
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const imgUrl = property.image?.startsWith("http")
-    ? property.image
-    : `${API}${property.image}`;
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
 
   const handleEnquire = () => {
-    const msg = `Hello, I'm interested in this property: *${property.title}*${property.location ? ` (${property.location})` : ""}${property.price ? ` — ${property.price}` : ""}. Please let me know more details.`;
+    const msg = `Hello, I'm interested in this property: *${property.name}*${property.location ? ` (${property.location})` : ""}${property.price ? ` — ${property.price}` : ""}. Please let me know more details.`;
     window.open(`https://wa.me/2348061587993?text=${encodeURIComponent(msg)}`, "_blank");
   };
+
+  const allImages = [coverImage, ...images.map((img) => img.url)];
+  const currentImage = allImages[currentIndex] || coverImage;
 
   return (
     <AnimatePresence>
@@ -48,7 +71,7 @@ function PropertyModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -56,35 +79,68 @@ function PropertyModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="relative w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl"
+          className="relative w-full max-w-4xl bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/20 flex items-center justify-center text-white text-sm hover:bg-black/40 transition"
+            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm hover:bg-white/20 transition"
           >
             ✕
           </button>
 
-          <div className="w-full aspect-[4/3] overflow-hidden bg-[#f0f4f8]">
+          {/* Carousel */}
+          <div className="relative w-full aspect-[16/9] bg-black/40 overflow-hidden">
             <img
-              src={imgUrl}
-              alt={property.title}
-              className="w-full h-full object-cover"
+              src={currentImage}
+              alt={property.name}
+              className="w-full h-full object-contain"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
+            {allImages.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrev}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 text-white hover:bg-black/80 transition flex items-center justify-center text-2xl"
+                >
+                  ‹
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 text-white hover:bg-black/80 transition flex items-center justify-center text-2xl"
+                >
+                  ›
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {allImages.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        idx === currentIndex ? "bg-white" : "bg-white/40"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="p-6">
-            <h3 className="text-xl font-serif text-[#B0D4E8] mb-1">{property.title}</h3>
+            <h3 className="text-xl font-serif text-[#B0D4E8] mb-1">{property.name}</h3>
             {property.location && (
-              <p className="text-slate-500 text-sm flex items-center gap-1 mb-2">
+              <p className="text-white/50 text-sm flex items-center gap-1 mb-2">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 {property.location}
               </p>
             )}
             {property.price && (
               <p className="text-[#B0D4E8] font-bold text-lg mb-4">{property.price}</p>
+            )}
+            {property.description && (
+              <div
+                className="text-white/60 text-sm leading-relaxed mb-4 line-clamp-3"
+                dangerouslySetInnerHTML={{ __html: property.description }}
+              />
             )}
             <button
               onClick={handleEnquire}
@@ -99,12 +155,10 @@ function PropertyModal({
   );
 }
 
-// ─── PROPERTY CARD ────────────────────────────────────────────────────────────
+// ─── PROPERTY CARD (dark theme) ───────────────────────────────────────────
 
 function PropertyCard({ property, onView }: { property: Property; onView: () => void }) {
-  const imgUrl = property.image?.startsWith("http")
-    ? property.image
-    : `${API}${property.image}`;
+  const coverImage = property.cover || (property.images.length > 0 ? property.images[0].url : "");
 
   return (
     <motion.div
@@ -112,26 +166,31 @@ function PropertyCard({ property, onView }: { property: Property; onView: () => 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#B0D4E8]/10 flex flex-col"
+      className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-[#B0D4E8]/30 transition-colors flex flex-col cursor-pointer"
+      onClick={onView}
     >
-      <div className="aspect-[4/3] overflow-hidden bg-[#EEF4F8] relative">
+      <div className="aspect-[4/3] overflow-hidden bg-zinc-800 relative">
         <img
-          src={imgUrl}
-          alt={property.title}
-          className="w-full h-full object-cover"
+          src={coverImage}
+          alt={property.name}
+          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
         />
-        <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition" />
+        {property.images.length > 0 && (
+          <div className="absolute bottom-2 right-2 bg-black/70 text-white/80 text-[10px] px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+            <span>📷</span> {property.images.length + 1}
+          </div>
+        )}
       </div>
 
       <div className="p-5 flex flex-col gap-3 flex-1">
         <div>
           <p className="text-[9px] uppercase tracking-[0.4em] text-[#B0D4E8] font-bold mb-1">Property</p>
-          <h3 className="text-lg font-serif text-slate-800 leading-tight">{property.title}</h3>
+          <h3 className="text-lg font-serif text-white leading-tight">{property.name}</h3>
         </div>
 
         {property.location && (
-          <p className="text-slate-400 text-xs flex items-center gap-1">
+          <p className="text-white/40 text-xs flex items-center gap-1">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             {property.location}
           </p>
@@ -142,7 +201,7 @@ function PropertyCard({ property, onView }: { property: Property; onView: () => 
         )}
 
         <button
-          onClick={onView}
+          onClick={(e) => { e.stopPropagation(); onView(); }}
           className="mt-auto w-full bg-[#B0D4E8] text-black rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#8bbdd4] active:scale-[0.98] transition flex items-center justify-center gap-2"
         >
           <span>View Property</span>
@@ -153,7 +212,7 @@ function PropertyCard({ property, onView }: { property: Property; onView: () => 
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// ─── MAIN PAGE ──────────────────────────────────────────────────────────────
 
 export default function RealEstateListings() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -162,43 +221,41 @@ export default function RealEstateListings() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // ─── FETCH + EXCLUDE ALBUM IMAGES ──────────────────────────────────────────
   useEffect(() => {
-    fetch(`${API}/api/items`)
+    fetch(`${API}/api/fashion-albums`)
       .then((res) => res.json())
-      .then((data: any[]) => {
-        // Keep only realestate items that are NOT part of a fashion album
-        const filtered = data.filter(
-          (item) => item.category === "realestate" && !item.albumId
+      .then((data: Property[]) => {
+        const realEstateAlbums = data.filter(
+          (album) => album.category === "realestate" && album.cover
         );
-        setProperties(filtered);
+        setProperties(realEstateAlbums);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#EEF6FA] text-slate-800 overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
 
-      {/* Header */}
-      <header className="fixed top-0 left-0 w-full z-[100] flex items-center justify-between px-5 py-4 bg-white/50 backdrop-blur-xl border-b border-[#B0D4E8]/10">
+      {/* Header (fixed, consistent with landing) */}
+      <header className="fixed top-0 left-0 w-full z-[100] flex items-center justify-between px-5 py-4 bg-black/80 backdrop-blur-xl border-b border-white/5">
         <button
           onClick={() => navigate("/real-estate")}
-          className="text-[#B0D4E8] text-lg hover:scale-110 transition-transform"
+          className="text-[#B0D4E8] text-xl hover:scale-110 transition-transform"
         >
           ←
         </button>
         <div className="flex flex-col items-start ml-4 flex-1">
           <p className="text-[#B0D4E8] text-[10px] tracking-[0.7em] uppercase font-bold">Available Properties</p>
-          <span className="text-slate-400 text-[8px] tracking-[0.3em] uppercase">TOPXCM Real Estate</span>
+          <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">TOPXCM Real Estate</span>
         </div>
-        <RealEstateMenu onOpenAction={() => setMenuOpen(true)} onCloseAction={() => setMenuOpen(false)} />
+        {/* Menu is now fixed independently by the RealEstateMenu component */}
       </header>
 
       {/* Hero strip */}
-      <div className="pt-24 px-5 py-10 border-b border-[#B0D4E8]/10 bg-white/20">
-        <h1 className="text-3xl md:text-5xl font-serif italic text-slate-800 mb-2">Properties</h1>
-        <p className="text-slate-500 text-sm font-light max-w-sm leading-relaxed">
+      <div className="pt-24 px-5 py-10 border-b border-white/5 bg-black/30">
+        <h1 className="text-3xl md:text-5xl font-serif italic text-white mb-2">Properties</h1>
+        <p className="text-white/40 text-sm font-light max-w-sm leading-relaxed">
           Premium homes and investment properties across Lagos, curated for your lifestyle.
         </p>
       </div>
@@ -211,14 +268,11 @@ export default function RealEstateListings() {
           </div>
         ) : properties.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-slate-400 text-sm uppercase tracking-widest">No properties listed yet.</p>
-            <p className="text-slate-300 text-xs mt-2 uppercase tracking-widest">Check back soon or contact us directly.</p>
+            <p className="text-white/40 text-sm uppercase tracking-widest">No properties listed yet.</p>
+            <p className="text-white/20 text-xs mt-2 uppercase tracking-widest">Check back soon or contact us directly.</p>
             <button
               onClick={() => navigate("/real-estate/contact")}
-              className="mt-8 px-10 py-4 rounded-full border uppercase text-xs font-bold tracking-[0.3em] transition-all"
-              style={{ borderColor: "#B0D4E8", color: "#B0D4E8" }}
-              onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = "#B0D4E8"; (e.target as HTMLButtonElement).style.color = "#000"; }}
-              onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = "transparent"; (e.target as HTMLButtonElement).style.color = "#B0D4E8"; }}
+              className="mt-8 px-10 py-4 rounded-full border border-[#B0D4E8] uppercase text-xs font-bold tracking-[0.3em] text-[#B0D4E8] hover:bg-[#B0D4E8] hover:text-black transition-all"
             >
               Contact Us
             </button>
@@ -237,9 +291,9 @@ export default function RealEstateListings() {
       </main>
 
       {/* Footer */}
-      <footer className="py-16 text-center bg-white/40">
-        <div className="h-10 w-[1px] bg-[#B0D4E8] mx-auto mb-5" />
-        <p className="text-[8px] tracking-[1em] text-[#B0D4E8]/30 uppercase">
+      <footer className="py-16 text-center border-t border-white/5">
+        <div className="h-10 w-[1px] bg-gradient-to-b from-[#B0D4E8] to-transparent mx-auto mb-5" />
+        <p className="text-[8px] tracking-[1em] text-white/15 uppercase">
           © 2026 TOPXCM Real Estate • Lagos
         </p>
       </footer>

@@ -1,33 +1,47 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 
-// ─── AUTO-SCROLLING IMAGE ROW ───────────────────────────────────────────────
-const ImageRow = ({
-  images,
-  onImageClick,
+const API = "https://topxcm-backend-1.onrender.com";
+
+// ─── TYPES ──────────────────────────────────────────────────────────────────
+
+interface ShowcaseItem {
+  image: string;
+  targetRoute?: string; // from extra_text
+  id: string;
+  title?: string;
+}
+
+// ─── ROUTE MAP ──────────────────────────────────────────────────────────────
+
+const categoryRouteMap: Record<string, string> = {
+  weddings: "/photography/weddings",
+  "studio-outdoors": "/photography/studio-outdoors",
+  "aerials-videos": "/photography/aerials-videos",
+  canvas: "/photography/canvas",
+  portraits: "/photography/portraits",
+};
+
+// ─── AUTO-SCROLLING IMAGE ROW ──────────────────────────────────────────────
+
+function AutoScrollRow({
+  items,
+  onItemClick,
   reverse = false,
+  speed = 0.4,
 }: {
-  images: string[];
-  onImageClick: (url: string) => void;
+  items: ShowcaseItem[];
+  onItemClick: (item: ShowcaseItem) => void;
   reverse?: boolean;
-}) => {
+  speed?: number;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number | null>(null);
   const isUserScrolling = useRef(false);
   const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const speed = reverse ? -0.6 : 0.6;
-
-  const shapes = [
-    "w-52 h-72 rounded-2xl",
-    "w-80 h-56 rounded-3xl",
-    "w-60 h-80 rounded-tl-[60px] rounded-br-[60px]",
-    "w-56 h-56 rounded-full",
-    "w-72 h-64 rounded-xl",
-    "w-48 h-80 rounded-[40px]",
-    "w-96 h-60 rounded-lg",
-    "w-64 h-64 rounded-tl-3xl rounded-br-3xl",
-  ];
+  const direction = reverse ? -speed : speed;
 
   useEffect(() => {
     const track = trackRef.current;
@@ -35,11 +49,11 @@ const ImageRow = ({
 
     const step = () => {
       if (!isUserScrolling.current && track) {
-        track.scrollLeft += speed;
+        track.scrollLeft += direction;
         const half = track.scrollWidth / 2;
-        if (speed > 0 && track.scrollLeft >= half) {
+        if (direction > 0 && track.scrollLeft >= half) {
           track.scrollLeft -= half;
-        } else if (speed < 0 && track.scrollLeft <= 0) {
+        } else if (direction < 0 && track.scrollLeft <= 0) {
           track.scrollLeft += half;
         }
       }
@@ -50,48 +64,49 @@ const ImageRow = ({
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [speed]);
+  }, [direction]);
 
   const pauseAutoScroll = () => {
     isUserScrolling.current = true;
     if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
     scrollTimeout.current = setTimeout(() => {
       isUserScrolling.current = false;
-    }, 2000);
+    }, 3000);
   };
 
-  const loopedImages = [...images, ...images];
+  const loopedItems = [...items];
+
+  if (items.length === 0) return null;
 
   return (
-    <div className="relative w-full overflow-hidden">
+    <div
+      className="relative w-full overflow-hidden"
+      onWheel={pauseAutoScroll}
+      onTouchStart={pauseAutoScroll}
+      onMouseDown={pauseAutoScroll}
+    >
       <div
         ref={trackRef}
-        // items-center (was items-end) so varying tile heights don't create uneven gaps
-        className="flex overflow-x-auto gap-6 py-4 px-8 no-scrollbar select-none items-center"
+        className="flex overflow-x-auto gap-1 py-4 px-2 no-scrollbar select-none items-center"
         style={{ scrollBehavior: "auto" }}
-        onWheel={pauseAutoScroll}
-        onTouchStart={pauseAutoScroll}
-        onMouseDown={pauseAutoScroll}
       >
-        {loopedImages.map((img, i) => (
+        {loopedItems.map((item, i) => (
           <motion.div
-            key={i}
-            whileHover={{ scale: 0.97, y: -6 }}
-            whileTap={{ scale: 0.95 }}
+            key={`${item.id}-${i}`}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            onClick={() => onImageClick(img)}
-            className={`${shapes[i % shapes.length]} shrink-0 relative flex-none p-1.5 rounded-[inherit] gold-mat`}
+            onClick={() => onItemClick(item)}
+            className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0 cursor-pointer overflow-hidden rounded-lg"
           >
-            {/* champagne-gold "mat" behind each tile so varying sizes read as intentional gallery framing */}
-            <div className="w-full h-full overflow-hidden cursor-pointer flex-none relative group photo-card rounded-[inherit]">
+            <div className="relative w-full aspect-[4/3] overflow-hidden">
               <img
-                src={img}
-                alt="Photography Showcase"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
+                src={item.image}
+                alt={item.title || "Showcase"}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              {/* Gold hover overlay */}
-              <div className="absolute inset-0 bg-[#D4AF37]/0 group-hover:bg-[#D4AF37]/10 transition-colors duration-300 flex items-center justify-center">
-                <span className="text-white text-xs uppercase tracking-widest font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg">
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                <span className="text-white text-xs uppercase tracking-widest font-bold opacity-0 hover:opacity-100 transition-opacity duration-300 drop-shadow-lg">
                   View
                 </span>
               </div>
@@ -101,37 +116,56 @@ const ImageRow = ({
       </div>
     </div>
   );
-};
+}
 
-// ─── MAIN PAGE ───────────────────────────────────────────────────────────────
+// ─── MAIN PAGE ──────────────────────────────────────────────────────────────
+
 export default function Photography() {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [selectedImg, setSelectedImg] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ShowcaseItem | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const heroSlides = [
+    "/images/slide5.jpg",
     "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=2000",
+    "/images/slide7.jpg",
     "/images/slide3.jpg",
-    "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2000",
     "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000",
     "/images/slide1.jpg",
     "/images/slide2.jpg",
     "/images/slide4.jpg",
-    "/images/slide5.jpg",
     "/images/slide6.jpg",
-    "/images/slide7.jpg",
-  ];
-
-  const rowImages = [
-    "/images/photo-1.jfif",
-    "/images/photo-2.jfif",
-    "/images/photo-3.jfif",
-    "/images/photo-4.jfif",
-    "/images/photo-5.jfif",
   ];
 
   const sloganText = "...your official photographer";
 
+  // ─── FETCH SHOWCASE ITEMS (with targetRoute from extra_text) ────────────
+  useEffect(() => {
+    fetch(`${API}/api/items`)
+      .then((res) => res.json())
+      .then((data: any[]) => {
+        const showcase = data
+          .filter((item) => item.category === "showcase")
+          .map((item) => ({
+            image: item.image,
+            targetRoute: item.extra_text || "", // <-- read extra_text
+            id: item.id,
+            title: item.title,
+          }))
+          .filter((item) => item.image);
+        setShowcaseItems(showcase);
+        setLoading(false);
+      })
+      .catch(() => {
+        setShowcaseItems([]);
+        setLoading(false);
+      });
+  }, []);
+
+  // ─── HERO SLIDE AUTO-PLAY ──────────────────────────────────────────────
   useEffect(() => {
     const timer = setInterval(
       () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length),
@@ -144,13 +178,50 @@ export default function Photography() {
     document.body.style.overflow = isMenuOpen ? "hidden" : "unset";
   }, [isMenuOpen]);
 
+  // ─── LIGHTBOX HANDLERS ──────────────────────────────────────────────────
+
+  const handleImageClick = (item: ShowcaseItem) => {
+    setSelectedItem(item);
+  };
+
+  const handleCloseLightbox = () => {
+    setSelectedItem(null);
+  };
+
+  const handleViewMore = (item: ShowcaseItem) => {
+    if (item.targetRoute && categoryRouteMap[item.targetRoute]) {
+      navigate(categoryRouteMap[item.targetRoute]);
+    } else {
+      // fallback: go to the main photography page or hide the button
+      navigate("/photography");
+    }
+    setSelectedItem(null);
+  };
+
+  // Split items into rows of 10
+  const chunkSize = 10;
+  const itemRows: ShowcaseItem[][] = [];
+  for (let i = 0; i < showcaseItems.length; i += chunkSize) {
+    itemRows.push(showcaseItems.slice(i, i + chunkSize));
+  }
+
+  // If no items, use fallback images (with no targetRoute)
+  const fallbackItems: ShowcaseItem[] = [
+    { image: "/images/photo-1.jfif", targetRoute: "", id: "fallback1" },
+    { image: "/images/photo-2.jfif", targetRoute: "", id: "fallback2" },
+    { image: "/images/photo-3.jfif", targetRoute: "", id: "fallback3" },
+    { image: "/images/photo-4.jfif", targetRoute: "", id: "fallback4" },
+    { image: "/images/photo-5.jfif", targetRoute: "", id: "fallback5" },
+  ];
+  const rowsToRender = itemRows.length > 0 ? itemRows : [fallbackItems];
+
   return (
     <div
       className={`relative w-full bg-black select-none overflow-x-hidden ${
-        selectedImg ? "h-screen overflow-hidden" : ""
+        selectedItem ? "h-screen overflow-hidden" : ""
       }`}
     >
-      {/* Page content fades when menu is open — exactly like the sample */}
+      {/* Page content fades when menu is open */}
       <div
         className="transition-all duration-500"
         style={{
@@ -159,9 +230,9 @@ export default function Photography() {
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
-        {/* ── LIGHTBOX ── */}
+        {/* ── LIGHTBOX (with View More) ── */}
         <AnimatePresence>
-          {selectedImg && (
+          {selectedItem && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -172,7 +243,7 @@ export default function Photography() {
                 backdropFilter: "blur(18px)",
                 backgroundColor: "rgba(0,0,0,0.75)",
               }}
-              onClick={() => setSelectedImg(null)}
+              onClick={handleCloseLightbox}
             >
               <motion.div
                 initial={{ scale: 0.88, y: 30, opacity: 0 }}
@@ -183,7 +254,7 @@ export default function Photography() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  onClick={() => setSelectedImg(null)}
+                  onClick={handleCloseLightbox}
                   className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center text-black text-lg font-bold shadow-lg transition-colors"
                   style={{ backgroundColor: "#D4AF37" }}
                   onMouseEnter={(e) =>
@@ -198,10 +269,26 @@ export default function Photography() {
                   ✕
                 </button>
                 <img
-                  src={selectedImg}
-                  alt="Enlarged view"
-                  className="w-full h-full object-contain rounded-xl max-h-[84vh]"
+                  src={selectedItem.image}
+                  alt={selectedItem.title || "Showcase"}
+                  className="w-full h-full object-contain rounded-xl max-h-[70vh]"
                 />
+                <div className="mt-4 flex justify-center gap-4">
+                  {selectedItem.targetRoute && categoryRouteMap[selectedItem.targetRoute] ? (
+                    <button
+                      onClick={() => handleViewMore(selectedItem)}
+                      className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37] px-6 py-2 text-sm font-semibold uppercase tracking-widest text-white transition-colors hover:bg-[#D4AF37]/20"
+                    >
+                      View More →
+                    </button>
+                  ) : null}
+                  <button
+                    onClick={handleCloseLightbox}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-2 text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:bg-white/10"
+                  >
+                    Close
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           )}
@@ -222,7 +309,6 @@ export default function Photography() {
                 style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
               />
             </AnimatePresence>
-            {/* Dark gradient overlay — black base, subtle gold mid */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-[#D4AF37]/5 to-black/95" />
           </div>
 
@@ -335,24 +421,13 @@ export default function Photography() {
 
         {/* ── IMAGE ROWS ── */}
         <section className="relative py-24 bg-black overflow-hidden">
-          {/* subtle gold dot texture so the black section doesn't read as flat/empty */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage: "radial-gradient(rgba(212,175,55,0.35) 1px, transparent 1px)",
-              backgroundSize: "22px 22px",
-              opacity: 0.4,
-              maskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
-              WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
-            }}
-          />
-          {/* soft gold glow blobs to fill dead space at the edges */}
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Soft background glow */}
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
 
-          {/* section heading so the rows aren't just floating images */}
+          {/* Section heading */}
           <div className="relative text-center mb-14 px-6">
-            <p className="text-[10px] tracking-[0.5em] uppercase font-bold text-[white]">
+            <p className="text-[10px] tracking-[0.5em] uppercase font-bold text-white">
               The Gallery
             </p>
             <h3 className="font-serif italic text-2xl md:text-4xl text-white/85">
@@ -361,14 +436,49 @@ export default function Photography() {
             <div className="w-16 h-[2px] bg-[#D4AF37]/50 mx-auto mt-5 rounded-full" />
           </div>
 
-          <div className="relative flex flex-col gap-16">
-            <ImageRow images={rowImages} onImageClick={setSelectedImg} reverse={false} />
-            <ImageRow images={rowImages} onImageClick={setSelectedImg} reverse={true} />
-            <ImageRow images={rowImages} onImageClick={setSelectedImg} reverse={false} />
+          {/* Loading state */}
+          {loading && (
+            <div className="flex justify-center py-16">
+              <div className="w-8 h-8 border-2 border-white/10 border-t-[#D4AF37] rounded-full animate-spin" />
+            </div>
+          )}
+
+          {/* Rows of images */}
+          {!loading && (
+            <div className="flex flex-col gap-2">
+              {rowsToRender.map((row, idx) => (
+                <AutoScrollRow
+                  key={idx}
+                  items={row}
+                  onItemClick={handleImageClick}
+                  reverse={idx % 2 === 1}
+                  speed={0.4 + idx * 0.05}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* ─── VIDEO SECTION (STATIC) ─── */}
+          <div className="relative mt-20 px-4 max-w-4xl mx-auto">
+            <div className="rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-2xl">
+              <video
+                src="/videos/showcase.mp4"
+                poster="/images/video-poster.jpg"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-auto aspect-video object-cover"
+                controls={false}
+              />
+            </div>
+            <p className="text-center text-white/40 text-xs uppercase tracking-[0.3em] mt-4">
+              Cinematic Showreel
+            </p>
           </div>
         </section>
 
-        {/* ── ABOUT / PHILOSOPHY SECTION ── */}
+        {/* ─── ABOUT / PHILOSOPHY SECTION (unchanged) ─── */}
         <section
           className="py-32 px-6 md:px-20"
           style={{
@@ -378,8 +488,6 @@ export default function Photography() {
         >
           <div className="max-w-6xl mx-auto flex flex-col gap-16">
             <div className="space-y-6">
-              {/* About Us section – we keep the existing structure, but the contact box is updated */}
-
               <div style={{ borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: "2rem" }}>
                 <h3 className="font-serif italic text-3xl" style={{ color: "#D4AF37" }}>
                   The Philosophy
@@ -413,18 +521,15 @@ export default function Photography() {
                   </a>
                 </div>
 
-                {/* ─── UPDATED CONTACT & SOCIAL BOX ─── */}
+                {/* Contact & Social Box */}
                 <div
                   className="mt-8 rounded-2xl p-6 space-y-6"
                   style={{ border: "1px solid rgba(212,175,55,0.15)", backgroundColor: "rgba(212,175,55,0.03)" }}
                 >
-                  {/* Inquiries – now with Call Us and WhatsApp buttons */}
                   <div className="space-y-3">
                     <p className="text-[9px] font-bold tracking-[0.5em] uppercase" style={{ color: "#D4AF37" }}>
                       Inquiries
                     </p>
-
-                    {/* Call Us button */}
                     <a
                       href="tel:+2348132799299"
                       className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
@@ -450,8 +555,6 @@ export default function Photography() {
                         Call Us
                       </span>
                     </a>
-
-                    {/* WhatsApp button */}
                     <a
                       href="https://wa.me/2348132799299"
                       target="_blank"
@@ -484,12 +587,9 @@ export default function Photography() {
 
                   <div style={{ height: "1px", backgroundColor: "rgba(212,175,55,0.1)" }} />
 
-                  {/* Connect With Us – unchanged (keeps existing social links) */}
                   <div>
                     <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>Connect With Us</p>
                     <div className="flex items-center gap-3 flex-wrap">
-
-                      {/* Facebook */}
                       <a
                         href="https://www.facebook.com/share/1KToiX8cS4/"
                         target="_blank"
@@ -504,8 +604,6 @@ export default function Photography() {
                         </svg>
                         <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Facebook</span>
                       </a>
-
-                      {/* Instagram */}
                       <a
                         href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA=="
                         target="_blank"
@@ -522,8 +620,6 @@ export default function Photography() {
                         </svg>
                         <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Instagram</span>
                       </a>
-
-                      {/* Twitter / X */}
                       <a
                         href="https://twitter.com/topstudios1"
                         target="_blank"
@@ -538,8 +634,6 @@ export default function Photography() {
                         </svg>
                         <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Twitter</span>
                       </a>
-
-                      {/* Email */}
                       <a
                         href="mailto:topstudios@email.com"
                         className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
@@ -553,11 +647,9 @@ export default function Photography() {
                         </svg>
                         <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Email</span>
                       </a>
-
                     </div>
                   </div>
                 </div>
-                {/* ─── END CONTACT & SOCIAL BOX ─── */}
               </div>
             </div>
           </div>
@@ -592,32 +684,6 @@ export default function Photography() {
           .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
-          }
-
-          /* Champagne-gold mat behind each tile */
-          .gold-mat {
-            background: linear-gradient(145deg, rgba(212,175,55,0.14), rgba(212,175,55,0.02));
-            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.6);
-          }
-
-          /* Resting glow — subtle gold edge on every card */
-          .photo-card {
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            box-shadow:
-              0 0 12px rgba(212, 175, 55, 0.15),
-              0 0 30px rgba(212, 175, 55, 0.06),
-              0 8px 32px rgba(0, 0, 0, 0.6);
-            transition: box-shadow 0.4s ease, border-color 0.4s ease;
-          }
-
-          /* Hover glow — lights up bright on interaction */
-          .photo-card:hover {
-            border-color: rgba(212, 175, 55, 0.7);
-            box-shadow:
-              0 0 20px rgba(212, 175, 55, 0.5),
-              0 0 60px rgba(212, 175, 55, 0.25),
-              0 0 100px rgba(212, 175, 55, 0.1),
-              0 12px 40px rgba(0, 0, 0, 0.8);
           }
         `}</style>
       </div>
