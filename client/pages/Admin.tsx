@@ -41,7 +41,7 @@ interface SingleItem {
   price: string;
   order?: number;
   album_id?: string;
-  extra_text?: string; // <-- ADDED
+  extra_text?: string;
 }
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
@@ -491,21 +491,35 @@ function CategoryManager({
   // ─── REORDER IMAGES ────────────────────────────────────────────────────────
 
   const moveImage = async (albumId: string, imageId: string, direction: "up" | "down") => {
+    console.log(`🔁 moveImage called: album ${albumId}, image ${imageId}, direction ${direction}`);
     const album = albums.find(a => a.id === albumId);
-    if (!album) return;
+    if (!album) {
+      console.warn("❌ Album not found");
+      return;
+    }
     const images = album.images;
     const index = images.findIndex(img => img.id === imageId);
-    if (index === -1) return;
+    if (index === -1) {
+      console.warn("❌ Image not found in album");
+      return;
+    }
     const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= images.length) return;
+    if (newIndex < 0 || newIndex >= images.length) {
+      console.warn("❌ Cannot move out of bounds");
+      return;
+    }
 
     const img1 = images[index];
     const img2 = images[newIndex];
+    if (!img1.id || !img2.id) {
+      console.warn("❌ Missing image ID", { img1, img2 });
+      return;
+    }
+
     const order1 = img1.order ?? index;
     const order2 = img2.order ?? newIndex;
 
     const updateOrder = async (img: AlbumImage, newOrder: number) => {
-      if (!img.id) return;
       const body = {
         title: img.title || "",
         description: img.description || "",
@@ -513,72 +527,120 @@ function CategoryManager({
         extra_text: img.extra_text || "",
         order: newOrder,
       };
+      console.log(`📤 Updating image ${img.id} to order ${newOrder}`);
       try {
-        await fetch(`${albumEndpoint}/${albumId}/images/${img.id}`, {
+        const res = await fetch(`${albumEndpoint}/${albumId}/images/${img.id}`, {
           method: "PUT",
           headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status} - ${text}`);
+        }
+        console.log(`✅ Image ${img.id} updated`);
       } catch (e) {
-        console.error("Failed to update order", e);
+        console.error("❌ Failed to update image order", e);
+        throw e;
       }
     };
 
-    await Promise.all([
-      updateOrder(img1, order2),
-      updateOrder(img2, order1),
-    ]);
+    try {
+      await Promise.all([
+        updateOrder(img1, order2),
+        updateOrder(img2, order1),
+      ]);
+      // Update local state
+      const updatedImages = [...images];
+      [updatedImages[index], updatedImages[newIndex]] = [updatedImages[newIndex], updatedImages[index]];
+      updatedImages.forEach((img, idx) => { img.order = idx; });
 
-    const updatedImages = [...images];
-    [updatedImages[index], updatedImages[newIndex]] = [updatedImages[newIndex], updatedImages[index]];
-    updatedImages.forEach((img, idx) => { img.order = idx; });
-
-    const updatedAlbums = albums.map(a =>
-      a.id === albumId ? { ...a, images: updatedImages } : a
-    );
-    setAlbums(updatedAlbums);
-    if (selectedAlbum?.id === albumId) {
-      setSelectedAlbum({ ...selectedAlbum, images: updatedImages });
+      const updatedAlbums = albums.map(a =>
+        a.id === albumId ? { ...a, images: updatedImages } : a
+      );
+      setAlbums(updatedAlbums);
+      if (selectedAlbum?.id === albumId) {
+        setSelectedAlbum({ ...selectedAlbum, images: updatedImages });
+      }
+      console.log("✅ Image reorder complete");
+    } catch (err) {
+      alert("❌ Failed to reorder images. Check console for details.");
     }
   };
 
-  // ─── REORDER SINGLES ──────────────────────────────────────────────────────
+  // ─── REORDER SINGLES (FIXED with index‑based ordering) ───────────────────
 
   const moveSingle = async (itemId: string, direction: "up" | "down") => {
+    console.log(`🔁 moveSingle called: item ${itemId}, direction ${direction}`);
+
+    // Filter by the selected category (same as UI)
     const filtered = singles.filter(s => s.category === selectedCategory);
+    console.log(`📋 Filtered singles (${selectedCategory}):`, filtered.map(s => `${s.id} (${s.title})`));
+
     const index = filtered.findIndex(s => s.id === itemId);
-    if (index === -1) return;
+    if (index === -1) {
+      console.warn("❌ Item not found in filtered list");
+      return;
+    }
     const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= filtered.length) return;
+    if (newIndex < 0 || newIndex >= filtered.length) {
+      console.warn("❌ Cannot move out of bounds");
+      return;
+    }
 
     const item1 = filtered[index];
     const item2 = filtered[newIndex];
-    const order1 = item1.order ?? index;
-    const order2 = item2.order ?? newIndex;
+    console.log(`🔄 Swapping: ${item1.title} (${item1.id}) ↔ ${item2.title} (${item2.id})`);
+
+    // ─── Assign new orders based on their new positions ───
+    const newOrder1 = newIndex; // item1 moves to newIndex
+    const newOrder2 = index;    // item2 moves to index
+
+    console.log(`📊 New orders: ${item1.id} → ${newOrder1}, ${item2.id} → ${newOrder2}`);
 
     const updateOrder = async (item: SingleItem, newOrder: number) => {
+      console.log(`📤 Updating item ${item.id} (${item.title}) to order ${newOrder}`);
       try {
-        await fetch(`${API}/api/items/${item.id}`, {
+        const res = await fetch(`${API}/api/items/${item.id}`, {
           method: "PUT",
           headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
           body: JSON.stringify({ order: newOrder }),
         });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status} - ${text}`);
+        }
+        const result = await res.json();
+        console.log(`✅ Item ${item.id} updated successfully`, result);
+        return result;
       } catch (e) {
-        console.error("Failed to update single order", e);
+        console.error(`❌ Failed to update item ${item.id}`, e);
+        throw e;
       }
     };
 
-    await Promise.all([
-      updateOrder(item1, order2),
-      updateOrder(item2, order1),
-    ]);
+    try {
+      await Promise.all([
+        updateOrder(item1, newOrder1),
+        updateOrder(item2, newOrder2),
+      ]);
 
-    const updatedSingles = singles.map(s => {
-      if (s.id === item1.id) return { ...s, order: order2 };
-      if (s.id === item2.id) return { ...s, order: order1 };
-      return s;
-    });
-    setSingles(updatedSingles);
+      // Update local state immediately
+      const updatedSingles = singles.map(s => {
+        if (s.id === item1.id) return { ...s, order: newOrder1 };
+        if (s.id === item2.id) return { ...s, order: newOrder2 };
+        return s;
+      });
+      setSingles(updatedSingles);
+      console.log("✅ Single item reorder complete (local state updated)");
+
+      // Refetch from server to sync
+      await fetchSingles();
+      console.log("🔄 Refetched singles from server to sync");
+    } catch (err) {
+      console.error("❌ Reorder failed", err);
+      alert("❌ Failed to reorder items. Check console for details.");
+    }
   };
 
   // ─── DELETE FUNCTIONS ──────────────────────────────────────────────────────
@@ -1063,7 +1125,7 @@ function CategoryManager({
                   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
                   .map((item, index, arr) => (
                     <div
-                      key={item.id}
+                      key={`${item.id}-${item.order}`} // ← force re-render on order change
                       className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] px-3 py-2"
                     >
                       <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover border border-white/10" />
@@ -1454,7 +1516,7 @@ function CategoryManager({
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── SECTION TABS (wrappers for CategoryManager) ────────────────────────────
+// ── SECTION TABS ──────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FashionTab() {

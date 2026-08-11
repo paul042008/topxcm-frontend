@@ -4,7 +4,7 @@ import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 
 const API = "https://topxcm-backend-1.onrender.com";
-const WA = "https://wa.me/2348061587993?text=Hi!%20I'd%20like%20to%20book%20a%20session.";
+const WA = "https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20book%20a%20session.";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 

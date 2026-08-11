@@ -4,7 +4,7 @@ import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 
 const API = "https://topxcm-backend-1.onrender.com";
-const WA = "https://wa.me/2348061587993?text=Hi!%20I'd%20like%20to%20order%20a%20frame%20or%20canvas.";
+const WA = "https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20order%20a%20frame%20or%20canvas.";
 
 interface Product {
   id: string;
@@ -52,7 +52,7 @@ function ItemModal({ item, onClose }: { item: Product; onClose: () => void }) {
             <p className="text-[#D4AF37] text-2xl font-bold mb-4">₦{parseInt(item.price).toLocaleString()}</p>
           )}
           <a
-            href={`https://wa.me/2348061587993?text=Hi!%20I'd%20like%20to%20order%20*${item.title}*%20(₦${item.price})`}
+            href={`https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20order%20*${item.title}*%20(₦${item.price})`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-black text-xs font-bold uppercase tracking-widest transition hover:opacity-90"
@@ -200,7 +200,7 @@ export default function PhotoCanvas() {
                       onClick={(e) => {
                         e.stopPropagation();
                         window.open(
-                          `https://wa.me/2348061587993?text=Hi!%20I'd%20like%20to%20order%20*${product.title}*%20(₦${product.price})`,
+                          `https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20order%20*${product.title}*%20(₦${product.price})`,
                           "_blank"
                         );
                       }}
