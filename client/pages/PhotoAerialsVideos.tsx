@@ -53,6 +53,13 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   };
 
   const renderCover = () => {
+    if (!coverImage) {
+      return (
+        <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">
+          {isVideoCategory ? "🎬" : "📷"}
+        </div>
+      );
+    }
     if (isVideoCategory) {
       return (
         <video
@@ -62,6 +69,9 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
           muted
           loop
           playsInline
+          controlsList="nodownload"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
         />
       );
     }
@@ -69,6 +79,14 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   };
 
   const renderThumbnail = (img: AlbumImage, idx: number) => {
+    // ─── GUARD: missing/null URL – show a placeholder instead of a broken player ───
+    if (!img.url) {
+      return (
+        <div className="w-full h-full flex items-center justify-center text-2xl opacity-20 bg-zinc-900">
+          {isVideoCategory ? "🎬" : "📷"}
+        </div>
+      );
+    }
     if (isVideoCategory) {
       return (
         <video
@@ -141,12 +159,12 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.04 }}
-              onClick={() => setSelectedIndex(idx)}
-              className="aspect-square cursor-pointer group relative overflow-hidden bg-zinc-900"
+              onClick={() => img.url && setSelectedIndex(idx)}
+              className={`aspect-square group relative overflow-hidden bg-zinc-900 ${img.url ? "cursor-pointer" : "cursor-default"}`}
             >
               {renderThumbnail(img, idx)}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition" />
-              {isVideoCategory && (
+              {isVideoCategory && img.url && (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-black/60 backdrop-blur">
                     <span className="ml-1 text-[#D4AF37] text-lg">▶</span>
@@ -265,12 +283,14 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
                 playsInline
                 onMouseEnter={(e) => e.currentTarget.play()}
                 onMouseLeave={(e) => e.currentTarget.pause()}
+                onContextMenu={(e) => e.preventDefault()}
               />
             ) : (
               <img
                 src={displayImage}
                 alt={album.name}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                onContextMenu={(e) => e.preventDefault()}
               />
             )}
             {isVideoCategory && (
@@ -306,11 +326,23 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
   );
 }
 
-// ─── SINGLE CARD (video plays directly on card) ────────────────────────────
+// ─── SINGLE CARD (video plays directly on card – with error handling) ──────
 
 function SingleCard({ item }: { item: Album }) {
   const image = item.images[0];
+  const hasUrl = !!image?.url; // ─── GUARD: null/missing URL from a failed upload ───
   const isVideoCategory = item.category === "videos" || item.category === "aerials";
+  const [isVideoError, setIsVideoError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleVideoLoaded = () => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {
+        // Autoplay was blocked – user can click play.
+        console.log("Autoplay blocked for:", item.name);
+      });
+    }
+  };
 
   return (
     <motion.div
@@ -321,10 +353,11 @@ function SingleCard({ item }: { item: Album }) {
       className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-lg"
     >
       <div className="relative h-64 md:h-72 overflow-hidden bg-zinc-800">
-        {image ? (
+        {hasUrl ? (
           <>
-            {isVideoCategory ? (
+            {isVideoCategory && !isVideoError ? (
               <video
+                ref={videoRef}
                 src={image.url}
                 className="w-full h-full object-cover"
                 controls
@@ -332,18 +365,25 @@ function SingleCard({ item }: { item: Album }) {
                 muted
                 playsInline
                 loop
+                onError={() => {
+                  console.error("🎥 Video failed to load:", image.url);
+                  setIsVideoError(true);
+                }}
+                onLoadedData={handleVideoLoaded}
               />
             ) : (
               <img
                 src={image.url}
                 alt={item.name}
                 className="w-full h-full object-cover"
+                onError={() => console.error("🖼️ Image failed to load:", image.url)}
               />
             )}
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-4xl opacity-20">
             {isVideoCategory ? "🎬" : "📷"}
+            <span className="text-xs opacity-60">Unavailable</span>
           </div>
         )}
         <span className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">

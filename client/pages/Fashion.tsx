@@ -76,13 +76,6 @@ const fallbackCollections: CollectionCard[] = [
     id: "xcm-signature",
     title: "XCM Signature",
     description: "Iconic pieces, defining style.",
-    image: "/images/row2.jpg",
-    count: "14 Items",
-  },
-  {
-    id: "xcm-signature",
-    title: "XCM Signature",
-    description: "Iconic pieces, defining style.",
     image: "/images/row1.jpg",
     count: "14 Items",
   },
@@ -91,13 +84,6 @@ const fallbackCollections: CollectionCard[] = [
     title: "XCM Signature",
     description: "Iconic pieces, defining style.",
     image: "/images/row3.jpg",
-    count: "14 Items",
-  },
-  {
-    id: "street-royalty",
-    title: "XCM Signature",
-    description: "Iconic pieces, defining style.",
-    image: "/images/row4.jpg",
     count: "14 Items",
   },
 ];
