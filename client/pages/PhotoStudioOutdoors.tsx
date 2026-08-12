@@ -26,6 +26,7 @@ interface Album {
   price: string;
   cover?: string;
   images: AlbumImage[];
+  isSingle?: boolean;
 }
 
 // ─── GALLERY VIEW ──────────────────────────────────────────────────────────
@@ -63,12 +64,12 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         <span className="text-white/40 text-xs">{images.length} photos</span>
       </div>
 
-      {/* ─── COVER – NO FRAME, NATURAL ASPECT RATIO ─── */}
       <div className="relative w-full bg-zinc-800">
         <img
           src={coverImage}
           alt={album.name}
           className="w-full h-auto max-h-[85vh] object-contain mx-auto"
+          onContextMenu={(e) => e.preventDefault()}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
         <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full">
@@ -95,7 +96,6 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         </div>
       </div>
 
-      {/* ─── GALLERY THUMBNAILS – NO FRAME, MASONRY, NATURAL ASPECT ─── */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 [column-fill:balance]">
           {images.map((img, idx) => (
@@ -111,6 +111,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                 src={img.url}
                 alt={img.title}
                 className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-105"
+                onContextMenu={(e) => e.preventDefault()}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition" />
             </motion.div>
@@ -167,6 +168,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                 src={images[selectedIndex].url}
                 alt={images[selectedIndex].title}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
+                onContextMenu={(e) => e.preventDefault()}
               />
               {images[selectedIndex].title && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
@@ -181,7 +183,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   );
 }
 
-// ─── ALBUM CARD – NO FRAME, NATURAL ASPECT RATIO ──────────────────────────
+// ─── ALBUM CARD – NO FRAME, NATURAL ASPECT RATIO, WITH "VIEW GALLERY" OVERLAY ──
 
 function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
   const displayImage = album.cover || (album.images.length > 0 ? album.images[0].url : null);
@@ -201,10 +203,17 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
             src={displayImage}
             alt={album.name}
             className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+            onContextMenu={(e) => e.preventDefault()}
           />
         ) : (
           <div className="w-full aspect-[4/3] flex items-center justify-center text-4xl opacity-20">📷</div>
         )}
+        {/* ─── OVERLAY: "View Gallery" ─── */}
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
+          <span className="text-white text-xs font-bold uppercase tracking-[0.4em] border border-white/40 px-4 py-2 rounded-full backdrop-blur-sm">
+            View Gallery
+          </span>
+        </div>
         <span className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">
           {album.images.length} items
         </span>
@@ -225,6 +234,49 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
   );
 }
 
+// ─── SINGLE CARD – NO FRAME, NO BADGE, NO OVERLAY ─────────────────────────
+
+function SingleCard({ item, onClick }: { item: Album; onClick: () => void }) {
+  const image = item.images[0];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6 }}
+      className="cursor-pointer group"
+      onClick={onClick}
+    >
+      <div className="relative w-full overflow-hidden bg-zinc-900">
+        {image ? (
+          <img
+            src={image.url}
+            alt={item.name}
+            className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        ) : (
+          <div className="w-full aspect-[4/3] flex items-center justify-center text-4xl opacity-20">📷</div>
+        )}
+        {/* ─── NO OVERLAY ─── */}
+      </div>
+      <div className="p-4">
+        <p className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-1">
+          {item.category}
+        </p>
+        <h3 className="text-lg font-serif text-white leading-tight">{item.name}</h3>
+        {item.description && (
+          <div
+            className="text-white/40 text-xs leading-relaxed mt-2 line-clamp-2 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+            dangerouslySetInnerHTML={{ __html: item.description }}
+          />
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── MAIN PAGE ──────────────────────────────────────────────────────────────
 
 export default function PhotoStudioOutdoors() {
@@ -235,15 +287,62 @@ export default function PhotoStudioOutdoors() {
   const [activeTab, setActiveTab] = useState<"all" | "studio" | "outdoors">("all");
 
   useEffect(() => {
-    fetch(`${API}/api/fashion-albums`)
-      .then((res) => res.json())
-      .then((data: Album[]) => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch albums
+        const albumsRes = await fetch(`${API}/api/fashion-albums`);
+        const albumsData: Album[] = await albumsRes.json();
+
+        // Fetch single items
+        const itemsRes = await fetch(`${API}/api/items`);
+        const itemsData = await itemsRes.json();
+
         const photoCategories = ["studio", "outdoors"];
-        const filtered = data.filter((album) => photoCategories.includes(album.category));
-        setAlbums(filtered);
+
+        // Filter albums
+        const filteredAlbums = albumsData.filter((album) =>
+          photoCategories.includes(album.category)
+        );
+
+        // Filter standalone items (no album_id) with category studio/outdoors
+        const standaloneItems = itemsData.filter(
+          (item: any) =>
+            !item.album_id &&
+            photoCategories.includes(item.category) &&
+            item.image // ensure there's an image
+        );
+
+        // Convert standalone items to virtual albums
+        const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
+          id: `single-${item.id}`,
+          name: item.title || "Untitled",
+          category: item.category,
+          description: item.description || "",
+          price: item.price || "",
+          cover: item.image,
+          isSingle: true,
+          images: [
+            {
+              url: item.image,
+              title: item.title || "Untitled",
+              description: item.description || "",
+              price: item.price || "",
+              extra_text: item.extra_text || "",
+            },
+          ],
+        }));
+
+        setAlbums([...filteredAlbums, ...singleItemsAsAlbums]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setAlbums([]);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchData();
   }, []);
 
   const filteredAlbums =
@@ -312,14 +411,17 @@ export default function PhotoStudioOutdoors() {
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 [column-fill:balance]">
             {filteredAlbums.map((album) => (
               <div key={album.id} className="mb-5 break-inside-avoid">
-                <AlbumCard album={album} onClick={() => setSelectedAlbum(album)} />
+                {album.isSingle ? (
+                  <SingleCard item={album} onClick={() => setSelectedAlbum(album)} />
+                ) : (
+                  <AlbumCard album={album} onClick={() => setSelectedAlbum(album)} />
+                )}
               </div>
             ))}
           </div>
         )}
       </main>
 
-      {/* ─── FOOTER with Instagram & Facebook icons ─── */}
       <footer className="py-16 text-center border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
@@ -337,7 +439,7 @@ export default function PhotoStudioOutdoors() {
               </svg>
             </a>
             <a
-              href="https://www.facebook.com/Topweddings1"
+              href="https://www.facebook.com/share/19fqFjS3Bw/"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"
@@ -348,7 +450,6 @@ export default function PhotoStudioOutdoors() {
               </svg>
             </a>
           </div>
-
           <div className="flex flex-col items-center gap-4">
             <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />
             <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP • All Right Reserve</p>

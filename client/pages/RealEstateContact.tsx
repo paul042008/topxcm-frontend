@@ -112,15 +112,15 @@ export default function RealEstateContact() {
           </div>
         </div>
 
-        {/* Email */}
+        {/* ─── UPDATED EMAIL ─── */}
         <div>
           <p className="text-[#B0D4E8] text-[9px] uppercase tracking-[0.6em] font-bold mb-8">Email</p>
           <a
-            href="mailto:YOUR_EMAIL_HERE"
+            href="mailto:xcminternational@gmail.com"
             className="group flex items-center justify-between px-6 py-5 rounded-2xl border border-white/10 bg-white/5 transition-all duration-300 hover:border-[#B0D4E8]/40"
           >
             <div>
-              <p className="font-bold text-xl tracking-wide text-[#B0D4E8]">YOUR_EMAIL_HERE</p>
+              <p className="font-bold text-xl tracking-wide text-[#B0D4E8]">xcminternational@gmail.com</p>
               <p className="text-white/40 text-xs uppercase tracking-widest mt-1">Tap to email us</p>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B0D4E8" strokeWidth="1.5" className="opacity-40 group-hover:opacity-100 transition-opacity">
@@ -130,26 +130,22 @@ export default function RealEstateContact() {
           </a>
         </div>
 
-        {/* Social Media */}
+        {/* ─── UPDATED SOCIAL MEDIA (no Twitter) ─── */}
         <div>
           <p className="text-[#B0D4E8] text-[9px] uppercase tracking-[0.6em] font-bold mb-8">Social Media</p>
           <div className="flex flex-col gap-4">
             {[
               {
-                href: "https://www.facebook.com/share/1KToiX8cS4/",
+                href: "https://www.facebook.com/share/18W5YWxTBN/",
                 label: "Facebook",
                 icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#B0D4E8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>,
               },
               {
-                href: "https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA==",
+                href: "https://www.instagram.com/xcm_homesandproperties?igsh=MTkxaWsyc3p6ZGdiMA==",
                 label: "Instagram",
                 icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B0D4E8" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#B0D4E8" stroke="none"/></svg>,
               },
-              {
-                href: "YOUR_TWITTER_LINK_HERE",
-                label: "Twitter / X",
-                icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#B0D4E8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.736-8.835L2.25 2.25h6.918l4.265 5.638 4.811-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/></svg>,
-              },
+              // Twitter entry removed
             ].map((s) => (
               <a
                 key={s.label}

@@ -574,7 +574,7 @@ export default function FashionPage() {
 
           <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-5 pb-10 pt-8 md:px-10">
             <div className="grid flex-1 items-stretch gap-4 grid-cols-[1.08fr_0.92fr] sm:gap-6 md:gap-8 overflow-visible">
-            <div className="relative z-10 flex flex-col justify-start pt-16 max-w-[18rem] sm:max-w-xl md:max-w-[540px]">
+            <div className="relative z-10 flex flex-col justify-start pt-8 max-w-[18rem] sm:max-w-xl md:max-w-[540px]">
                 <motion.p
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -646,7 +646,7 @@ export default function FashionPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.45, ease: "easeOut" }}
-              className="relative z-20 -mt-6 sm:-mt-10 lg:-mt-14"
+              className="relative z-20 -mt-12 sm:-mt-16 lg:-mt-20"
             >
               <div className="rounded-[30px] border border-white/12 bg-black/60 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center px-1">

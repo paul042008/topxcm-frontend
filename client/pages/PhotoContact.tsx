@@ -146,7 +146,7 @@ export default function PhotoContact() {
           <div>
             <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>Connect With Us</p>
             <div className="flex items-center gap-3 flex-wrap">
-              <a href="https://www.facebook.com/share/1KToiX8cS4/" target="_blank" rel="noreferrer"
+              <a href="https://www.facebook.com/share/19fqFjS3Bw/" target="_blank" rel="noreferrer"
                 className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                 style={{ border: "1px solid rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.04)" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
@@ -166,16 +166,7 @@ export default function PhotoContact() {
                 </svg>
                 <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">Instagram</span>
               </a>
-              <a href="YOUR_TWITTER_LINK_HERE" target="_blank" rel="noreferrer"
-                className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                style={{ border: "1px solid rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.04)" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
-                <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">Twitter / X</span>
-              </a>
-              <a href="mailto:YOUR_EMAIL_HERE"
+              <a href="mailto:theofficialphotography1@email.com"
                 className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                 style={{ border: "1px solid rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.04)" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}

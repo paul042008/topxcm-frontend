@@ -9,7 +9,7 @@ const API = "https://topxcm-backend-1.onrender.com";
 
 interface ShowcaseItem {
   image: string;
-  targetRoute?: string; // from extra_text
+  targetRoute?: string;
   id: string;
   title?: string;
 }
@@ -23,6 +23,136 @@ const categoryRouteMap: Record<string, string> = {
   canvas: "/photography/canvas",
   portraits: "/photography/portraits",
 };
+
+// ─── GLOBAL PROTECTION HOOK ─────────────────────────────────────────────────
+// Blocks the common browser-level ways to save/copy images or view source.
+// NOTE: this cannot and does not stop OS-level screenshots (Snipping Tool,
+// ⌘+Shift+4, phone screenshot buttons, or photographing the screen) — no
+// website can see or intercept those, since they never touch the browser.
+
+function useAntiCaptureProtection() {
+  const [isObscured, setIsObscured] = useState(false);
+
+  useEffect(() => {
+    const blockKeys = (e: KeyboardEvent) => {
+      const key = e.key;
+      const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+      // Block Save (Ctrl/Cmd+S), Print (Ctrl/Cmd+P), View Source (Ctrl/Cmd+U)
+      if (ctrlOrCmd && ["s", "S", "p", "P", "u", "U"].includes(key)) {
+        e.preventDefault();
+        return false;
+      }
+      // Block DevTools shortcuts
+      if (key === "F12") {
+        e.preventDefault();
+        return false;
+      }
+      if (ctrlOrCmd && e.shiftKey && ["i", "I", "j", "J", "c", "C"].includes(key)) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Best-effort: clear clipboard shortly after a PrintScreen keypress.
+    // Only works in browsers that grant clipboard-write without a prompt,
+    // and does nothing on mobile (screenshots don't fire this event there).
+    const handlePrintScreen = (e: KeyboardEvent) => {
+      if (e.key === "PrintScreen") {
+        navigator.clipboard?.writeText("").catch(() => {});
+      }
+    };
+
+    // Briefly hide content when the tab/window loses focus — catches some
+    // (not all) screen-recording tools that trigger a blur/visibility event.
+    const handleBlur = () => setIsObscured(true);
+    const handleFocus = () => setIsObscured(false);
+    const handleVisibility = () => setIsObscured(document.hidden);
+
+    const blockContextMenu = (e: MouseEvent) => e.preventDefault();
+
+    document.addEventListener("keydown", blockKeys);
+    document.addEventListener("keyup", handlePrintScreen);
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+    document.addEventListener("contextmenu", blockContextMenu);
+
+    return () => {
+      document.removeEventListener("keydown", blockKeys);
+      document.removeEventListener("keyup", handlePrintScreen);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      document.removeEventListener("contextmenu", blockContextMenu);
+    };
+  }, []);
+
+  return isObscured;
+}
+
+// ─── PROTECTED IMAGE COMPONENT ─────────────────────────────────────────────
+// Renders as a CSS background-image instead of an <img> tag — there's no
+// image element for "Save Image As", browser image context menus, or
+// drag-to-desktop to target. Combined with pointer/selection blocking below.
+
+function ProtectedImage({
+  src,
+  alt,
+  className = "",
+  onClick,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      role="img"
+      aria-label={alt}
+      onClick={onClick}
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      className={`relative overflow-hidden select-none ${className}`}
+      style={{
+        backgroundImage: `url("${src}")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        WebkitTouchCallout: "none",
+        userSelect: "none",
+        touchAction: "manipulation",
+      }}
+    >
+      {/* Transparent layer that intercepts long-press / right-click / drag
+          so the underlying background-image can't be targeted directly */}
+      <div
+        className="absolute inset-0"
+        onContextMenu={(e) => e.preventDefault()}
+        onDragStart={(e) => e.preventDefault()}
+        style={{ WebkitTouchCallout: "none" }}
+      />
+
+      {/* Watermark that appears only on long-press attempts (mobile) */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300 flex items-center justify-center"
+        style={{
+          background: "rgba(0,0,0,0.4)",
+          backdropFilter: "blur(2px)",
+        }}
+        onTouchStart={(e) => {
+          const el = e.currentTarget;
+          el.style.opacity = "0.8";
+          setTimeout(() => { el.style.opacity = "0"; }, 2000);
+        }}
+      >
+        <span className="text-[#D4AF37] text-sm font-bold uppercase tracking-widest bg-black/50 px-4 py-2 rounded-full">
+          TOP ©
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // ─── AUTO-SCROLLING IMAGE ROW ──────────────────────────────────────────────
 
@@ -78,6 +208,13 @@ function AutoScrollRow({
 
   if (items.length === 0) return null;
 
+  const getAspectClass = (index: number) => {
+    const mod = index % 3;
+    if (mod === 0) return "aspect-square";
+    if (mod === 1) return "aspect-[3/4]";
+    return "aspect-[4/3]";
+  };
+
   return (
     <div
       className="relative w-full overflow-hidden"
@@ -97,15 +234,15 @@ function AutoScrollRow({
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => onItemClick(item)}
-            className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0 cursor-pointer overflow-hidden rounded-lg"
+            className="w-[240px] sm:w-[280px] md:w-[320px] shrink-0 cursor-pointer overflow-hidden rounded-lg"
           >
-            <div className="relative w-full aspect-[4/3] overflow-hidden">
-              <img
+            <div className={`relative w-full ${getAspectClass(i)} overflow-hidden`}>
+              <ProtectedImage
                 src={item.image}
                 alt={item.title || "Showcase"}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full transition-transform duration-700 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-300 flex items-center justify-center pointer-events-none">
                 <span className="text-white text-xs uppercase tracking-widest font-bold opacity-0 hover:opacity-100 transition-opacity duration-300 drop-shadow-lg">
                   View
                 </span>
@@ -127,6 +264,7 @@ export default function Photography() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const isObscured = useAntiCaptureProtection();
 
   const heroSlides = [
     "/images/slide5.jpg",
@@ -135,14 +273,12 @@ export default function Photography() {
     "/images/slide3.jpg",
     "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000",
     "/images/slide1.jpg",
-    "/images/slide2.jpg",
     "/images/slide4.jpg",
     "/images/slide6.jpg",
   ];
 
   const sloganText = "...your official photographer";
 
-  // ─── FETCH SHOWCASE ITEMS (with targetRoute from extra_text) ────────────
   useEffect(() => {
     fetch(`${API}/api/items`)
       .then((res) => res.json())
@@ -151,7 +287,7 @@ export default function Photography() {
           .filter((item) => item.category === "showcase")
           .map((item) => ({
             image: item.image,
-            targetRoute: item.extra_text || "", // <-- read extra_text
+            targetRoute: item.extra_text || "",
             id: item.id,
             title: item.title,
           }))
@@ -165,7 +301,6 @@ export default function Photography() {
       });
   }, []);
 
-  // ─── HERO SLIDE AUTO-PLAY ──────────────────────────────────────────────
   useEffect(() => {
     const timer = setInterval(
       () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length),
@@ -177,8 +312,6 @@ export default function Photography() {
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? "hidden" : "unset";
   }, [isMenuOpen]);
-
-  // ─── LIGHTBOX HANDLERS ──────────────────────────────────────────────────
 
   const handleImageClick = (item: ShowcaseItem) => {
     setSelectedItem(item);
@@ -192,20 +325,21 @@ export default function Photography() {
     if (item.targetRoute && categoryRouteMap[item.targetRoute]) {
       navigate(categoryRouteMap[item.targetRoute]);
     } else {
-      // fallback: go to the main photography page or hide the button
       navigate("/photography");
     }
     setSelectedItem(null);
   };
 
-  // Split items into rows of 10
+  const handleVideoClick = () => {
+    navigate("/photography/aerials-videos");
+  };
+
   const chunkSize = 10;
   const itemRows: ShowcaseItem[][] = [];
   for (let i = 0; i < showcaseItems.length; i += chunkSize) {
     itemRows.push(showcaseItems.slice(i, i + chunkSize));
   }
 
-  // If no items, use fallback images (with no targetRoute)
   const fallbackItems: ShowcaseItem[] = [
     { image: "/images/photo-1.jfif", targetRoute: "", id: "fallback1" },
     { image: "/images/photo-2.jfif", targetRoute: "", id: "fallback2" },
@@ -221,7 +355,20 @@ export default function Photography() {
         selectedItem ? "h-screen overflow-hidden" : ""
       }`}
     >
-      {/* Page content fades when menu is open */}
+      {/* ─── OBSCURE OVERLAY on tab/window blur (best-effort only) ─── */}
+      <AnimatePresence>
+        {isObscured && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] bg-black flex items-center justify-center"
+          >
+            <span className="text-[#D4AF37] text-xs uppercase tracking-[0.4em]">TOP ©</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div
         className="transition-all duration-500"
         style={{
@@ -230,7 +377,7 @@ export default function Photography() {
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
-        {/* ── LIGHTBOX (with View More) ── */}
+        {/* ── LIGHTBOX ── */}
         <AnimatePresence>
           {selectedItem && (
             <motion.div
@@ -268,10 +415,10 @@ export default function Photography() {
                 >
                   ✕
                 </button>
-                <img
+                <ProtectedImage
                   src={selectedItem.image}
                   alt={selectedItem.title || "Showcase"}
-                  className="w-full h-full object-contain rounded-xl max-h-[70vh]"
+                  className="w-full rounded-xl h-[70vh]"
                 />
                 <div className="mt-4 flex justify-center gap-4">
                   {selectedItem.targetRoute && categoryRouteMap[selectedItem.targetRoute] ? (
@@ -296,14 +443,13 @@ export default function Photography() {
 
         {/* ── HERO SECTION ── */}
         <section className="relative h-screen w-full overflow-hidden flex flex-col">
-          {/* Background slides */}
           <div className="absolute inset-0 z-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSlide}
-                initial={{ opacity: 0, scale: 1.04 }}
-                animate={{ opacity: 0.6, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
+                initial={{ opacity: 0, scale: 1.25 }}
+                animate={{ opacity: 0.6, scale: 1.15 }}
+                exit={{ opacity: 0, scale: 1.1 }}
                 transition={{ duration: 0.8, ease: "easeInOut" }}
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
@@ -312,7 +458,6 @@ export default function Photography() {
             <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-[#D4AF37]/5 to-black/95" />
           </div>
 
-          {/* ── HEADER ── */}
           <header className="relative z-50 flex justify-between items-center p-6 md:p-10">
             <div className="flex flex-col gap-0.5">
               <span
@@ -328,7 +473,6 @@ export default function Photography() {
             <PhotoMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
           </header>
 
-          {/* ── HERO CONTENT ── */}
           <main className="absolute inset-0 z-10 flex items-center justify-center text-center px-6">
             <div className="flex flex-col items-center justify-center">
               <motion.p
@@ -392,7 +536,6 @@ export default function Photography() {
             </div>
           </main>
 
-          {/* Scroll indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -421,11 +564,9 @@ export default function Photography() {
 
         {/* ── IMAGE ROWS ── */}
         <section className="relative py-24 bg-black overflow-hidden">
-          {/* Soft background glow */}
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Section heading */}
           <div className="relative text-center mb-14 px-6">
             <p className="text-[10px] tracking-[0.5em] uppercase font-bold text-white">
               The Gallery
@@ -436,14 +577,12 @@ export default function Photography() {
             <div className="w-16 h-[2px] bg-[#D4AF37]/50 mx-auto mt-5 rounded-full" />
           </div>
 
-          {/* Loading state */}
           {loading && (
             <div className="flex justify-center py-16">
               <div className="w-8 h-8 border-2 border-white/10 border-t-[#D4AF37] rounded-full animate-spin" />
             </div>
           )}
 
-          {/* Rows of images */}
           {!loading && (
             <div className="flex flex-col gap-2">
               {rowsToRender.map((row, idx) => (
@@ -458,29 +597,48 @@ export default function Photography() {
             </div>
           )}
 
-          {/* ─── VIDEO SECTION (STATIC) ─── */}
-          <div className="relative mt-20 px-4 max-w-4xl mx-auto">
-            <div className="rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-2xl">
-              <video
-                src="/videos/showcase.mp4"
-                poster="/images/video-poster.jpg"
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-auto aspect-video object-cover"
-                controls={false}
-              />
+          {/* ─── VIDEO SECTION (CLICKABLE) ── */}
+          <div className="relative mt-8 px-4 max-w-4xl mx-auto">
+            <div
+              className="rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-2xl cursor-pointer group transition-all duration-300 hover:border-[#D4AF37]/50"
+              onClick={handleVideoClick}
+            >
+              <div className="relative">
+                <video
+                  src="/videos/showcase.mp4"
+                  poster="/images/video-poster.jpg"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-auto aspect-video object-cover pointer-events-none"
+                  controls={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                  controlsList="nodownload noremoteplayback"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center gap-2">
+                    <div className="w-16 h-16 rounded-full bg-[#D4AF37]/80 flex items-center justify-center backdrop-blur-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="black">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-xs uppercase tracking-widest font-bold drop-shadow-lg">
+                      Watch Reel
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
             <p className="text-center text-white/40 text-xs uppercase tracking-[0.3em] mt-4">
-              Cinematic Showreel
+              Cinematic Showreel — Click to view more
             </p>
           </div>
         </section>
 
-        {/* ─── ABOUT / PHILOSOPHY SECTION (unchanged) ─── */}
+        {/* ─── PHILOSOPHY SECTION ── */}
         <section
-          className="py-32 px-6 md:px-20"
+          className="py-16 px-6 md:px-20"
           style={{
             backgroundColor: "rgba(212,175,55,0.04)",
             borderTop: "1px solid rgba(212,175,55,0.1)",
@@ -501,27 +659,7 @@ export default function Photography() {
                   timeless visual stories through cinematic weddings, expressive portraits, and striking
                   aerial imagery—transforming fleeting moments into elegant, timeless memories.
                 </p>
-                <div className="pt-6 flex gap-4 flex-wrap">
-                  <a
-                    href="https://wa.me/2348132799299"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="border px-10 py-4 uppercase text-xs font-bold tracking-[0.3em] transition-all inline-block"
-                    style={{ borderColor: "#D4AF37", color: "#D4AF37" }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#D4AF37";
-                      (e.currentTarget as HTMLAnchorElement).style.color = "#000";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
-                      (e.currentTarget as HTMLAnchorElement).style.color = "#D4AF37";
-                    }}
-                  >
-                    Book a Session
-                  </a>
-                </div>
 
-                {/* Contact & Social Box */}
                 <div
                   className="mt-8 rounded-2xl p-6 space-y-6"
                   style={{ border: "1px solid rgba(212,175,55,0.15)", backgroundColor: "rgba(212,175,55,0.03)" }}
@@ -635,7 +773,7 @@ export default function Photography() {
                         <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Twitter</span>
                       </a>
                       <a
-                        href="mailto:topstudios@email.com"
+                        href="mailto:theofficialphotography1@email.com"
                         className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                         style={{ border: "1px solid rgba(212,175,55,0.25)", backgroundColor: "rgba(212,175,55,0.04)" }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
@@ -655,7 +793,7 @@ export default function Photography() {
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
+        {/* ─── FOOTER ── */}
         <footer
           className="py-24 text-center"
           style={{
@@ -684,6 +822,12 @@ export default function Photography() {
           .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+          }
+          img {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
           }
         `}</style>
       </div>

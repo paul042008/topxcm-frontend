@@ -635,11 +635,16 @@ function GalleryView({
   );
 }
 
-// ─── ALBUM CARD ─────────────────────────────────────────────────────────────
+// ─── ALBUM CARD (updated: image clickable, button = Order Now, no badge) ──
 
 function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const displayImage = album.cover || (album.images.length > 0 ? album.images[0].url : null);
+
+  const handleOrder = () => {
+    const msg = `Hi! I'm interested in ordering from the *${album.name}* collection${album.price ? ` (starting at ${album.price})` : ""}. Please let me know the details.`;
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
 
   return (
     <motion.div
@@ -649,21 +654,22 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-black/40 relative">
+      <div
+        className="aspect-[4/3] overflow-hidden bg-black/40 relative cursor-pointer"
+        onClick={onViewGallery}
+      >
         {displayImage ? (
           <img
             src={displayImage}
             alt={album.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-4xl opacity-20">🤵</span>
           </div>
         )}
-        <span className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-[#00AEEF]/20">
-          {album.images.length} items
-        </span>
+        {/* BADGE REMOVED */}
       </div>
 
       <div className="p-5 flex flex-col gap-3 flex-1">
@@ -676,20 +682,20 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
 
         {album.description && (
           <>
-          <p
-            className={`text-white/50 text-xs leading-relaxed ${
-              !expanded ? "line-clamp-3" : ""
-            }`}
-          >
-            {album.description}
-          </p>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
-          >
-            {expanded ? "Show less" : "Read more"}
-          </button>
-        </>
+            <p
+              className={`text-white/50 text-xs leading-relaxed ${
+                !expanded ? "line-clamp-3" : ""
+              }`}
+            >
+              {album.description}
+            </p>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
+            >
+              {expanded ? "Show less" : "Read more"}
+            </button>
+          </>
         )}
 
         {album.price && (
@@ -697,10 +703,10 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
         )}
 
         <button
-          onClick={onViewGallery}
+          onClick={handleOrder}
           className="mt-auto w-full bg-[#00AEEF] text-black rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition flex items-center justify-center gap-2"
         >
-          <span>View Gallery</span>
+          <span>Order Now</span>
           <span className="text-base">→</span>
         </button>
       </div>
@@ -708,11 +714,16 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
   );
 }
 
-// ─── SINGLE CARD ────────────────────────────────────────────────────────────
+// ─── SINGLE CARD (updated: image clickable, button = Order Now, no badge) ──
 
 function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () => void }) {
   const image = album.images[0];
   const [expanded, setExpanded] = useState(false);
+
+  const handleOrder = () => {
+    const msg = `Hi! I'm interested in ordering: *${album.name}*${image?.price ? ` (${image.price})` : ""}. Please let me know the details.`;
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
 
   return (
     <motion.div
@@ -722,15 +733,16 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-black/40 relative">
+      <div
+        className="aspect-[4/3] overflow-hidden bg-black/40 relative cursor-pointer"
+        onClick={onViewSingle}
+      >
         <img
           src={image?.url}
           alt={album.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
         />
-        <span className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-[#00AEEF]/20">
-          1 item
-        </span>
+        {/* BADGE REMOVED */}
       </div>
 
       <div className="p-5 flex flex-col gap-3 flex-1">
@@ -743,19 +755,19 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
 
         {album.description && (
           <>
-  <div
-    className={`text-white/50 text-xs leading-relaxed ${
-      !expanded ? "line-clamp-3" : ""
-    }`}
-    dangerouslySetInnerHTML={{ __html: album.description }}
-  />
-  <button
-    onClick={() => setExpanded(!expanded)}
-    className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
-  >
-    {expanded ? "Show less" : "Read more"}
-  </button>
-</>
+            <div
+              className={`text-white/50 text-xs leading-relaxed ${
+                !expanded ? "line-clamp-3" : ""
+              }`}
+              dangerouslySetInnerHTML={{ __html: album.description }}
+            />
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
+            >
+              {expanded ? "Show less" : "Read more"}
+            </button>
+          </>
         )}
 
         {album.price && (
@@ -763,10 +775,10 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
         )}
 
         <button
-          onClick={onViewSingle}
+          onClick={handleOrder}
           className="mt-auto w-full bg-[#00AEEF] text-black rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition flex items-center justify-center gap-2"
         >
-          <span>View Item</span>
+          <span>Order Now</span>
           <span className="text-base">→</span>
         </button>
       </div>
@@ -774,7 +786,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// ─── MAIN PAGE ───────────────────────────────────────────────────────────────
 
 export default function FashionSuits() {
   const [menuOpen, setMenuOpen] = useState(false);

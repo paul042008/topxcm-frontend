@@ -477,7 +477,7 @@ export default function PhotoAerialsVideos() {
         <BackButton />
         <div className="flex flex-col items-center gap-0.5">
           <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">
-            Drone Aerials & Videos
+             Videos & Drone Aerials
           </p>
           <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">
             The Official Photography
@@ -496,7 +496,7 @@ export default function PhotoAerialsVideos() {
               className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none"
               style={{ fontFamily: "Impact, 'Arial Black', sans-serif" }}
             >
-              Drone Aerials &<br />Videos
+              Videos &<br />Drone Aerials
             </h1>
           </div>
           <p className="text-white/30 text-sm font-light max-w-sm leading-relaxed">
@@ -577,7 +577,7 @@ export default function PhotoAerialsVideos() {
               </svg>
             </a>
             <a
-              href="https://www.facebook.com/Topweddings1"
+              href="https://www.facebook.com/share/19fqFjS3Bw/"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"

@@ -252,7 +252,7 @@ export default function PhotoCanvas() {
               </svg>
             </a>
             <a
-              href="https://www.facebook.com/share/1KToiX8cS4/"
+              href="https://www.facebook.com/share/19fqFjS3Bw/"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"

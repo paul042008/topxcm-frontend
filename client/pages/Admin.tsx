@@ -1027,14 +1027,14 @@ function CategoryManager({
 
   const isPhoto = type === "photo";
 
-  // Helper: decide accept and label for uploads based on category
+  // ─── UPDATED HELPERS: include "properties" for video support ─────────────
   const getMediaAccept = (cat: string) => {
-    const videoCats = ["videos", "aerials"];
+    const videoCats = ["videos", "aerials", "properties"];
     return videoCats.includes(cat) ? "video/*,image/*" : "image/*";
   };
 
   const getMediaLabel = (cat: string, plural: boolean) => {
-    const videoCats = ["videos", "aerials"];
+    const videoCats = ["videos", "aerials", "properties"];
     const type = videoCats.includes(cat) ? "Images/Videos" : "Images";
     return plural ? `${type} * (select multiple)` : `${type} *`;
   };
@@ -1213,8 +1213,20 @@ function CategoryManager({
               <Field label="Default Price">
                 <PriceInput value={newAlbumPrice} onChange={setNewAlbumPrice} placeholder="e.g. 60,000" />
               </Field>
-              <UploadBox label="Cover Image *" single onChange={(f) => setNewAlbumCover(f[0] || null)} previewFiles={newAlbumCover ? [newAlbumCover] : []} />
-              <UploadBox label="Initial Album Image (optional)" single onChange={(f) => setNewAlbumInitialImage(f[0] || null)} previewFiles={newAlbumInitialImage ? [newAlbumInitialImage] : []} />
+              <UploadBox
+                label="Cover Image/Video *"
+                single
+                onChange={(f) => setNewAlbumCover(f[0] || null)}
+                previewFiles={newAlbumCover ? [newAlbumCover] : []}
+                accept="image/*,video/*" // ─── allow videos for cover ───
+              />
+              <UploadBox
+                label="Initial Album File (optional)"
+                single
+                onChange={(f) => setNewAlbumInitialImage(f[0] || null)}
+                previewFiles={newAlbumInitialImage ? [newAlbumInitialImage] : []}
+                accept="image/*,video/*" // ─── allow videos for initial ───
+              />
               <Field label="Extra Text for Initial Image (optional)">
                 <textarea
                   placeholder="Additional info for this image"
@@ -1347,7 +1359,6 @@ function CategoryManager({
                     {selectedAlbum.images.map((img, i) => (
                       <div key={i} className="group relative rounded-xl overflow-hidden border border-white/10">
                         {img.url && (() => {
-                          // Check if it's a video by extension or mime (we only have URL)
                           const isVideo = /\.(mp4|mov|webm|avi|mkv)$/i.test(img.url);
                           return isVideo ? (
                             <video src={img.url} className="w-full aspect-square object-cover" muted />
@@ -1432,7 +1443,13 @@ function CategoryManager({
               <Field label="Price">
                 <PriceInput value={editAlbumPrice} onChange={setEditAlbumPrice} placeholder="e.g. 60,000" />
               </Field>
-              <UploadBox label="Replace Cover (optional)" single onChange={(f) => setEditAlbumCover(f[0] || null)} previewFiles={editAlbumCover ? [editAlbumCover] : []} />
+              <UploadBox
+                label="Replace Cover (optional)"
+                single
+                onChange={(f) => setEditAlbumCover(f[0] || null)}
+                previewFiles={editAlbumCover ? [editAlbumCover] : []}
+                accept="image/*,video/*"
+              />
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditingAlbum(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
                 <button type="submit" disabled={editAlbumLoading} className={btnGold}>

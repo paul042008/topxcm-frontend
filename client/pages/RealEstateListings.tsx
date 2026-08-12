@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RealEstateMenu from "../components/RealEstateMenu";
 import { useNavigate } from "react-router-dom";
@@ -26,9 +26,10 @@ interface Property {
   cover?: string;
   images: PropertyImage[];
   location?: string;
+  isSingle?: boolean;
 }
 
-// ─── PROPERTY MODAL (with image carousel, dark theme) ──────────────────────
+// ─── PROPERTY MODAL (with image/video carousel, dark theme) ──────────────
 
 function PropertyModal({
   property,
@@ -40,6 +41,7 @@ function PropertyModal({
   const [currentIndex, setCurrentIndex] = useState(0);
   const images = property.images || [];
   const coverImage = property.cover || (images.length > 0 ? images[0].url : "");
+  const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)$/i.test(url);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -49,12 +51,12 @@ function PropertyModal({
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
   };
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
   };
 
   const handleEnquire = () => {
@@ -62,8 +64,34 @@ function PropertyModal({
     window.open(`https://wa.me/2348061587993?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  const allImages = [coverImage, ...images.map((img) => img.url)];
-  const currentImage = allImages[currentIndex] || coverImage;
+  const allImages = [coverImage, ...images.map((img) => img.url)].filter(Boolean);
+  const currentUrl = allImages[currentIndex] || coverImage;
+
+  const renderMedia = (url: string) => {
+    if (isVideo(url)) {
+      return (
+        <video
+          src={url}
+          className="w-full h-full object-contain max-h-[80vh]"
+          controls
+          autoPlay
+          playsInline
+          controlsList="nodownload"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
+        />
+      );
+    }
+    return (
+      <img
+        src={url}
+        alt={property.name}
+        className="w-full h-full object-contain max-h-[80vh]"
+        onContextMenu={(e) => e.preventDefault()}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+      />
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -89,14 +117,9 @@ function PropertyModal({
             ✕
           </button>
 
-          {/* Carousel */}
-          <div className="relative w-full aspect-[16/9] bg-black/40 overflow-hidden">
-            <img
-              src={currentImage}
-              alt={property.name}
-              className="w-full h-full object-contain"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-            />
+          {/* Media Carousel */}
+          <div className="relative w-full bg-black/40 flex items-center justify-center" style={{ minHeight: "50vh" }}>
+            {renderMedia(currentUrl)}
             {allImages.length > 1 && (
               <>
                 <button
@@ -155,10 +178,12 @@ function PropertyModal({
   );
 }
 
-// ─── PROPERTY CARD (dark theme) ───────────────────────────────────────────
+// ─── PROPERTY CARD (dark theme, no frame) ─────────────────────────────────
 
 function PropertyCard({ property, onView }: { property: Property; onView: () => void }) {
   const coverImage = property.cover || (property.images.length > 0 ? property.images[0].url : "");
+  const isVideo = /\.(mp4|mov|webm|avi|mkv)$/i.test(coverImage);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   return (
     <motion.div
@@ -170,22 +195,45 @@ function PropertyCard({ property, onView }: { property: Property; onView: () => 
       onClick={onView}
     >
       <div className="aspect-[4/3] overflow-hidden bg-zinc-800 relative">
-        <img
-          src={coverImage}
-          alt={property.name}
-          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-        />
-        {property.images.length > 0 && (
-          <div className="absolute bottom-2 right-2 bg-black/70 text-white/80 text-[10px] px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
-            <span>📷</span> {property.images.length + 1}
-          </div>
+        {coverImage ? (
+          <>
+            {isVideo ? (
+              <video
+                ref={videoRef}
+                src={coverImage}
+                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                muted
+                loop
+                playsInline
+                onMouseEnter={() => videoRef.current?.play()}
+                onMouseLeave={() => videoRef.current?.pause()}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            ) : (
+              <img
+                src={coverImage}
+                alt={property.name}
+                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                onContextMenu={(e) => e.preventDefault()}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
+            {property.images.length > 0 && (
+              <div className="absolute bottom-2 right-2 bg-black/70 text-white/80 text-[10px] px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+                <span>📷</span> {property.images.length + 1}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">🏠</div>
         )}
       </div>
 
       <div className="p-5 flex flex-col gap-3 flex-1">
         <div>
-          <p className="text-[9px] uppercase tracking-[0.4em] text-[#B0D4E8] font-bold mb-1">Property</p>
+          <p className="text-[9px] uppercase tracking-[0.4em] text-[#B0D4E8] font-bold mb-1">
+            {property.isSingle ? "Listing" : "Property"}
+          </p>
           <h3 className="text-lg font-serif text-white leading-tight">{property.name}</h3>
         </div>
 
@@ -204,7 +252,7 @@ function PropertyCard({ property, onView }: { property: Property; onView: () => 
           onClick={(e) => { e.stopPropagation(); onView(); }}
           className="mt-auto w-full bg-[#B0D4E8] text-black rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#8bbdd4] active:scale-[0.98] transition flex items-center justify-center gap-2"
         >
-          <span>View Property</span>
+          <span>View {property.isSingle ? "Listing" : "Property"}</span>
           <span className="text-base">→</span>
         </button>
       </div>
@@ -222,16 +270,71 @@ export default function RealEstateListings() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${API}/api/fashion-albums`)
-      .then((res) => res.json())
-      .then((data: Property[]) => {
-        const realEstateAlbums = data.filter(
-          (album) => album.category === "realestate" && album.cover
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch albums
+        const albumsRes = await fetch(`${API}/api/fashion-albums`);
+        const albumsData: Property[] = await albumsRes.json();
+
+        // Fetch single items
+        const itemsRes = await fetch(`${API}/api/items`);
+        const itemsData = await itemsRes.json();
+
+        const category = "properties";
+
+        // Filter albums
+        const albumProperties = albumsData.filter(
+          (album) => album.category === category && album.cover
         );
-        setProperties(realEstateAlbums);
+
+        // ─── COLLECT ALBUM COVER URLs TO EXCLUDE DUPLICATES ──────────────
+        const albumCoverUrls = albumsData
+          .filter((a) => a.category === category && a.cover)
+          .map((a) => a.cover)
+          .filter(Boolean);
+
+        // Filter standalone items (no album_id) with category properties
+        // AND exclude any item whose image is an album cover (to avoid duplicates)
+        const standaloneItems = itemsData.filter(
+          (item: any) =>
+            !item.album_id &&
+            item.category === category &&
+            item.image &&
+            !albumCoverUrls.includes(item.image) // ← FIX: skip cover images
+        );
+
+        // Convert standalone items to virtual properties
+        const singleProperties: Property[] = standaloneItems.map((item: any) => ({
+          id: `single-${item.id}`,
+          name: item.title || "Untitled",
+          category: item.category,
+          description: item.description || "",
+          price: item.price || "",
+          location: item.location || "",
+          cover: item.image,
+          isSingle: true,
+          images: [
+            {
+              url: item.image,
+              title: item.title || "Untitled",
+              description: item.description || "",
+              price: item.price || "",
+              extra_text: item.extra_text || "",
+            },
+          ],
+        }));
+
+        setProperties([...albumProperties, ...singleProperties]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setProperties([]);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -249,7 +352,6 @@ export default function RealEstateListings() {
           <p className="text-[#B0D4E8] text-[10px] tracking-[0.7em] uppercase font-bold">Available Properties</p>
           <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">TOPXCM Real Estate</span>
         </div>
-        {/* Menu is now fixed independently by the RealEstateMenu component */}
       </header>
 
       {/* Hero strip */}

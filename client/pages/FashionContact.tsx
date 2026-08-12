@@ -104,22 +104,12 @@ export default function FashionContact() {
               </p>
             </div>
 
-            {/* Two images */}
+            {/* one image */}
             <div className="grid grid-cols-2 gap-3 mt-8">
               <div className="aspect-[3/4] rounded-2xl overflow-hidden border border-[#00AEEF]/15 bg-[#00AEEF]/5">
                 <img
                   src="/images/1777805031168~2.png"
                   alt="XCM Wardrobes"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
-              <div className="aspect-[3/4] rounded-2xl overflow-hidden border border-[#00AEEF]/15 bg-[#00AEEF]/5">
-                <img
-                  src="/images/fashion-about2.jpg"
-                  alt="XCM Wardrobes studio"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).style.display = "none";

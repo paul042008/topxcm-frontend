@@ -511,7 +511,7 @@ export default function RealEstate() {
               className="max-h-8 w-auto md:max-h-10 object-contain -ml-1 -mt-3"
             />
             <span className="text-[9px] uppercase tracking-[0.55em] text-[#B0D4E8]/85 md:text-[11px]">
-              Real Estate
+              Homes And Properties
             </span>
           </div>
           {/* ─── NO HAMBURGER HERE ─── */}
@@ -540,14 +540,6 @@ export default function RealEstate() {
           {/* Hero text */}
           <div className="relative z-10 flex h-full items-center px-5 md:px-10">
             <div className="max-w-2xl">
-              <motion.p
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.1, ease: "easeOut" }}
-                className="text-[10px] font-bold uppercase tracking-[0.48em] text-[#B0D4E8]/80 md:text-sm"
-              >
-                XCM
-              </motion.p>
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -631,7 +623,7 @@ export default function RealEstate() {
           </div>
         </section>
 
-        {/* CONTACT */}
+        {/* ─── CONTACT SECTION ─── (UPDATED) */}
         <section className="relative overflow-hidden border-t border-[#B0D4E8]/10 bg-[#0a0a0a] px-5 py-20 md:px-10 md:py-28">
           <div className="absolute -left-20 top-12 h-72 w-72 rounded-full bg-[#B0D4E8]/10 blur-3xl" />
           <div className="absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-[#B0D4E8]/10 blur-3xl" />
@@ -674,8 +666,9 @@ export default function RealEstate() {
                   </a>
                 </div>
 
+                {/* ─── UPDATED EMAIL ─── */}
                 <a
-                  href="mailto:info@topxcm.com"
+                  href="mailto:xcminternational@gmail.com"
                   className="inline-flex items-center gap-3 rounded-2xl border border-black/10 px-6 py-4 text-xs font-semibold uppercase tracking-[0.28em] text-black transition-colors hover:border-[#B0D4E8]/30 hover:text-[#B0D4E8]"
                 >
                   Email Us
@@ -683,10 +676,11 @@ export default function RealEstate() {
 
                 <div className="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-black/20 to-transparent" />
 
+                {/* ─── UPDATED SOCIAL LINKS (no Twitter) ─── */}
                 <div className="flex flex-wrap justify-center gap-3">
                   <p className="w-full text-[10px] uppercase tracking-[0.45em] text-[#B0D4E8]">Connect With Us</p>
                   <a
-                    href="https://www.facebook.com/share/1KToiX8cS4/"
+                    href="https://www.facebook.com/share/18W5YWxTBN/"
                     target="_blank"
                     rel="noreferrer"
                     className="rounded-full border border-black/10 bg-black/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-black/65 transition-colors hover:bg-[#B0D4E8]/10 hover:text-[#B0D4E8]"
@@ -694,21 +688,14 @@ export default function RealEstate() {
                     Facebook
                   </a>
                   <a
-                    href="https://www.instagram.com/xcmwardrobes?igsh=NHJscDd1dTdodmFo"
+                    href="https://www.instagram.com/xcm_homesandproperties?igsh=MTkxaWsyc3p6ZGdiMA=="
                     target="_blank"
                     rel="noreferrer"
                     className="rounded-full border border-black/10 bg-black/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-black/65 transition-colors hover:bg-[#B0D4E8]/10 hover:text-[#B0D4E8]"
                   >
                     Instagram
                   </a>
-                  <a
-                    href="https://twitter.com/topxcm"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-full border border-black/10 bg-black/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-black/65 transition-colors hover:bg-[#B0D4E8]/10 hover:text-[#B0D4E8]"
-                  >
-                    Twitter / X
-                  </a>
+                  {/* Twitter removed */}
                 </div>
               </div>
             </div>
