@@ -27,6 +27,61 @@ interface Album {
   price: string;
   cover?: string;
   images: AlbumImage[];
+  isSingle?: boolean;
+}
+
+// ─── SIMPLE LIGHTBOX (for single images) ──────────────────────────────────
+
+function SingleImageLightbox({
+  image,
+  onClose,
+}: {
+  image: AlbumImage;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ duration: 0.25 }}
+        className="relative max-w-6xl w-full h-full flex items-center justify-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 text-white/60 hover:text-white text-2xl"
+        >
+          ✕
+        </button>
+        <img
+          src={image.url}
+          alt={image.title}
+          className="max-h-[90vh] max-w-[90vw] object-contain"
+          onContextMenu={(e) => e.preventDefault()}
+          draggable={false}
+        />
+        {image.title && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
+            {image.title}
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
+  );
 }
 
 // ─── GALLERY VIEW (modal) ──────────────────────────────────────────────────
@@ -64,12 +119,13 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         <span className="text-white/40 text-xs">{images.length} photos</span>
       </div>
 
-      {/* ─── COVER – NO FRAME, NATURAL ASPECT RATIO ─── */}
       <div className="relative w-full bg-zinc-800">
         <img
           src={coverImage}
           alt={album.name}
           className="w-full h-auto max-h-[85vh] object-contain mx-auto"
+          onContextMenu={(e) => e.preventDefault()}
+          draggable={false}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
         <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full">
@@ -96,7 +152,6 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         </div>
       </div>
 
-      {/* ─── GALLERY THUMBNAILS – NO FRAME, MASONRY, NATURAL ASPECT ─── */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 [column-fill:balance]">
           {images.map((img, idx) => (
@@ -112,6 +167,8 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                 src={img.url}
                 alt={img.title}
                 className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-105"
+                onContextMenu={(e) => e.preventDefault()}
+                draggable={false}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition" />
             </motion.div>
@@ -168,6 +225,8 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                 src={images[selectedIndex].url}
                 alt={images[selectedIndex].title}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
+                onContextMenu={(e) => e.preventDefault()}
+                draggable={false}
               />
               {images[selectedIndex].title && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
@@ -184,7 +243,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
 
 // ─── COMPONENTS FOR LISTING ────────────────────────────────────────────────
 
-// Featured Album – full‑width cinematic hero, NO FRAME, natural aspect ratio
+// Featured Album – full‑width cinematic hero
 function FeaturedAlbum({ item, onClick }: { item: Album; onClick: () => void }) {
   return (
     <motion.div
@@ -232,7 +291,7 @@ function FeaturedAlbum({ item, onClick }: { item: Album; onClick: () => void }) 
   );
 }
 
-// Editorial Card – alternating left/right layout, NO FRAME, natural aspect ratio
+// Editorial Card – alternating left/right layout
 function EditorialCard({ item, index, onClick }: { item: Album; index: number; onClick: () => void }) {
   const isEven = index % 2 === 0;
 
@@ -268,7 +327,7 @@ function EditorialCard({ item, index, onClick }: { item: Album; index: number; o
         }`}
       >
         <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.6em] font-bold mb-6">
-          Wedding Story
+          {item.category === "weddings" ? "Wedding Story" : "Event Story"}
         </p>
         <h3 className="text-2xl md:text-3xl lg:text-4xl font-serif italic text-white leading-snug mb-4 group-hover:text-[#D4AF37] transition-colors duration-500">
           {item.name}
@@ -289,7 +348,7 @@ function EditorialCard({ item, index, onClick }: { item: Album; index: number; o
   );
 }
 
-// Compact Card – small grid item, NO FRAME, natural aspect ratio
+// Compact Card – small grid item
 function CompactCard({ item, index, onClick }: { item: Album; index: number; onClick: () => void }) {
   return (
     <motion.div
@@ -336,23 +395,94 @@ export default function PhotoWeddings() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [singleImage, setSingleImage] = useState<AlbumImage | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "weddings" | "events">("all");
 
   useEffect(() => {
-    fetch(`${API}/api/fashion-albums`)
-      .then((res) => res.json())
-      .then((data: Album[]) => {
-        const weddingAlbums = data.filter((album) => album.category === "weddings");
-        setAlbums(weddingAlbums);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch albums
+        const albumsRes = await fetch(`${API}/api/fashion-albums`);
+        const albumsData: Album[] = await albumsRes.json();
+
+        // Fetch single items
+        const itemsRes = await fetch(`${API}/api/items`);
+        const itemsData = await itemsRes.json();
+
+        const categories = ["weddings", "events"];
+
+        // Filter albums by category
+        const filteredAlbums = albumsData.filter((album) =>
+          categories.includes(album.category)
+        );
+
+        // Fetch standalone items (no album_id) with category weddings or events
+        const standaloneItems = itemsData.filter(
+          (item: any) =>
+            !item.album_id &&
+            categories.includes(item.category) &&
+            item.image
+        );
+
+        // Convert standalone items to virtual albums
+        const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
+          id: `single-${item.id}`,
+          name: item.title || "Untitled",
+          category: item.category,
+          description: item.description || "",
+          price: item.price || "",
+          cover: item.secureImage || item.image,
+          isSingle: true,
+          images: [
+            {
+              url: item.secureImage || item.image,
+              title: item.title || "Untitled",
+              description: item.description || "",
+              price: item.price || "",
+              extra_text: item.extra_text || "",
+            },
+          ],
+        }));
+
+        setAlbums([...filteredAlbums, ...singleItemsAsAlbums]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setAlbums([]);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchData();
   }, []);
 
-  if (loading) return <LoadingState />;
+  // Filter albums based on active tab
+  const filteredAlbums =
+    activeTab === "all"
+      ? albums
+      : albums.filter((a) => a.category === activeTab);
 
-  const featured = albums[0];
-  const editorial = albums.slice(1, 5);
-  const compact = albums.slice(5);
+  // Separate into featured, editorial, compact (only for non-single albums)
+  const nonSingleAlbums = filteredAlbums.filter((a) => !a.isSingle);
+  const featured = nonSingleAlbums[0] || null;
+  const editorial = nonSingleAlbums.slice(1, 5);
+  const compact = nonSingleAlbums.slice(5);
+
+  // Single items (to be displayed separately, perhaps in a grid)
+  const singleItems = filteredAlbums.filter((a) => a.isSingle);
+
+  const handleCardClick = (album: Album) => {
+    if (album.isSingle) {
+      if (album.images.length > 0) {
+        setSingleImage(album.images[0]);
+      }
+    } else {
+      setSelectedAlbum(album);
+    }
+  };
+
+  if (loading) return <LoadingState />;
 
   return (
     <div className="min-h-screen bg-[#080808] text-white">
@@ -362,7 +492,7 @@ export default function PhotoWeddings() {
         <BackButton />
         <div className="flex flex-col items-center gap-0.5">
           <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">
-            Weddings & Other Events
+            Weddings & Events
           </p>
           <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">
             The Official Photography
@@ -385,7 +515,7 @@ export default function PhotoWeddings() {
               className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none"
               style={{ fontFamily: "Impact, 'Arial Black', sans-serif" }}
             >
-              Weddings & Other Events
+              Weddings & Events
             </h1>
           </div>
           <p className="text-white/30 text-sm font-light max-w-sm leading-relaxed">
@@ -394,26 +524,98 @@ export default function PhotoWeddings() {
         </div>
       </div>
 
-      {albums.length === 0 && (
+      {/* ─── FILTER TABS ─── */}
+      <div className="px-6 md:px-16 py-6 flex gap-6 border-b border-white/5 overflow-x-auto">
+        {(["all", "weddings", "events"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`text-[10px] uppercase tracking-[0.4em] font-bold pb-2 transition-all border-b-2 whitespace-nowrap ${
+              activeTab === tab
+                ? "text-[#D4AF37] border-[#D4AF37]"
+                : "text-white/30 border-transparent hover:text-white/60"
+            }`}
+          >
+            {tab === "all" ? "All" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {filteredAlbums.length === 0 && (
         <div className="flex flex-col items-center justify-center h-[50vh] text-center px-6">
           <div className="w-12 h-[1px] bg-[#D4AF37]/30 mb-8 mx-auto" />
-          <p className="text-white/40 text-lg font-serif italic">No wedding albums yet.</p>
+          <p className="text-white/40 text-lg font-serif italic">No collections in this category.</p>
           <p className="text-white/20 text-xs uppercase tracking-widest mt-3">
             Albums will appear here once uploaded
           </p>
         </div>
       )}
 
-      {featured && <FeaturedAlbum item={featured} onClick={() => setSelectedAlbum(featured)} />}
+      {/* ─── FEATURED (only if there is at least one non-single album) ─── */}
+      {featured && <FeaturedAlbum item={featured} onClick={() => handleCardClick(featured)} />}
 
+      {/* ─── EDITORIAL CARDS ─── */}
       {editorial.length > 0 && (
         <section className="flex flex-col">
           {editorial.map((item, i) => (
-            <EditorialCard key={item.id} item={item} index={i} onClick={() => setSelectedAlbum(item)} />
+            <EditorialCard
+              key={item.id}
+              item={item}
+              index={i}
+              onClick={() => handleCardClick(item)}
+            />
           ))}
         </section>
       )}
 
+      {/* ─── SINGLE ITEMS (displayed in a grid) ─── */}
+      {singleItems.length > 0 && (
+        <section className="px-6 md:px-16 py-20">
+          <div className="flex items-center gap-6 mb-12">
+            <div className="w-8 h-[1px] bg-[#D4AF37]/40" />
+            <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.6em] font-bold">
+              Featured Singles
+            </p>
+            <div className="flex-1 h-[1px] bg-white/5" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {singleItems.map((item, i) => (
+              <div
+                key={item.id}
+                className="group relative overflow-hidden border border-white/5 hover:border-[#D4AF37]/30 transition-colors duration-500 cursor-pointer"
+                onClick={() => handleCardClick(item)}
+              >
+                <div className="relative overflow-hidden bg-zinc-800">
+                  <img
+                    src={item.cover || (item.images.length > 0 ? item.images[0].url : "")}
+                    alt={item.name}
+                    className="w-full h-auto object-contain transition-transform duration-[1.2s] group-hover:scale-110"
+                    onContextMenu={(e) => e.preventDefault()}
+                    draggable={false}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
+                </div>
+                <div className="p-6 bg-[#0d0d0d]">
+                  <h4 className="text-lg font-serif italic text-white group-hover:text-[#D4AF37] transition-colors duration-300 mb-4 leading-snug">
+                    {item.name}
+                  </h4>
+                  {item.description && (
+                    <div
+                      className="text-white/40 text-sm line-clamp-2 mb-4 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+                      dangerouslySetInnerHTML={{ __html: item.description }}
+                    />
+                  )}
+                  <span className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors font-bold">
+                    View Image →
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ─── COMPACT CARDS (more albums) ─── */}
       {compact.length > 0 && (
         <section className="px-6 md:px-16 py-20">
           <div className="flex items-center gap-6 mb-12">
@@ -425,13 +627,18 @@ export default function PhotoWeddings() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {compact.map((item, i) => (
-              <CompactCard key={item.id} item={item} index={i} onClick={() => setSelectedAlbum(item)} />
+              <CompactCard
+                key={item.id}
+                item={item}
+                index={i}
+                onClick={() => handleCardClick(item)}
+              />
             ))}
           </div>
         </section>
       )}
 
-      {/* ─── UPDATED FOOTER – icons only ─── */}
+      {/* ─── FOOTER ─── */}
       <footer className="py-16 text-center border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
@@ -460,7 +667,6 @@ export default function PhotoWeddings() {
               </svg>
             </a>
           </div>
-
           <div className="flex flex-col items-center gap-4">
             <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />
             <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP • All Right Reserve</p>
@@ -481,8 +687,13 @@ export default function PhotoWeddings() {
         Book Us
       </a>
 
+      {/* ─── MODALS ─── */}
       <AnimatePresence>
         {selectedAlbum && <GalleryView album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {singleImage && <SingleImageLightbox image={singleImage} onClose={() => setSingleImage(null)} />}
       </AnimatePresence>
     </div>
   );

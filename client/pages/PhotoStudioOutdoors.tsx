@@ -29,6 +29,59 @@ interface Album {
   isSingle?: boolean;
 }
 
+// ─── SIMPLE LIGHTBOX (for single images) ──────────────────────────────────
+
+function SingleImageLightbox({
+  image,
+  onClose,
+}: {
+  image: AlbumImage;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ duration: 0.25 }}
+        className="relative max-w-6xl w-full h-full flex items-center justify-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 text-white/60 hover:text-white text-2xl"
+        >
+          ✕
+        </button>
+        <img
+          src={image.url}
+          alt={image.title}
+          className="max-h-[90vh] max-w-[90vw] object-contain"
+          onContextMenu={(e) => e.preventDefault()}
+        />
+        {image.title && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
+            {image.title}
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── GALLERY VIEW ──────────────────────────────────────────────────────────
 
 function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) {
@@ -284,47 +337,43 @@ export default function PhotoStudioOutdoors() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [singleImage, setSingleImage] = useState<AlbumImage | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "studio" | "outdoors">("all");
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch albums
         const albumsRes = await fetch(`${API}/api/fashion-albums`);
         const albumsData: Album[] = await albumsRes.json();
 
-        // Fetch single items
         const itemsRes = await fetch(`${API}/api/items`);
         const itemsData = await itemsRes.json();
 
         const photoCategories = ["studio", "outdoors"];
 
-        // Filter albums
         const filteredAlbums = albumsData.filter((album) =>
           photoCategories.includes(album.category)
         );
 
-        // Filter standalone items (no album_id) with category studio/outdoors
         const standaloneItems = itemsData.filter(
           (item: any) =>
             !item.album_id &&
             photoCategories.includes(item.category) &&
-            item.image // ensure there's an image
+            item.image
         );
 
-        // Convert standalone items to virtual albums
         const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
           id: `single-${item.id}`,
           name: item.title || "Untitled",
           category: item.category,
           description: item.description || "",
           price: item.price || "",
-          cover: item.image,
+          cover: item.secureImage || item.image,
           isSingle: true,
           images: [
             {
-              url: item.image,
+              url: item.secureImage || item.image,
               title: item.title || "Untitled",
               description: item.description || "",
               price: item.price || "",
@@ -347,6 +396,17 @@ export default function PhotoStudioOutdoors() {
 
   const filteredAlbums =
     activeTab === "all" ? albums : albums.filter((a) => a.category === activeTab);
+
+  const handleCardClick = (album: Album) => {
+    if (album.isSingle) {
+      // Single item: open lightbox with the image
+      if (album.images.length > 0) {
+        setSingleImage(album.images[0]);
+      }
+    } else {
+      setSelectedAlbum(album);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#080808] text-white overflow-x-hidden">
@@ -412,9 +472,9 @@ export default function PhotoStudioOutdoors() {
             {filteredAlbums.map((album) => (
               <div key={album.id} className="mb-5 break-inside-avoid">
                 {album.isSingle ? (
-                  <SingleCard item={album} onClick={() => setSelectedAlbum(album)} />
+                  <SingleCard item={album} onClick={() => handleCardClick(album)} />
                 ) : (
-                  <AlbumCard album={album} onClick={() => setSelectedAlbum(album)} />
+                  <AlbumCard album={album} onClick={() => handleCardClick(album)} />
                 )}
               </div>
             ))}
@@ -473,6 +533,10 @@ export default function PhotoStudioOutdoors() {
 
       <AnimatePresence>
         {selectedAlbum && <GalleryView album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {singleImage && <SingleImageLightbox image={singleImage} onClose={() => setSingleImage(null)} />}
       </AnimatePresence>
     </div>
   );

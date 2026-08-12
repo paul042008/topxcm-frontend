@@ -81,8 +81,15 @@ export default function PhotoCanvas() {
   useEffect(() => {
     fetch(`${API}/api/items`)
       .then((res) => res.json())
-      .then((data: Product[]) => {
-        const filtered = data.filter((i) => (i.category === "canvas" || i.category === "frames") && !i.albumId);
+      .then((data: any[]) => {
+        // Transform items: use secureImage if available, fallback to image
+        const transformed = data.map((item) => ({
+          ...item,
+          image: item.secureImage || item.image,
+        }));
+        const filtered = transformed.filter(
+          (i) => (i.category === "canvas" || i.category === "frames") && !i.albumId
+        );
         setProducts(filtered);
         setLoading(false);
       })

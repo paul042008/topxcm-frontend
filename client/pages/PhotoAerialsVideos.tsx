@@ -443,11 +443,11 @@ export default function PhotoAerialsVideos() {
           category: item.category,
           description: item.description || "",
           price: item.price || "",
-          cover: item.image,
+          cover: item.secureImage || item.image,
           isSingle: true,
           images: [
             {
-              url: item.image,
+              url: item.secureImage || item.image,
               title: item.title || "Untitled",
               description: item.description || "",
               price: item.price || "",

@@ -286,7 +286,7 @@ export default function Photography() {
         const showcase = data
           .filter((item) => item.category === "showcase")
           .map((item) => ({
-            image: item.image,
+            image: item.secureImage || item.image,
             targetRoute: item.extra_text || "",
             id: item.id,
             title: item.title,
