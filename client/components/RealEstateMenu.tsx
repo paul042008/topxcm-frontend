@@ -7,35 +7,38 @@ interface RealEstateMenuProps {
   isRealEstateLanding?: boolean;
   onOpenAction?: () => void;
   onCloseAction?: () => void;
+  isOpen?: boolean;      // controlled by parent
+  onClose?: () => void;   // called when menu should close
 }
 
 export default function RealEstateMenu({
   isRealEstateLanding = false,
   onOpenAction,
   onCloseAction,
+  isOpen = false,
+  onClose,
 }: RealEstateMenuProps) {
-  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const isRealEstateHome = location.pathname === "/real-estate";
   const isSubPage = location.pathname.startsWith("/real-estate/") && location.pathname !== "/real-estate";
 
-  const handleOpen = () => {
-    setOpen(true);
-    if (onOpenAction) onOpenAction();
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    if (onCloseAction) onCloseAction();
-  };
-
   const links = [
     {
-      label: "View Properties",
+      label: "Gallery",
       sub: "Available Listings",
       path: "/real-estate/listings",
+    },
+    {
+      label: "Construction Projects",
+      sub: "Ongoing & Completed",
+      path: "/real-estate/construction",
+    },
+    {
+      label: "2D & 3D Plans",
+      sub: "Architectural Designs",
+      path: "/real-estate/plans",
     },
     {
       label: "Contact Us",
@@ -44,10 +47,19 @@ export default function RealEstateMenu({
     },
   ];
 
+  const handleOpen = () => {
+    if (onOpenAction) onOpenAction();
+  };
+
+  const handleClose = () => {
+    if (onClose) onClose();
+    if (onCloseAction) onCloseAction();
+  };
+
   return (
     <>
       {/* ── HAMBURGER (Fixed to Right) ── */}
-      {!open && (
+      {!isOpen && (
         <button
           onClick={handleOpen}
           className="fixed top-8 right-6 md:right-10 z-[9999] flex flex-col gap-[5px] group"
@@ -60,18 +72,21 @@ export default function RealEstateMenu({
 
       {/* ── FULL SCREEN MENU OVERLAY (Dark Theme) ── */}
       <AnimatePresence>
-        {open && (
+        {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[10000] bg-black w-screen h-screen overflow-hidden flex flex-col"
           >
-            {/* Header Area */}
+            {/* Header Area with Logo */}
             <div className="w-full px-8 pt-12 flex justify-between items-center">
-              <div className="flex flex-col gap-0.5 opacity-70">
-                <span className="text-[#B0D4E8] text-[10px] tracking-[0.7em] uppercase font-bold">XCM</span>
-                <span className="text-white/30 text-[8px] tracking-[0.3em] uppercase">Real Estate</span>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/images/your-logo12.png"
+                  alt="XCM Homes"
+                  className="h-12 w-auto object-contain"
+                />
               </div>
 
               <button
@@ -116,7 +131,7 @@ export default function RealEstateMenu({
                     onClick={() => { handleClose(); navigate("/real-estate"); }}
                     className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/30 hover:text-[#B0D4E8] transition-all"
                   >
-                    ← Back to Real Estate
+                    ← Back to Homes
                   </button>
                 )}
               </div>

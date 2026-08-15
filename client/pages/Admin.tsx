@@ -10,7 +10,7 @@ type MainTab = "fashion" | "photo" | "realestate";
 
 type FashionCategory = "casuals" | "natives" | "agbadas" | "suits" | "latest";
 type PhotoCategory = "weddings" | "portraits" | "videos" | "aerials" | "studio" | "outdoors" | "showcase" | "canvas" | "frames";
-type RealEstateCategory = "properties";
+type RealEstateCategory = "properties" | "construction" | "plans";
 
 interface AlbumImage {
   id?: string;
@@ -73,6 +73,8 @@ const PHOTO_CATEGORIES: { value: PhotoCategory; label: string; icon: string }[] 
 
 const REAL_ESTATE_CATEGORIES: { value: RealEstateCategory; label: string; icon: string }[] = [
   { value: "properties", label: "Properties", icon: "🏠" },
+  { value: "construction", label: "Construction", icon: "🏗️" },
+  { value: "plans", label: "2D & 3D Plans", icon: "📐" },
 ];
 
 // ─── SHOWCASE ROUTE OPTIONS ────────────────────────────────────────────────
@@ -83,6 +85,16 @@ const SHOWCASE_ROUTE_OPTIONS = [
   { value: "aerials-videos", label: "Drone Aerials & Videos" },
   { value: "canvas", label: "Canvas & Frames" },
   { value: "portraits", label: "Portraits" },
+];
+
+// ─── CAROUSEL ROUTE OPTIONS (for fashion) ─────────────────────────────────
+
+const CAROUSEL_ROUTE_OPTIONS = [
+  { value: "/fashion/suits", label: "Suits" },
+  { value: "/fashion/agbadas", label: "Agbadas" },
+  { value: "/fashion/natives", label: "Natives" },
+  { value: "/fashion/casuals", label: "Casuals" },
+  { value: "/fashion/latest", label: "Latest Collection" },
 ];
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
@@ -375,19 +387,23 @@ function CategoryManager({
   type,
   categoryOptions,
   albumEndpoint = `${API}/api/fashion-albums`,
+  enableCarousel = false,
 }: {
   type: string;
   categoryOptions: { value: string; label: string; icon: string }[];
   albumEndpoint?: string;
+  enableCarousel?: boolean;
 }) {
   // ─── STATE ──────────────────────────────────────────────────────────────────
   const [albums, setAlbums] = useState<Album[]>([]);
   const [singles, setSingles] = useState<SingleItem[]>([]);
+  const [carouselItems, setCarouselItems] = useState<SingleItem[]>([]);
   const [loadingAlbums, setLoadingAlbums] = useState(false);
   const [loadingSingles, setLoadingSingles] = useState(false);
+  const [loadingCarousel, setLoadingCarousel] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryOptions[0]?.value || "");
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
-  const [mode, setMode] = useState<"albums" | "single">("albums");
+  const [mode, setMode] = useState<"albums" | "single" | "carousel">("albums");
 
   // ─── CREATE ALBUM STATE ────────────────────────────────────────────────────
   const [newAlbumName, setNewAlbumName] = useState("");
@@ -443,6 +459,15 @@ function CategoryManager({
   const [editSingleLoading, setEditSingleLoading] = useState(false);
   const [editSingleMsg, setEditSingleMsg] = useState("");
 
+  // ─── CAROUSEL STATE ──────────────────────────────────────────────────────
+  const [carouselFile, setCarouselFile] = useState<File | null>(null);
+  const [carouselTitle, setCarouselTitle] = useState("");
+  const [carouselDesc, setCarouselDesc] = useState("");
+  const [carouselRoute, setCarouselRoute] = useState<string>(CAROUSEL_ROUTE_OPTIONS[0]?.value || "");
+  const [carouselLoading, setCarouselLoading] = useState(false);
+  const [carouselMsg, setCarouselMsg] = useState("");
+  const [deletingCarouselId, setDeletingCarouselId] = useState<string | null>(null);
+
   // ─── ADD IMAGES TO ALBUM STATE ──────────────────────────────────────────
   const [imgFiles, setImgFiles] = useState<File[]>([]);
   const [imgTitle, setImgTitle] = useState("");
@@ -484,29 +509,49 @@ function CategoryManager({
       const res = await fetch(`${API}/api/items`);
       if (res.ok) {
         const all = await res.json();
-        const filtered = all.filter((item: any) => !item.album_id && categoryOptions.some(c => c.value === item.category));
+        // Exclude carousel items and filter by category options
+        const filtered = all.filter(
+          (item: any) =>
+            !item.album_id &&
+            item.category !== "fashion-carousel" &&
+            categoryOptions.some((c) => c.value === item.category)
+        );
         setSingles(filtered);
       }
     } catch {}
     setLoadingSingles(false);
   }, [categoryOptions]);
 
+  const fetchCarousel = useCallback(async () => {
+    if (!enableCarousel) return;
+    setLoadingCarousel(true);
+    try {
+      const res = await fetch(`${API}/api/items?category=fashion-carousel`);
+      if (res.ok) {
+        const data = await res.json();
+        setCarouselItems(data);
+      }
+    } catch {}
+    setLoadingCarousel(false);
+  }, [enableCarousel]);
+
   useEffect(() => {
     fetchAlbums();
     fetchSingles();
-  }, [fetchAlbums, fetchSingles]);
+    if (enableCarousel) fetchCarousel();
+  }, [fetchAlbums, fetchSingles, fetchCarousel, enableCarousel]);
 
   // ─── REORDER IMAGES ────────────────────────────────────────────────────────
 
   const moveImage = async (albumId: string, imageId: string, direction: "up" | "down") => {
     console.log(`🔁 moveImage called: album ${albumId}, image ${imageId}, direction ${direction}`);
-    const album = albums.find(a => a.id === albumId);
+    const album = albums.find((a) => a.id === albumId);
     if (!album) {
       console.warn("❌ Album not found");
       return;
     }
     const images = album.images;
-    const index = images.findIndex(img => img.id === imageId);
+    const index = images.findIndex((img) => img.id === imageId);
     if (index === -1) {
       console.warn("❌ Image not found in album");
       return;
@@ -554,16 +599,15 @@ function CategoryManager({
     };
 
     try {
-      await Promise.all([
-        updateOrder(img1, order2),
-        updateOrder(img2, order1),
-      ]);
+      await Promise.all([updateOrder(img1, order2), updateOrder(img2, order1)]);
       // Update local state
       const updatedImages = [...images];
       [updatedImages[index], updatedImages[newIndex]] = [updatedImages[newIndex], updatedImages[index]];
-      updatedImages.forEach((img, idx) => { img.order = idx; });
+      updatedImages.forEach((img, idx) => {
+        img.order = idx;
+      });
 
-      const updatedAlbums = albums.map(a =>
+      const updatedAlbums = albums.map((a) =>
         a.id === albumId ? { ...a, images: updatedImages } : a
       );
       setAlbums(updatedAlbums);
@@ -581,8 +625,8 @@ function CategoryManager({
   const moveSingle = async (itemId: string, direction: "up" | "down") => {
     console.log(`🔁 moveSingle called: item ${itemId}, direction ${direction}`);
 
-    const filtered = singles.filter(s => s.category === selectedCategory);
-    const index = filtered.findIndex(s => s.id === itemId);
+    const filtered = singles.filter((s) => s.category === selectedCategory);
+    const index = filtered.findIndex((s) => s.id === itemId);
     if (index === -1) {
       console.warn("❌ Item not found in filtered list");
       return;
@@ -621,12 +665,9 @@ function CategoryManager({
     };
 
     try {
-      await Promise.all([
-        updateOrder(item1, newOrder1),
-        updateOrder(item2, newOrder2),
-      ]);
+      await Promise.all([updateOrder(item1, newOrder1), updateOrder(item2, newOrder2)]);
 
-      const updatedSingles = singles.map(s => {
+      const updatedSingles = singles.map((s) => {
         if (s.id === item1.id) return { ...s, order: newOrder1 };
         if (s.id === item2.id) return { ...s, order: newOrder2 };
         return s;
@@ -707,6 +748,28 @@ function CategoryManager({
     }
   };
 
+  const deleteCarousel = async (itemId: string) => {
+    if (!window.confirm("Delete this carousel item? This cannot be undone.")) return;
+    setDeletingCarouselId(itemId);
+    try {
+      const res = await fetch(`${API}/api/items/${itemId}`, {
+        method: "DELETE",
+        headers: AUTH_HEADER,
+      });
+      if (res.status === 404) {
+        alert("Delete endpoint not found.");
+        setDeletingCarouselId(null);
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to delete carousel item");
+      fetchCarousel();
+    } catch (err) {
+      alert("Error deleting carousel item. Try again.");
+    } finally {
+      setDeletingCarouselId(null);
+    }
+  };
+
   // ─── CREATE ALBUM ──────────────────────────────────────────────────────────
 
   const handleCreateAlbum = async (e: FormEvent) => {
@@ -735,7 +798,9 @@ function CategoryManager({
       const d = await res.json();
       if (!res.ok) return setCreateMsg(d.message || "Failed to create album");
       setCreateMsg("✅ Album created!");
-      setNewAlbumName(""); setNewAlbumDesc(""); setNewAlbumPrice("");
+      setNewAlbumName("");
+      setNewAlbumDesc("");
+      setNewAlbumPrice("");
       setNewAlbumCover(null);
       setNewAlbumInitialImage(null);
       setNewAlbumExtraText("");
@@ -757,7 +822,7 @@ function CategoryManager({
     try {
       const fd = new FormData();
       imgFiles.forEach((file) => fd.append("images", file));
-      
+
       const isPhoto = type === "photo";
       fd.append("title", isPhoto ? "" : imgTitle);
       fd.append("description", isPhoto ? "" : imgDesc);
@@ -782,7 +847,7 @@ function CategoryManager({
         setImgExtraText("");
       }
       const updatedAlbums = await fetchAlbums();
-      const updatedAlbum = updatedAlbums.find(a => a.id === selectedAlbum.id);
+      const updatedAlbum = updatedAlbums.find((a) => a.id === selectedAlbum.id);
       if (updatedAlbum) {
         setSelectedAlbum(updatedAlbum);
       }
@@ -807,7 +872,7 @@ function CategoryManager({
       fd.append("description", singleDesc);
       fd.append("category", singleCat);
       if (singlePrice) fd.append("price", singlePrice);
-      
+
       const isPhoto = type === "photo";
       if (isPhoto && singleCat === "showcase" && singleTargetRoute) {
         fd.append("extra_text", singleTargetRoute);
@@ -821,9 +886,9 @@ function CategoryManager({
       const d = await res.json();
       if (!res.ok) return setSingleMsg(d.message || "Upload failed");
       setSingleMsg("✅ Uploaded!");
-      setSingleFile(null); 
-      setSingleTitle(""); 
-      setSingleDesc(""); 
+      setSingleFile(null);
+      setSingleTitle("");
+      setSingleDesc("");
       setSinglePrice("");
       setSingleTargetRoute("");
       fetchSingles();
@@ -831,6 +896,42 @@ function CategoryManager({
       setSingleMsg("❌ Could not reach server. Try again.");
     } finally {
       setSingleLoading(false);
+    }
+  };
+
+  // ─── CAROUSEL UPLOAD ──────────────────────────────────────────────────────
+
+  const handleCarouselUpload = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!carouselFile) return setCarouselMsg("Select an image");
+    if (!carouselTitle.trim()) return setCarouselMsg("Title is required");
+    setCarouselLoading(true);
+    setCarouselMsg("");
+    try {
+      const fd = new FormData();
+      fd.append("image", carouselFile);
+      fd.append("title", carouselTitle);
+      fd.append("description", carouselDesc);
+      fd.append("category", "fashion-carousel");
+      fd.append("extra_text", carouselRoute);
+
+      const res = await fetchWithWakeup(
+        `${API}/api/upload`,
+        { method: "POST", headers: AUTH_HEADER, body: fd },
+        setCarouselMsg
+      );
+      const d = await res.json();
+      if (!res.ok) return setCarouselMsg(d.message || "Upload failed");
+      setCarouselMsg("✅ Carousel item added!");
+      setCarouselFile(null);
+      setCarouselTitle("");
+      setCarouselDesc("");
+      setCarouselRoute(CAROUSEL_ROUTE_OPTIONS[0]?.value || "");
+      fetchCarousel();
+    } catch {
+      setCarouselMsg("❌ Could not reach server. Try again.");
+    } finally {
+      setCarouselLoading(false);
     }
   };
 
@@ -870,7 +971,17 @@ function CategoryManager({
       setEditingAlbum(null);
       fetchAlbums();
       if (selectedAlbum?.id === editingAlbum.id) {
-        setSelectedAlbum((prev) => prev ? { ...prev, name: editAlbumName, category: editAlbumCategory, description: editAlbumDesc, price: editAlbumPrice } : prev);
+        setSelectedAlbum((prev) =>
+          prev
+            ? {
+                ...prev,
+                name: editAlbumName,
+                category: editAlbumCategory,
+                description: editAlbumDesc,
+                price: editAlbumPrice,
+              }
+            : prev
+        );
       }
       setEditAlbumCover(null);
     } catch {
@@ -906,7 +1017,7 @@ function CategoryManager({
         description: editImageDesc,
         price: editImagePrice,
         extra_text: editImageExtra,
-        order: editImageOrder !== undefined ? editImageOrder : (editingImage.image.order ?? 0),
+        order: editImageOrder !== undefined ? editImageOrder : editingImage.image.order ?? 0,
       };
 
       if (hasFile) {
@@ -983,7 +1094,7 @@ function CategoryManager({
         category: editSingleCat,
         description: editSingleDesc,
         price: editSinglePrice,
-        order: editSingleOrder !== undefined ? editSingleOrder : (editingSingle.order ?? 0),
+        order: editSingleOrder !== undefined ? editSingleOrder : editingSingle.order ?? 0,
       };
 
       if (hasFile) {
@@ -1029,12 +1140,12 @@ function CategoryManager({
 
   // ─── UPDATED HELPERS: include "properties" for video support ─────────────
   const getMediaAccept = (cat: string) => {
-    const videoCats = ["videos", "aerials", "properties"];
+    const videoCats = ["videos", "aerials", "properties", "construction", "plans"];
     return videoCats.includes(cat) ? "video/*,image/*" : "image/*";
   };
 
   const getMediaLabel = (cat: string, plural: boolean) => {
-    const videoCats = ["videos", "aerials", "properties"];
+    const videoCats = ["videos", "aerials", "properties", "construction", "plans"];
     const type = videoCats.includes(cat) ? "Images/Videos" : "Images";
     return plural ? `${type} * (select multiple)` : `${type} *`;
   };
@@ -1042,7 +1153,7 @@ function CategoryManager({
   return (
     <div className="space-y-5">
       {/* Mode toggle */}
-      <div className="flex gap-2 p-1 bg-[#111] rounded-xl border border-white/[0.07] w-fit">
+      <div className="flex gap-2 p-1 bg-[#111] rounded-xl border border-white/[0.07] w-fit flex-wrap">
         {(["albums", "single"] as const).map((m) => (
           <button
             key={m}
@@ -1054,17 +1165,142 @@ function CategoryManager({
             {m === "albums" ? "📁 Album Manager" : "⚡ Quick Upload"}
           </button>
         ))}
+        {enableCarousel && (
+          <button
+            onClick={() => setMode("carousel")}
+            className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${
+              mode === "carousel" ? "bg-[#D4AF37] text-black" : "text-white/50 hover:text-white"
+            }`}
+          >
+            🎠 Carousel
+          </button>
+        )}
       </div>
 
-      {mode === "single" ? (
+      {mode === "carousel" && enableCarousel ? (
+        <div className="space-y-5">
+          {/* Upload Form */}
+          <form onSubmit={handleCarouselUpload} className={`${cardCls} space-y-4`}>
+            <SectionTitle>Add Carousel Image</SectionTitle>
+            <Field label="Title *">
+              <input
+                placeholder="e.g. Heritage Drop"
+                value={carouselTitle}
+                onChange={(e) => setCarouselTitle(e.target.value)}
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Description">
+              <RichTextEditor
+                value={carouselDesc}
+                onChange={setCarouselDesc}
+                placeholder="Describe the collection…"
+              />
+            </Field>
+            <Field label="Target Route (where 'See More' goes)">
+              <select
+                value={carouselRoute}
+                onChange={(e) => setCarouselRoute(e.target.value)}
+                className={inputCls}
+              >
+                {CAROUSEL_ROUTE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <UploadBox
+              label="Image *"
+              single
+              onChange={(f) => setCarouselFile(f[0] || null)}
+              previewFiles={carouselFile ? [carouselFile] : []}
+              accept="image/*"
+            />
+            <FormFooter msg={carouselMsg} loading={carouselLoading} label="Add Carousel Item" />
+          </form>
+
+          {/* List of carousel items */}
+          <div className={cardCls}>
+            <div className="flex items-center justify-between">
+              <SectionTitle>Carousel Items ({carouselItems.length})</SectionTitle>
+              <button onClick={fetchCarousel} className="text-xs text-white/30 hover:text-white/60 transition">
+                ↻ Refresh
+              </button>
+            </div>
+            {loadingCarousel ? (
+              <p className="text-white/30 text-sm py-4 text-center">Loading…</p>
+            ) : carouselItems.length === 0 ? (
+              <p className="text-white/25 text-sm italic py-4 text-center">No carousel items yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {carouselItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] px-3 py-2"
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-12 h-12 rounded-lg object-cover border border-white/10"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
+                      <p className="text-xs text-white/35 truncate">→ {item.extra_text || "No route"}</p>
+                    </div>
+                    <button
+                      onClick={() => deleteCarousel(item.id)}
+                      disabled={deletingCarouselId === item.id}
+                      className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center disabled:opacity-40"
+                    >
+                      {deletingCarouselId === item.id ? (
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          <path d="M8 4V2h8v2" />
+                          <line x1="10" y1="11" x2="10" y2="17" />
+                          <line x1="14" y1="11" x2="14" y2="17" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : mode === "single" ? (
         <div className="space-y-5">
           {/* Upload Form */}
           <form onSubmit={handleSingleUpload} className={`${cardCls} space-y-4`}>
             <SectionTitle>Quick Single Upload</SectionTitle>
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Category">
-                <select value={singleCat} onChange={(e) => setSingleCat(e.target.value)} className={inputCls}>
-                  {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                <select
+                  value={singleCat}
+                  onChange={(e) => setSingleCat(e.target.value)}
+                  className={inputCls}
+                >
+                  {categoryOptions.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.icon} {c.label}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="Price">
@@ -1072,10 +1308,19 @@ function CategoryManager({
               </Field>
             </div>
             <Field label="Title">
-              <input placeholder="Item name" value={singleTitle} onChange={(e) => setSingleTitle(e.target.value)} className={inputCls} />
+              <input
+                placeholder="Item name"
+                value={singleTitle}
+                onChange={(e) => setSingleTitle(e.target.value)}
+                className={inputCls}
+              />
             </Field>
             <Field label="Description">
-              <RichTextEditor value={singleDesc} onChange={setSingleDesc} placeholder="Describe the piece…" />
+              <RichTextEditor
+                value={singleDesc}
+                onChange={setSingleDesc}
+                placeholder="Describe the piece…"
+              />
             </Field>
 
             {/* ─── Showcase Target Route Dropdown ─── */}
@@ -1088,7 +1333,9 @@ function CategoryManager({
                 >
                   <option value="">Select a category…</option>
                   {SHOWCASE_ROUTE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
                 <p className="text-[9px] text-white/40 mt-1">
@@ -1110,7 +1357,7 @@ function CategoryManager({
           {/* Manage Singles with Category Filter */}
           <div className={cardCls}>
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <SectionTitle>Manage Singles ({singles.filter(s => s.category === selectedCategory).length})</SectionTitle>
+              <SectionTitle>Manage Singles ({singles.filter((s) => s.category === selectedCategory).length})</SectionTitle>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-white/40 uppercase tracking-wider">Filter:</span>
                 <select
@@ -1119,30 +1366,40 @@ function CategoryManager({
                   className="bg-[#0d0d0d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:border-[#D4AF37] outline-none"
                 >
                   {categoryOptions.map((c) => (
-                    <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
+                    <option key={c.value} value={c.value}>
+                      {c.icon} {c.label}
+                    </option>
                   ))}
                 </select>
-                <button onClick={fetchSingles} className="text-xs text-white/30 hover:text-white/60 transition">↻ Refresh</button>
+                <button onClick={fetchSingles} className="text-xs text-white/30 hover:text-white/60 transition">
+                  ↻ Refresh
+                </button>
               </div>
             </div>
             {loadingSingles ? (
               <p className="text-white/30 text-sm py-4 text-center">Loading…</p>
-            ) : singles.filter(s => s.category === selectedCategory).length === 0 ? (
+            ) : singles.filter((s) => s.category === selectedCategory).length === 0 ? (
               <p className="text-white/25 text-sm italic py-4 text-center">No items in this category.</p>
             ) : (
               <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                 {singles
-                  .filter(s => s.category === selectedCategory)
+                  .filter((s) => s.category === selectedCategory)
                   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
                   .map((item, index, arr) => (
                     <div
                       key={`${item.id}-${item.order}`}
                       className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] px-3 py-2"
                     >
-                      <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover border border-white/10" />
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-12 h-12 rounded-lg object-cover border border-white/10"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
-                        <p className="text-xs text-white/35 truncate">{item.category} {item.price && `· ₦${item.price}`}</p>
+                        <p className="text-xs text-white/35 truncate">
+                          {item.category} {item.price && `· ₦${item.price}`}
+                        </p>
                         {item.category === "showcase" && item.extra_text && (
                           <p className="text-[9px] text-[#D4AF37]/60 mt-0.5">→ {item.extra_text}</p>
                         )}
@@ -1154,7 +1411,19 @@ function CategoryManager({
                         className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center disabled:opacity-20"
                         title="Move up"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="18 15 12 9 6 15" />
+                        </svg>
                       </button>
                       <button
                         onClick={() => moveSingle(item.id, "down")}
@@ -1162,14 +1431,36 @@ function CategoryManager({
                         className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center disabled:opacity-20"
                         title="Move down"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
                       </button>
                       <button
                         onClick={() => openEditSingle(item)}
                         className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
                         title="Edit item"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
@@ -1180,10 +1471,27 @@ function CategoryManager({
                         className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center disabled:opacity-40"
                       >
                         {deletingSingleId === item.id ? (
-                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                          </svg>
                         ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                            <path d="M8 4V2h8v2" />
+                            <line x1="10" y1="11" x2="10" y2="17" />
+                            <line x1="14" y1="11" x2="14" y2="17" />
                           </svg>
                         )}
                       </button>
@@ -1200,15 +1508,32 @@ function CategoryManager({
             <form onSubmit={handleCreateAlbum} className={cardCls}>
               <SectionTitle>Create Album</SectionTitle>
               <Field label="Album Name *">
-                <input placeholder="e.g. Summer Collection 2025" value={newAlbumName} onChange={(e) => setNewAlbumName(e.target.value)} className={inputCls} />
+                <input
+                  placeholder="e.g. Summer Collection 2025"
+                  value={newAlbumName}
+                  onChange={(e) => setNewAlbumName(e.target.value)}
+                  className={inputCls}
+                />
               </Field>
               <Field label="Category">
-                <select value={newAlbumCategory} onChange={(e) => setNewAlbumCategory(e.target.value)} className={inputCls}>
-                  {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                <select
+                  value={newAlbumCategory}
+                  onChange={(e) => setNewAlbumCategory(e.target.value)}
+                  className={inputCls}
+                >
+                  {categoryOptions.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.icon} {c.label}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="Description">
-                <RichTextEditor value={newAlbumDesc} onChange={setNewAlbumDesc} placeholder="Album description…" />
+                <RichTextEditor
+                  value={newAlbumDesc}
+                  onChange={setNewAlbumDesc}
+                  placeholder="Album description…"
+                />
               </Field>
               <Field label="Default Price">
                 <PriceInput value={newAlbumPrice} onChange={setNewAlbumPrice} placeholder="e.g. 60,000" />
@@ -1242,17 +1567,21 @@ function CategoryManager({
             {/* Album list */}
             <div className={cardCls}>
               <div className="flex items-center justify-between">
-                <SectionTitle>Albums ({albums.filter(a => categoryOptions.some(c => c.value === a.category)).length})</SectionTitle>
-                <button onClick={fetchAlbums} className="text-xs text-white/30 hover:text-white/60 transition">↻ Refresh</button>
+                <SectionTitle>
+                  Albums ({albums.filter((a) => categoryOptions.some((c) => c.value === a.category)).length})
+                </SectionTitle>
+                <button onClick={fetchAlbums} className="text-xs text-white/30 hover:text-white/60 transition">
+                  ↻ Refresh
+                </button>
               </div>
               {loadingAlbums ? (
                 <p className="text-white/30 text-sm py-4 text-center">Loading…</p>
-              ) : albums.filter(a => categoryOptions.some(c => c.value === a.category)).length === 0 ? (
+              ) : albums.filter((a) => categoryOptions.some((c) => c.value === a.category)).length === 0 ? (
                 <p className="text-white/25 text-sm italic py-4 text-center">No albums yet</p>
               ) : (
                 <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
                   {albums
-                    .filter(a => categoryOptions.some(c => c.value === a.category))
+                    .filter((a) => categoryOptions.some((c) => c.value === a.category))
                     .map((album) => (
                       <div
                         key={album.id}
@@ -1271,7 +1600,9 @@ function CategoryManager({
                               <p className="text-white text-sm font-medium truncate">{album.name}</p>
                               <p className="text-white/35 text-xs capitalize mt-0.5">{album.category}</p>
                             </div>
-                            <span className="text-[#D4AF37]/60 text-xs shrink-0 tabular-nums">{album.images?.length || 0} imgs</span>
+                            <span className="text-[#D4AF37]/60 text-xs shrink-0 tabular-nums">
+                              {album.images?.length || 0} imgs
+                            </span>
                           </div>
                         </button>
                         <button
@@ -1279,7 +1610,17 @@ function CategoryManager({
                           className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
                           title="Edit album"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                           </svg>
@@ -1289,8 +1630,22 @@ function CategoryManager({
                           className="shrink-0 w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition flex items-center justify-center"
                           title="Delete album"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 4V2h8v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                            <path d="M8 4V2h8v2" />
+                            <line x1="10" y1="11" x2="10" y2="17" />
+                            <line x1="14" y1="11" x2="14" y2="17" />
                           </svg>
                         </button>
                       </div>
@@ -1308,9 +1663,16 @@ function CategoryManager({
                   <div>
                     <p className={labelCls}>Editing Album</p>
                     <h3 className="text-xl font-serif text-[#D4AF37]">{selectedAlbum.name}</h3>
-                    <p className="text-white/35 text-xs capitalize mt-0.5">{selectedAlbum.category} · {selectedAlbum.images?.length || 0} files</p>
+                    <p className="text-white/35 text-xs capitalize mt-0.5">
+                      {selectedAlbum.category} · {selectedAlbum.images?.length || 0} files
+                    </p>
                   </div>
-                  <button onClick={() => setSelectedAlbum(null)} className="text-white/25 hover:text-white/70 transition text-lg leading-none">✕</button>
+                  <button
+                    onClick={() => setSelectedAlbum(null)}
+                    className="text-white/25 hover:text-white/70 transition text-lg leading-none"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
 
@@ -1321,14 +1683,23 @@ function CategoryManager({
                   <>
                     <div className="grid gap-3 md:grid-cols-2">
                       <Field label="Image Title">
-                        <input placeholder="e.g. Royal Blue" value={imgTitle} onChange={(e) => setImgTitle(e.target.value)} className={inputCls} />
+                        <input
+                          placeholder="e.g. Royal Blue"
+                          value={imgTitle}
+                          onChange={(e) => setImgTitle(e.target.value)}
+                          className={inputCls}
+                        />
                       </Field>
                       <Field label="Price (overrides album default)">
                         <PriceInput value={imgPrice} onChange={setImgPrice} placeholder="e.g. 75,000" />
                       </Field>
                     </div>
                     <Field label="Description">
-                      <RichTextEditor value={imgDesc} onChange={setImgDesc} placeholder="Describe this specific piece…" />
+                      <RichTextEditor
+                        value={imgDesc}
+                        onChange={setImgDesc}
+                        placeholder="Describe this specific piece…"
+                      />
                     </Field>
                     <Field label="Extra Text (optional)">
                       <textarea
@@ -1358,14 +1729,15 @@ function CategoryManager({
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {selectedAlbum.images.map((img, i) => (
                       <div key={i} className="group relative rounded-xl overflow-hidden border border-white/10">
-                        {img.url && (() => {
-                          const isVideo = /\.(mp4|mov|webm|avi|mkv)$/i.test(img.url);
-                          return isVideo ? (
-                            <video src={img.url} className="w-full aspect-square object-cover" muted />
-                          ) : (
-                            <img src={img.url} alt={img.title} className="w-full aspect-square object-cover" />
-                          );
-                        })()}
+                        {img.url &&
+                          (() => {
+                            const isVideo = /\.(mp4|mov|webm|avi|mkv)$/i.test(img.url);
+                            return isVideo ? (
+                              <video src={img.url} className="w-full aspect-square object-cover" muted />
+                            ) : (
+                              <img src={img.url} alt={img.title} className="w-full aspect-square object-cover" />
+                            );
+                          })()}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition p-3 flex flex-col justify-end">
                           <p className="text-white text-xs font-medium">{img.title}</p>
                           {img.price && <p className="text-[#D4AF37] text-xs">₦{img.price}</p>}
@@ -1378,7 +1750,19 @@ function CategoryManager({
                             className="w-6 h-6 rounded-full bg-[#D4AF37]/60 text-black hover:bg-[#D4AF37] transition flex items-center justify-center disabled:opacity-20 disabled:cursor-not-allowed"
                             title="Move up"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="18 15 12 9 6 15" />
+                            </svg>
                           </button>
                           <button
                             onClick={() => img.id && moveImage(selectedAlbum.id, img.id, "down")}
@@ -1386,14 +1770,36 @@ function CategoryManager({
                             className="w-6 h-6 rounded-full bg-[#D4AF37]/60 text-black hover:bg-[#D4AF37] transition flex items-center justify-center disabled:opacity-20 disabled:cursor-not-allowed"
                             title="Move down"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="6 9 12 15 18 9" />
+                            </svg>
                           </button>
                           <button
                             onClick={() => openEditImage(selectedAlbum.id, img)}
                             className="w-6 h-6 rounded-full bg-[#D4AF37]/80 text-black hover:bg-[#D4AF37] transition flex items-center justify-center"
                             title="Edit file"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
@@ -1403,8 +1809,19 @@ function CategoryManager({
                             className="w-6 h-6 rounded-full bg-red-500/80 text-white hover:bg-red-500 transition flex items-center justify-center"
                             title="Delete file"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <line x1="18" y1="6" x2="6" y2="18" />
+                              <line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
                           </button>
                         </div>
@@ -1417,7 +1834,11 @@ function CategoryManager({
           ) : (
             <div className="rounded-2xl border border-dashed border-white/[0.07] flex flex-col items-center justify-center min-h-[300px] gap-3 text-center px-6">
               <span className="text-3xl opacity-30">📁</span>
-              <p className="text-white/25 text-sm">Select an album on the left to edit it,<br />or create a new one</p>
+              <p className="text-white/25 text-sm">
+                Select an album on the left to edit it,
+                <br />
+                or create a new one
+              </p>
             </div>
           )}
         </div>
@@ -1430,15 +1851,32 @@ function CategoryManager({
             <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit Album</h3>
             <form onSubmit={handleEditAlbum} className="space-y-4">
               <Field label="Album Name *">
-                <input value={editAlbumName} onChange={(e) => setEditAlbumName(e.target.value)} className={inputCls} required />
+                <input
+                  value={editAlbumName}
+                  onChange={(e) => setEditAlbumName(e.target.value)}
+                  className={inputCls}
+                  required
+                />
               </Field>
               <Field label="Category">
-                <select value={editAlbumCategory} onChange={(e) => setEditAlbumCategory(e.target.value)} className={inputCls}>
-                  {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                <select
+                  value={editAlbumCategory}
+                  onChange={(e) => setEditAlbumCategory(e.target.value)}
+                  className={inputCls}
+                >
+                  {categoryOptions.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.icon} {c.label}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="Description">
-                <RichTextEditor value={editAlbumDesc} onChange={setEditAlbumDesc} placeholder="Album description…" />
+                <RichTextEditor
+                  value={editAlbumDesc}
+                  onChange={setEditAlbumDesc}
+                  placeholder="Album description…"
+                />
               </Field>
               <Field label="Price">
                 <PriceInput value={editAlbumPrice} onChange={setEditAlbumPrice} placeholder="e.g. 60,000" />
@@ -1451,7 +1889,13 @@ function CategoryManager({
                 accept="image/*,video/*"
               />
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setEditingAlbum(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => setEditingAlbum(null)}
+                  className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg"
+                >
+                  Cancel
+                </button>
                 <button type="submit" disabled={editAlbumLoading} className={btnGold}>
                   {editAlbumLoading ? "Saving…" : "Save Changes"}
                 </button>
@@ -1469,16 +1913,29 @@ function CategoryManager({
             <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit File</h3>
             <form onSubmit={handleEditImage} className="space-y-4">
               <Field label="Title">
-                <input value={editImageTitle} onChange={(e) => setEditImageTitle(e.target.value)} className={inputCls} />
+                <input
+                  value={editImageTitle}
+                  onChange={(e) => setEditImageTitle(e.target.value)}
+                  className={inputCls}
+                />
               </Field>
               <Field label="Price">
                 <PriceInput value={editImagePrice} onChange={setEditImagePrice} placeholder="e.g. 75,000" />
               </Field>
               <Field label="Description">
-                <RichTextEditor value={editImageDesc} onChange={setEditImageDesc} placeholder="Description…" />
+                <RichTextEditor
+                  value={editImageDesc}
+                  onChange={setEditImageDesc}
+                  placeholder="Description…"
+                />
               </Field>
               <Field label="Extra Text">
-                <textarea value={editImageExtra} onChange={(e) => setEditImageExtra(e.target.value)} className={textareaCls} rows={2} />
+                <textarea
+                  value={editImageExtra}
+                  onChange={(e) => setEditImageExtra(e.target.value)}
+                  className={textareaCls}
+                  rows={2}
+                />
               </Field>
               <Field label="Order (number) – lower = appears first">
                 <input
@@ -1497,7 +1954,13 @@ function CategoryManager({
                 accept={getMediaAccept(selectedAlbum?.category || "image")}
               />
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setEditingImage(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => setEditingImage(null)}
+                  className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg"
+                >
+                  Cancel
+                </button>
                 <button type="submit" disabled={editImageLoading} className={btnGold}>
                   {editImageLoading ? "Saving…" : "Save Changes"}
                 </button>
@@ -1515,18 +1978,35 @@ function CategoryManager({
             <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit Single Item</h3>
             <form onSubmit={handleEditSingle} className="space-y-4">
               <Field label="Title *">
-                <input value={editSingleTitle} onChange={(e) => setEditSingleTitle(e.target.value)} className={inputCls} required />
+                <input
+                  value={editSingleTitle}
+                  onChange={(e) => setEditSingleTitle(e.target.value)}
+                  className={inputCls}
+                  required
+                />
               </Field>
               <Field label="Category">
-                <select value={editSingleCat} onChange={(e) => setEditSingleCat(e.target.value)} className={inputCls}>
-                  {categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                <select
+                  value={editSingleCat}
+                  onChange={(e) => setEditSingleCat(e.target.value)}
+                  className={inputCls}
+                >
+                  {categoryOptions.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.icon} {c.label}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="Price">
                 <PriceInput value={editSinglePrice} onChange={setEditSinglePrice} placeholder="e.g. 85,000" />
               </Field>
               <Field label="Description">
-                <RichTextEditor value={editSingleDesc} onChange={setEditSingleDesc} placeholder="Describe this item…" />
+                <RichTextEditor
+                  value={editSingleDesc}
+                  onChange={setEditSingleDesc}
+                  placeholder="Describe this item…"
+                />
               </Field>
               <Field label="Order (number) – lower = appears first">
                 <input
@@ -1545,7 +2025,13 @@ function CategoryManager({
                 accept={getMediaAccept(editSingleCat)}
               />
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setEditingSingle(null)} className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg">Cancel</button>
+                <button
+                  type="button"
+                  onClick={() => setEditingSingle(null)}
+                  className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg"
+                >
+                  Cancel
+                </button>
                 <button type="submit" disabled={editSingleLoading} className={btnGold}>
                   {editSingleLoading ? "Saving…" : "Save Changes"}
                 </button>
@@ -1564,7 +2050,14 @@ function CategoryManager({
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FashionTab() {
-  return <CategoryManager type="fashion" categoryOptions={FASHION_CATEGORIES} albumEndpoint={`${API}/api/fashion-albums`} />;
+  return (
+    <CategoryManager
+      type="fashion"
+      categoryOptions={FASHION_CATEGORIES}
+      albumEndpoint={`${API}/api/fashion-albums`}
+      enableCarousel={true}
+    />
+  );
 }
 
 function PhotoTab() {
@@ -1636,18 +2129,35 @@ export default function Admin() {
   if (!isAuthed) {
     return (
       <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
-        <div className="pointer-events-none fixed inset-0 opacity-[0.03]"
-          style={{ backgroundImage: "linear-gradient(#D4AF37 1px, transparent 1px), linear-gradient(90deg, #D4AF37 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+        <div
+          className="pointer-events-none fixed inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#D4AF37 1px, transparent 1px), linear-gradient(90deg, #D4AF37 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
         <form onSubmit={handleLogin} className="relative w-full max-w-sm">
           <div className="rounded-2xl border border-white/10 bg-[#111]/90 p-8 backdrop-blur-xl shadow-2xl">
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 mb-4 text-2xl">🔑</div>
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 mb-4 text-2xl">
+                🔑
+              </div>
               <p className="text-[10px] uppercase tracking-[0.4em] text-[#D4AF37]/50 mb-1">Private Access</p>
               <h1 className="text-2xl font-serif text-white">Admin Panel</h1>
             </div>
             <div className="space-y-3">
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" autoFocus className={inputCls} />
-              <button type="submit" className={`${btnGold} w-full py-3 text-base`}>Unlock Dashboard</button>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                autoFocus
+                className={inputCls}
+              />
+              <button type="submit" className={`${btnGold} w-full py-3 text-base`}>
+                Unlock Dashboard
+              </button>
             </div>
             {loginError && <p className="mt-4 text-center text-sm text-red-400">{loginError}</p>}
           </div>
@@ -1660,20 +2170,37 @@ export default function Admin() {
     <div className="min-h-screen bg-[#080808] text-white">
       <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#0a0a0a]/90 backdrop-blur-xl px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/25 flex items-center justify-center text-sm">✦</div>
+          <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/25 flex items-center justify-center text-sm">
+            ✦
+          </div>
           <div>
             <p className="text-[9px] uppercase tracking-[0.35em] text-[#D4AF37]/50 leading-none mb-0.5">Admin</p>
             <h1 className="text-sm font-semibold text-white leading-none">TOPXCM Control Panel</h1>
           </div>
         </div>
-        <button onClick={() => { localStorage.removeItem(AUTH_KEY); setIsAuthed(false); }} className="text-xs text-white/30 hover:text-white/60 transition border border-white/10 rounded-lg px-3 py-1.5">Sign out</button>
+        <button
+          onClick={() => {
+            localStorage.removeItem(AUTH_KEY);
+            setIsAuthed(false);
+          }}
+          className="text-xs text-white/30 hover:text-white/60 transition border border-white/10 rounded-lg px-3 py-1.5"
+        >
+          Sign out
+        </button>
       </header>
 
       <div className="border-b border-white/[0.07] px-5 bg-[#0a0a0a]">
         <div className="flex max-w-5xl mx-auto">
           {TAB_CONFIG.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`px-5 py-3.5 text-sm font-medium transition-all border-b-2 ${tab === t.id ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-white/35 hover:text-white/65"}`}>
-              <span className="mr-1.5">{t.icon}</span>{t.label}
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-5 py-3.5 text-sm font-medium transition-all border-b-2 ${
+                tab === t.id ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-white/35 hover:text-white/65"
+              }`}
+            >
+              <span className="mr-1.5">{t.icon}</span>
+              {t.label}
             </button>
           ))}
         </div>

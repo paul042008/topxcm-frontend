@@ -29,6 +29,9 @@ const WeddingAlbum = lazy(() => import("./pages/WeddingAlbum"));
 const Admin = lazy(() => import("./pages/Admin"));
 const PhotoCanvas = lazy(() => import("./pages/PhotoCanvas"));
 
+const RealEstateConstruction = lazy(() => import("./pages/RealEstateConstruction"));
+const RealEstatePlans = lazy(() => import("./pages/RealEstatePlans"));
+
 const queryClient = new QueryClient();
 
 // ─── PROTECTION WRAPPER ──────────────────────────────────────────────
@@ -160,6 +163,8 @@ const App = () => (
               <Route path="/real-estate" element={<RealEstate />} />
               <Route path="/real-estate/listings" element={<RealEstateListings />} />
               <Route path="/real-estate/contact" element={<RealEstateContact />} />
+              <Route path="/real-estate/construction" element={<RealEstateConstruction />} />
+              <Route path="/real-estate/plans" element={<RealEstatePlans />} />
 
               {/* Other Routes */}
               <Route path="/wedding/:id" element={<WeddingAlbum />} />

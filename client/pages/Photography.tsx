@@ -25,10 +25,6 @@ const categoryRouteMap: Record<string, string> = {
 };
 
 // ─── GLOBAL PROTECTION HOOK ─────────────────────────────────────────────────
-// Blocks the common browser-level ways to save/copy images or view source.
-// NOTE: this cannot and does not stop OS-level screenshots (Snipping Tool,
-// ⌘+Shift+4, phone screenshot buttons, or photographing the screen) — no
-// website can see or intercept those, since they never touch the browser.
 
 function useAntiCaptureProtection() {
   const [isObscured, setIsObscured] = useState(false);
@@ -38,12 +34,10 @@ function useAntiCaptureProtection() {
       const key = e.key;
       const ctrlOrCmd = e.ctrlKey || e.metaKey;
 
-      // Block Save (Ctrl/Cmd+S), Print (Ctrl/Cmd+P), View Source (Ctrl/Cmd+U)
       if (ctrlOrCmd && ["s", "S", "p", "P", "u", "U"].includes(key)) {
         e.preventDefault();
         return false;
       }
-      // Block DevTools shortcuts
       if (key === "F12") {
         e.preventDefault();
         return false;
@@ -54,17 +48,12 @@ function useAntiCaptureProtection() {
       }
     };
 
-    // Best-effort: clear clipboard shortly after a PrintScreen keypress.
-    // Only works in browsers that grant clipboard-write without a prompt,
-    // and does nothing on mobile (screenshots don't fire this event there).
     const handlePrintScreen = (e: KeyboardEvent) => {
       if (e.key === "PrintScreen") {
         navigator.clipboard?.writeText("").catch(() => {});
       }
     };
 
-    // Briefly hide content when the tab/window loses focus — catches some
-    // (not all) screen-recording tools that trigger a blur/visibility event.
     const handleBlur = () => setIsObscured(true);
     const handleFocus = () => setIsObscured(false);
     const handleVisibility = () => setIsObscured(document.hidden);
@@ -92,9 +81,6 @@ function useAntiCaptureProtection() {
 }
 
 // ─── PROTECTED IMAGE COMPONENT ─────────────────────────────────────────────
-// Renders as a CSS background-image instead of an <img> tag — there's no
-// image element for "Save Image As", browser image context menus, or
-// drag-to-desktop to target. Combined with pointer/selection blocking below.
 
 function ProtectedImage({
   src,
@@ -124,8 +110,6 @@ function ProtectedImage({
         touchAction: "manipulation",
       }}
     >
-      {/* Transparent layer that intercepts long-press / right-click / drag
-          so the underlying background-image can't be targeted directly */}
       <div
         className="absolute inset-0"
         onContextMenu={(e) => e.preventDefault()}
@@ -133,7 +117,6 @@ function ProtectedImage({
         style={{ WebkitTouchCallout: "none" }}
       />
 
-      {/* Watermark that appears only on long-press attempts (mobile) */}
       <div
         className="absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300 flex items-center justify-center"
         style={{
@@ -278,6 +261,17 @@ export default function Photography() {
   ];
 
   const sloganText = "...your official photographer";
+
+  // ─── DETERMINE IF CURRENT SLIDE IS SLIDE6 ──────────────────────────────
+  const isSlide6 = heroSlides[currentSlide] === "/images/slide6.jpg";
+
+// No zoom – all slides just fade in/out
+const initialScale = 1;
+const animateScale = 1;
+const exitScale = 1;
+
+// All slides use "cover" (fill the container without cropping)
+const bgSize = "cover";
 
   useEffect(() => {
     fetch(`${API}/api/items`)
@@ -447,12 +441,16 @@ export default function Photography() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSlide}
-                initial={{ opacity: 0, scale: 1.25 }}
-                animate={{ opacity: 0.6, scale: 1.15 }}
-                exit={{ opacity: 0, scale: 1.1 }}
+                initial={{ opacity: 0, scale: initialScale }}
+                animate={{ opacity: 0.6, scale: animateScale }}
+                exit={{ opacity: 0, scale: exitScale }}
                 transition={{ duration: 0.8, ease: "easeInOut" }}
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
+                className="absolute inset-0 bg-center"
+                style={{
+                  backgroundImage: `url(${heroSlides[currentSlide]})`,
+                  backgroundSize: bgSize,
+                  backgroundPosition: "center",
+                }}
               />
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-[#D4AF37]/5 to-black/95" />
@@ -654,7 +652,7 @@ export default function Photography() {
                   Every Frame <br />
                   <span style={{ color: "#D4AF37" }}>is Art</span>
                 </h2>
-                <p className="leading-relaxed text-lg font-light text-white/60">
+                <p className="leading-relaxed text-lg font-light text-white/60 mt-6">
                   Based in the heart of Lagos, TOP is a creative photography brand dedicated to crafting
                   timeless visual stories through cinematic weddings, expressive portraits, and striking
                   aerial imagery—transforming fleeting moments into elegant, timeless memories.
@@ -729,7 +727,7 @@ export default function Photography() {
                     <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>Connect With Us</p>
                     <div className="flex items-center gap-3 flex-wrap">
                       <a
-                        href="https://www.facebook.com/share/1KToiX8cS4/"
+                        href="https://www.facebook.com/share/19fqFjS3Bw/"
                         target="_blank"
                         rel="noreferrer"
                         className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"

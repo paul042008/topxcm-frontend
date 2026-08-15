@@ -627,16 +627,11 @@ function GalleryView({
   );
 }
 
-// ─── ALBUM CARD (updated: clickable image, Order Now, no badge) ──────────
+// ─── ALBUM CARD (UPDATED: "View Gallery" button, description spacing) ─────
 
 function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const displayImage = album.cover || (album.images.length > 0 ? album.images[0].url : null);
-
-  const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering from the *${album.name}* collection${album.price ? ` (starting at ₦${album.price})` : ""}. Please let me know the details.`;
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-  };
 
   return (
     <motion.div
@@ -674,13 +669,12 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
 
         {album.description && (
           <>
-            <p
-              className={`text-white/50 text-xs leading-relaxed ${
+            <div
+              className={`text-white/50 text-xs leading-relaxed album-description ${
                 !expanded ? "line-clamp-3" : ""
               }`}
-            >
-              {album.description}
-            </p>
+              dangerouslySetInnerHTML={{ __html: album.description }}
+            />
             <button
               onClick={() => setExpanded(!expanded)}
               className="text-[#00AEEF] text-[10px] font-bold uppercase tracking-wider hover:underline self-start"
@@ -695,10 +689,10 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
         )}
 
         <button
-          onClick={handleOrder}
-          className="mt-auto w-full bg-[#00AEEF] text-black rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition flex items-center justify-center gap-2"
+          onClick={onViewGallery}
+          className="mt-auto w-full border border-[#00AEEF]/40 text-[#00AEEF] rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#00AEEF]/10 active:scale-[0.98] transition flex items-center justify-center gap-2"
         >
-          <span>Order Now</span>
+          <span>View Gallery</span>
           <span className="text-base">→</span>
         </button>
       </div>
@@ -706,7 +700,7 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
   );
 }
 
-// ─── SINGLE CARD (updated: clickable image, Order Now, no badge) ──────────
+// ─── SINGLE CARD (unchanged – still "Order Now") ──────────────────────────
 
 function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () => void }) {
   const image = album.images[0];
@@ -748,7 +742,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
         {album.description && (
           <>
             <div
-              className={`text-white/50 text-xs leading-relaxed ${
+              className={`text-white/50 text-xs leading-relaxed album-description ${
                 !expanded ? "line-clamp-3" : ""
               }`}
               dangerouslySetInnerHTML={{ __html: album.description }}
@@ -944,6 +938,16 @@ export default function FashionAgbada() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* ─── GLOBAL STYLES FOR DESCRIPTION PARAGRAPH SPACING ─────────── */}
+      <style>{`
+        .album-description p {
+          margin-bottom: 0.5rem;
+        }
+        .album-description p:last-child {
+          margin-bottom: 0;
+        }
+      `}</style>
     </div>
   );
 }

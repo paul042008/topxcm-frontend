@@ -17,12 +17,21 @@ interface Album {
   images: any[];
 }
 
+interface CarouselItem {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  extra_text?: string; // stores the target route
+}
+
 type CollectionCard = {
   id: string;
   title: string;
   description: string;
   image: string;
   count: string;
+  targetRoute?: string;
 };
 
 // ─── STATIC DATA ────────────────────────────────────────────────────────────
@@ -43,6 +52,7 @@ const fallbackCollections: CollectionCard[] = [
     description: "Tradition. Reimagined.",
     image: "/images/hero1.png",
     count: "12 Items",
+    targetRoute: "/fashion/suits",
   },
   {
     id: "heritage-drop",
@@ -50,6 +60,7 @@ const fallbackCollections: CollectionCard[] = [
     description: "Clean. Classy. Timeless.",
     image: "/images/hero2.png",
     count: "18 Items",
+    targetRoute: "/fashion/suits",
   },
   {
     id: "heritage-drop",
@@ -57,6 +68,7 @@ const fallbackCollections: CollectionCard[] = [
     description: "Clean. Classy. Timeless.",
     image: "/images/hero5.png",
     count: "18 Items",
+    targetRoute: "/fashion/suits",
   },
   {
     id: "minimal-luxe",
@@ -64,6 +76,7 @@ const fallbackCollections: CollectionCard[] = [
     description: "Bold. Urban. Fearless.",
     image: "/images/hero3.jpeg",
     count: "10 Items",
+    targetRoute: "/fashion/agbadas",
   },
   {
     id: "minimal-luxe",
@@ -71,6 +84,7 @@ const fallbackCollections: CollectionCard[] = [
     description: "Iconic pieces, defining style.",
     image: "/images/hero4.jpeg",
     count: "14 Items",
+    targetRoute: "/fashion/agbadas",
   },
   {
     id: "xcm-signature",
@@ -78,6 +92,7 @@ const fallbackCollections: CollectionCard[] = [
     description: "Iconic pieces, defining style.",
     image: "/images/row1.jpg",
     count: "14 Items",
+    targetRoute: "/fashion/casuals",
   },
   {
     id: "street-royalty",
@@ -85,22 +100,57 @@ const fallbackCollections: CollectionCard[] = [
     description: "Iconic pieces, defining style.",
     image: "/images/row3.jpg",
     count: "14 Items",
+    targetRoute: "/fashion/natives",
   },
 ];
-
-// ─── ROUTE MAPPING ──────────────────────────────────────────────────────────
-
-const collectionRouteMap: Record<string, string> = {
-  "heritage-drop": "/fashion/suits",
-  "minimal-luxe": "/fashion/agbada",
-  "street-royalty": "/fashion/natives",
-  "xcm-signature": "/fashion/casuals",
-};
 
 const DEFAULT_ROUTE = "/fashion/latest";
 
 function getRouteForCard(card: CollectionCard): string {
-  return collectionRouteMap[card.id] || DEFAULT_ROUTE;
+  return card.targetRoute || DEFAULT_ROUTE;
+}
+
+// ─── WAKE‑UP HELPERS (copied from admin) ────────────────────────────────
+
+async function pingServer(): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < 90_000) {
+    try {
+      const res = await fetch(`${API}/api/items`, {
+        signal: AbortSignal.timeout(10_000),
+        cache: "no-store",
+      });
+      if (res.ok || res.status < 500) return true;
+    } catch {
+      // still sleeping
+    }
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  return false;
+}
+
+async function fetchWithWakeup(url: string, options: RequestInit): Promise<Response> {
+  // First check if server is alive
+  let alive = false;
+  try {
+    const probe = await fetch(`${API}/api/items`, {
+      signal: AbortSignal.timeout(5_000),
+      cache: "no-store",
+    });
+    alive = probe.ok || probe.status < 500;
+  } catch {
+    alive = false;
+  }
+
+  if (!alive) {
+    const woke = await pingServer();
+    if (!woke) {
+      throw new Error("Server did not wake up in time");
+    }
+    await new Promise((r) => setTimeout(r, 300));
+  }
+
+  return fetch(url, { ...options, signal: AbortSignal.timeout(300_000) });
 }
 
 // ─── FEATURE TILES ──────────────────────────────────────────────────────────
@@ -150,6 +200,34 @@ const featureTiles = [
   },
 ];
 
+// ─── FEATURE BLOCK ──────────────────────────────────────────────────────────
+
+function FeatureBlock({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-start gap-2 px-1 py-2 text-center md:gap-3 md:px-3 md:py-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-[#00AEEF] shadow-[0_0_0_1px_rgba(0,174,239,0.18)] md:h-12 md:w-12">
+        {icon}
+      </div>
+      <div className="space-y-0.5 md:space-y-1">
+        <h3 className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black leading-tight md:text-sm md:tracking-[0.14em]">
+          {title}
+        </h3>
+        <p className="mx-auto hidden max-w-[14rem] text-[9px] leading-relaxed text-black/60 md:block md:text-xs">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── REUSABLE COMPONENTS ────────────────────────────────────────────────────
 
 function SectionLabel({
@@ -188,7 +266,7 @@ function ImageOnlyCard({
   onClick,
 }: {
   item: CollectionCard;
-  onClick: (card: CollectionCard) => void;
+  onClick: (item: CollectionCard, e: React.MouseEvent) => void;
 }) {
   return (
     <motion.button
@@ -196,7 +274,11 @@ function ImageOnlyCard({
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 250, damping: 22 }}
-      onClick={() => onClick(item)}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick(item, e);
+      }}
       className="group relative w-full overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
     >
       <div className="relative aspect-[4/5]">
@@ -210,7 +292,7 @@ function ImageOnlyCard({
   );
 }
 
-// ─── SLIDING RAIL (direction-aware touch handling) ────────────────────────
+// ─── SLIDING RAIL ──────────────────────────────────────────────────────────
 
 function SlidingRail({
   items,
@@ -218,7 +300,7 @@ function SlidingRail({
   reverse = false,
 }: {
   items: CollectionCard[];
-  onClick: (card: CollectionCard) => void;
+  onClick: (item: CollectionCard, e: React.MouseEvent) => void;
   reverse?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -369,9 +451,9 @@ function SlidingRail({
         className="flex gap-4 py-2 px-1 no-scrollbar select-none"
         style={{
           transform: `translateX(${translateX}px)`,
-          transition: 'none',
-          width: 'max-content',
-          cursor: isDragging ? 'grabbing' : 'grab',
+          transition: "none",
+          width: "max-content",
+          cursor: isDragging ? "grabbing" : "grab",
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -396,15 +478,18 @@ export default function FashionPage() {
   const [selectedItem, setSelectedItem] = useState<CollectionCard | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [latestAlbums, setLatestAlbums] = useState<Album[]>([]);
+  const [carouselItems, setCarouselItems] = useState<CollectionCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingCarousel, setLoadingCarousel] = useState(true);
 
   const collectionsRef = useRef<HTMLDivElement>(null);
   const WA = "https://wa.me/2348061587993";
 
+  // Fetch latest albums with wake-up
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    fetch(`${API}/api/fashion-albums`)
+    fetchWithWakeup(`${API}/api/fashion-albums`, { method: "GET" })
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();
@@ -428,6 +513,39 @@ export default function FashionPage() {
     };
   }, []);
 
+  // Fetch fashion carousel items (category = "fashion-carousel") with wake-up
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingCarousel(true);
+    fetchWithWakeup(`${API}/api/items?category=fashion-carousel`, { method: "GET" })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch carousel");
+        return res.json();
+      })
+      .then((data: CarouselItem[]) => {
+        if (!isMounted) return;
+        const cards: CollectionCard[] = data.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          image: item.image,
+          count: "1 Item",
+          targetRoute: item.extra_text || DEFAULT_ROUTE,
+        }));
+        setCarouselItems(cards.length > 0 ? cards : fallbackCollections);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setCarouselItems(fallbackCollections);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingCarousel(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     const timer = window.setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
@@ -443,6 +561,7 @@ export default function FashionPage() {
       description: album.description || "Exclusive pieces",
       image: album.cover || fallbackCollections[index % fallbackCollections.length].image,
       count: `${album.images?.length || 0} Items`,
+      targetRoute: "/fashion/latest",
     }));
   }, [latestAlbums]);
 
@@ -450,10 +569,35 @@ export default function FashionPage() {
     return heroCollections.slice(0, 1);
   }, [heroCollections]);
 
-  const railItems = useMemo<CollectionCard[]>(() => fallbackCollections, []);
+  const railItems = useMemo<CollectionCard[]>(() => {
+    return carouselItems.length > 0 ? carouselItems : fallbackCollections;
+  }, [carouselItems]);
+
   const heroCopy = "Premium, confident and classic outfit tailored for you.";
 
-  const handleImageClick = (card: CollectionCard) => {
+  // ─── SCROLL POSITION FIX FOR LIGHTBOX ──────────────────────────────────
+  const scrollPositionRef = useRef(0);
+
+  useEffect(() => {
+    if (selectedItem) {
+      const y = window.scrollY;
+      scrollPositionRef.current = y;
+      document.body.style.overflow = "hidden";
+      window.scrollTo(0, y);
+    } else {
+      document.body.style.overflow = "";
+      if (scrollPositionRef.current !== window.scrollY) {
+        window.scrollTo(0, scrollPositionRef.current);
+      }
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedItem]);
+
+  const handleImageClick = (card: CollectionCard, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setSelectedItem(card);
   };
 
@@ -472,11 +616,7 @@ export default function FashionPage() {
   };
 
   return (
-    <div
-      className={`relative w-full overflow-x-hidden bg-black text-white ${
-        selectedItem ? "h-screen overflow-hidden" : ""
-      }`}
-    >
+    <div className="relative w-full overflow-x-hidden bg-black text-white">
       <FashionMenu
         isFashionLanding={true}
         initialOpen={isMenuOpen}
@@ -550,7 +690,7 @@ export default function FashionPage() {
               className="max-h-8 w-auto md:max-h-10 object-contain -ml-1 -mt-3"
             />
             <span className="text-[9px] uppercase tracking-[0.55em] text-[#00AEEF]/85 md:text-[11px]">
-              Wardrodes
+              Wardrobes
             </span>
           </div>
           <button
@@ -574,15 +714,13 @@ export default function FashionPage() {
 
           <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-5 pb-10 pt-8 md:px-10">
             <div className="grid flex-1 items-stretch gap-4 grid-cols-[1.08fr_0.92fr] sm:gap-6 md:gap-8 overflow-visible">
-            <div className="relative z-10 flex flex-col justify-start pt-8 max-w-[18rem] sm:max-w-xl md:max-w-[540px]">
+              <div className="relative z-10 flex flex-col justify-start pt-8 max-w-[18rem] sm:max-w-xl md:max-w-[540px]">
                 <motion.p
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 1.1, ease: "easeOut" }}
                   className="text-[10px] font-bold uppercase tracking-[0.48em] text-white/85 md:text-sm"
-                >
-                 
-                </motion.p>
+                />
                 <motion.h1
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -651,16 +789,15 @@ export default function FashionPage() {
               <div className="rounded-[30px] border border-white/12 bg-black/60 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center px-1">
                   <div className="flex items-center gap-3">
-<svg className="text-[#00AEEF] w-2 h-2" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-  <circle cx="12" cy="12" r="10" />
-</svg>
+                    <svg className="text-[#00AEEF] w-2 h-2" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="12" r="10" />
+                    </svg>
                     <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#00AEEF]">
                       Latest Collections
                     </p>
                   </div>
                 </div>
 
-                {/* ─── CARD WITH VIEW MORE BUTTON ───────── */}
                 <div className="flex justify-center pb-1 mt-6">
                   {loading ? (
                     <div className="flex items-center justify-center w-full py-8">
@@ -673,7 +810,11 @@ export default function FashionPage() {
                           key={latestPanelItems[0].id}
                           type="button"
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => handleImageClick(latestPanelItems[0])}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleImageClick(latestPanelItems[0], e);
+                          }}
                           className="w-full overflow-hidden rounded-[28px] border border-white/8 bg-white/5 text-left shadow-lg"
                         >
                           <div className="relative h-[250px] sm:h-[240px] md:h-[280px]">
@@ -688,7 +829,6 @@ export default function FashionPage() {
                                 <h3 className="text-2xl font-semibold text-white sm:text-3xl">
                                   {latestPanelItems[0].title}
                                 </h3>
-                                {/* ─── UPDATED: render HTML description ─── */}
                                 <div
                                   className="text-sm text-white/75 sm:text-base max-w-xl line-clamp-2 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
                                   dangerouslySetInnerHTML={{
@@ -738,8 +878,16 @@ export default function FashionPage() {
             </div>
 
             <div className="mt-8 space-y-5">
-              <SlidingRail items={railItems} onClick={handleImageClick} />
-              <SlidingRail items={[...railItems].reverse()} onClick={handleImageClick} reverse />
+              {loadingCarousel ? (
+                <div className="flex justify-center py-10">
+                  <div className="w-6 h-6 border-2 border-[#00AEEF]/20 border-t-[#00AEEF] rounded-full animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <SlidingRail items={railItems} onClick={handleImageClick} />
+                  <SlidingRail items={[...railItems].reverse()} onClick={handleImageClick} reverse />
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -759,7 +907,7 @@ export default function FashionPage() {
                   >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6.08 6.08l1.37-1.37a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6.08 6.08l1.37-1.37a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                       </svg>
                     </div>
                     <div className="text-left">
@@ -776,8 +924,8 @@ export default function FashionPage() {
                   >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#00AEEF]/25 bg-[#00AEEF]/10 text-[#00AEEF]">
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366]">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.126 1.524 5.868L.057 23.5l5.806-1.524A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.18-1.433l-.371-.221-3.844 1.009 1.028-3.752-.242-.386A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.126 1.524 5.868L.057 23.5l5.806-1.524A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.18-1.433l-.371-.221-3.844 1.009 1.028-3.752-.242-.386A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
                       </svg>
                     </div>
                     <div className="text-left">
@@ -840,34 +988,6 @@ export default function FashionPage() {
           .no-scrollbar::-webkit-scrollbar { display: none; }
           .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
-      </div>
-    </div>
-  );
-}
-
-// ─── FEATURE BLOCK ──────────────────────────────────────────────────────────
-
-function FeatureBlock({
-  title,
-  description,
-  icon,
-}: {
-  title: string;
-  description: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-start gap-2 px-1 py-2 text-center md:gap-3 md:px-3 md:py-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-[#00AEEF] shadow-[0_0_0_1px_rgba(0,174,239,0.18)] md:h-12 md:w-12">
-        {icon}
-      </div>
-      <div className="space-y-0.5 md:space-y-1">
-        <h3 className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black leading-tight md:text-sm md:tracking-[0.14em]">
-          {title}
-        </h3>
-        <p className="mx-auto hidden max-w-[14rem] text-[9px] leading-relaxed text-black/60 md:block md:text-xs">
-          {description}
-        </p>
       </div>
     </div>
   );

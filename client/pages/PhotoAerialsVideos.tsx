@@ -29,14 +29,89 @@ interface Album {
   isSingle?: boolean;
 }
 
-// ─── GALLERY VIEW (for albums with multiple images) ────────────────────────
+// ─── HELPER: detect video by actual file extension ────────────────────────
+
+function isVideoUrl(url?: string | null): boolean {
+  if (!url) return false;
+  return /\.(mp4|mov|webm|avi|mkv|m4v|ogg)(\?.*)?$/i.test(url);
+}
+
+// ─── HELPER: fullscreen + landscape lock + unmute for videos ──────────────
+
+async function enterLandscapeFullscreen(el: HTMLVideoElement | null) {
+  if (!el) return;
+  try {
+    el.muted = false;
+    el.controls = true;
+  } catch {}
+
+  const anyEl = el as any;
+
+  // iOS Safari: native fullscreen video player
+  if (typeof anyEl.webkitEnterFullscreen === "function") {
+    try {
+      anyEl.webkitEnterFullscreen();
+      return;
+    } catch {}
+  }
+
+  // Standard Fullscreen API
+  try {
+    if (!document.fullscreenElement) {
+      await el.requestFullscreen();
+    }
+  } catch {}
+
+  // Orientation lock
+  try {
+    const orientation = screen.orientation as any;
+    if (orientation && orientation.lock) {
+      await orientation.lock("landscape");
+    }
+  } catch {}
+}
+
+function exitLandscapeFullscreenAndMute(video: HTMLVideoElement | null) {
+  if (!video) return;
+  try {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  } catch {}
+  try {
+    const orientation = screen.orientation as any;
+    if (orientation && orientation.unlock) {
+      orientation.unlock();
+    }
+  } catch {}
+  video.muted = true;
+}
+
+// ─── GALLERY VIEW ──────────────────────────────────────────────────────────
 
 function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const images = album.images || [];
   const coverImage = album.cover || (images.length > 0 ? images[0].url : "");
-  const isVideoCategory = album.category === "videos" || album.category === "aerials";
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
+  const lightboxVideoRef = useRef<HTMLVideoElement>(null);
+
+  const selectedIsVideo = selectedIndex !== null && isVideoUrl(images[selectedIndex]?.url);
+
+  useEffect(() => {
+    if (selectedIndex !== null && selectedIsVideo) {
+      const video = lightboxVideoRef.current;
+      if (video) {
+        video.play().catch(() => {});
+        enterLandscapeFullscreen(video);
+      }
+    }
+    return () => {
+      if (lightboxVideoRef.current) {
+        exitLandscapeFullscreenAndMute(lightboxVideoRef.current);
+      }
+    };
+  }, [selectedIndex, selectedIsVideo]);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -56,11 +131,11 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
     if (!coverImage) {
       return (
         <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">
-          {isVideoCategory ? "🎬" : "📷"}
+          📷
         </div>
       );
     }
-    if (isVideoCategory) {
+    if (isVideoUrl(coverImage)) {
       return (
         <video
           src={coverImage}
@@ -79,25 +154,24 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   };
 
   const renderThumbnail = (img: AlbumImage, idx: number) => {
-    // ─── GUARD: missing/null URL – show a placeholder instead of a broken player ───
     if (!img.url) {
       return (
         <div className="w-full h-full flex items-center justify-center text-2xl opacity-20 bg-zinc-900">
-          {isVideoCategory ? "🎬" : "📷"}
+          📷
         </div>
       );
     }
-    if (isVideoCategory) {
+    if (isVideoUrl(img.url)) {
       return (
         <video
           ref={(el) => { videoRefs.current[img.id || String(idx)] = el; }}
           src={img.url}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          autoPlay
           muted
           loop
           playsInline
-          onMouseEnter={(e) => e.currentTarget.play()}
-          onMouseLeave={(e) => e.currentTarget.pause()}
+          onContextMenu={(e) => e.preventDefault()}
         />
       );
     }
@@ -106,6 +180,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         src={img.url}
         alt={img.title}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        onContextMenu={(e) => e.preventDefault()}
       />
     );
   };
@@ -131,7 +206,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
           <h1 className="text-3xl md:text-5xl font-serif text-white leading-tight">{album.name}</h1>
           {album.description && (
             <div
-              className="text-white/70 text-sm md:text-base mt-2 max-w-2xl [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+              className="text-white/70 text-sm md:text-base mt-2 max-w-2xl [&_strong]:font-bold [&_em]:italic [&_u]:underline album-description"
               dangerouslySetInnerHTML={{ __html: album.description }}
             />
           )}
@@ -164,7 +239,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
             >
               {renderThumbnail(img, idx)}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition" />
-              {isVideoCategory && img.url && (
+              {isVideoUrl(img.url) && (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-black/60 backdrop-blur">
                     <span className="ml-1 text-[#D4AF37] text-lg">▶</span>
@@ -176,6 +251,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         </div>
       </div>
 
+      {/* ─── LIGHTBOX ── */}
       <AnimatePresence>
         {selectedIndex !== null && (
           <motion.div
@@ -221,19 +297,32 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                   </button>
                 </>
               )}
-              {isVideoCategory ? (
+              {selectedIsVideo ? (
                 <video
+                  ref={lightboxVideoRef}
                   src={images[selectedIndex].url}
-                  className="max-h-[90vh] max-w-[90vw]"
+                  className="max-h-[90vh] max-w-[90vw] w-auto"
                   controls
                   autoPlay
                   playsInline
+                  onContextMenu={(e) => e.preventDefault()}
+                  onClick={() => {
+                    const video = lightboxVideoRef.current;
+                    if (video) {
+                      if (!document.fullscreenElement) {
+                        enterLandscapeFullscreen(video);
+                      } else {
+                        exitLandscapeFullscreenAndMute(video);
+                      }
+                    }
+                  }}
                 />
               ) : (
                 <img
                   src={images[selectedIndex].url}
                   alt={images[selectedIndex].title}
                   className="max-h-[90vh] max-w-[90vw] object-contain"
+                  onContextMenu={(e) => e.preventDefault()}
                 />
               )}
               {images[selectedIndex].title && (
@@ -241,9 +330,9 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                   {images[selectedIndex].title}
                 </div>
               )}
-              {isVideoCategory && (
+              {selectedIsVideo && (
                 <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#D4AF37]/20 text-[#D4AF37] text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-[#D4AF37]/30">
-                  🎬 Video content
+                  🎬 Click video to toggle fullscreen
                 </div>
               )}
             </div>
@@ -254,11 +343,11 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   );
 }
 
-// ─── ALBUM CARD ─────────────────────────────────────────────────────────────
+// ─── ALBUM CARD (with "View Gallery" button) ──────────────────────────────
 
 function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
   const displayImage = album.cover || (album.images.length > 0 ? album.images[0].url : null);
-  const isVideoCategory = album.category === "videos" || album.category === "aerials";
+  const displayIsVideo = isVideoUrl(displayImage);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   return (
@@ -267,22 +356,23 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6 }}
-      className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group"
-      onClick={onClick}
+      className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-lg group"
     >
-      <div className="relative h-64 md:h-72 overflow-hidden bg-zinc-800">
+      <div
+        className="relative h-64 md:h-72 overflow-hidden bg-zinc-800 cursor-pointer"
+        onClick={onClick}
+      >
         {displayImage ? (
           <>
-            {isVideoCategory ? (
+            {displayIsVideo ? (
               <video
                 ref={videoRef}
                 src={displayImage}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                autoPlay
                 muted
                 loop
                 playsInline
-                onMouseEnter={(e) => e.currentTarget.play()}
-                onMouseLeave={(e) => e.currentTarget.pause()}
                 onContextMenu={(e) => e.preventDefault()}
               />
             ) : (
@@ -293,8 +383,8 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
                 onContextMenu={(e) => e.preventDefault()}
               />
             )}
-            {isVideoCategory && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+            {displayIsVideo && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-black/60 backdrop-blur">
                   <span className="ml-1 text-[#D4AF37] text-2xl">▶</span>
                 </div>
@@ -303,13 +393,14 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
           </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">
-            {isVideoCategory ? "🎬" : "📷"}
+            📷
           </div>
         )}
         <span className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">
           {album.images.length} items
         </span>
       </div>
+
       <div className="p-5">
         <p className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-1">
           {album.category === "aerials" ? "Aerials" : "Hand Held Videos"}
@@ -317,32 +408,76 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
         <h3 className="text-lg font-serif text-white leading-tight">{album.name}</h3>
         {album.description && (
           <div
-            className="text-white/40 text-xs leading-relaxed mt-2 line-clamp-2 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+            className="text-white/40 text-xs leading-relaxed mt-2 line-clamp-2 album-description"
             dangerouslySetInnerHTML={{ __html: album.description }}
           />
         )}
+        <button
+          onClick={onClick}
+          className="mt-4 w-full border border-[#D4AF37]/40 text-[#D4AF37] rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-[#D4AF37]/10 active:scale-[0.98] transition"
+        >
+          View Gallery →
+        </button>
       </div>
     </motion.div>
   );
 }
 
-// ─── SINGLE CARD (video plays directly on card – with error handling) ──────
+// ─── SINGLE CARD (video plays directly on card) ────────────────────────────
 
 function SingleCard({ item }: { item: Album }) {
   const image = item.images[0];
-  const hasUrl = !!image?.url; // ─── GUARD: null/missing URL from a failed upload ───
-  const isVideoCategory = item.category === "videos" || item.category === "aerials";
+  const hasUrl = !!image?.url;
+  const itemIsVideo = isVideoUrl(image?.url);
   const [isVideoError, setIsVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const handleVideoLoaded = () => {
     if (videoRef.current) {
       videoRef.current.play().catch(() => {
-        // Autoplay was blocked – user can click play.
         console.log("Autoplay blocked for:", item.name);
       });
     }
   };
+
+  const handleVideoClick = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = false;
+    video.controls = true;
+    video.play().catch(() => {});
+    enterLandscapeFullscreen(video);
+  };
+
+  const handleExitFullscreen = () => {
+    const video = videoRef.current;
+    if (video) {
+      exitLandscapeFullscreenAndMute(video);
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const video = videoRef.current;
+      if (!document.fullscreenElement && video) {
+        video.muted = true;
+        setIsFullscreen(false);
+      } else if (document.fullscreenElement && video) {
+        setIsFullscreen(true);
+      }
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+    };
+  }, []);
+
+  const showExitButton = isFullscreen && itemIsVideo;
 
   return (
     <motion.div
@@ -355,34 +490,59 @@ function SingleCard({ item }: { item: Album }) {
       <div className="relative h-64 md:h-72 overflow-hidden bg-zinc-800">
         {hasUrl ? (
           <>
-            {isVideoCategory && !isVideoError ? (
-              <video
-                ref={videoRef}
-                src={image.url}
-                className="w-full h-full object-cover"
-                controls
-                autoPlay
-                muted
-                playsInline
-                loop
-                onError={() => {
-                  console.error("🎥 Video failed to load:", image.url);
-                  setIsVideoError(true);
-                }}
-                onLoadedData={handleVideoLoaded}
-              />
+            {itemIsVideo && !isVideoError ? (
+              <>
+                <video
+                  ref={videoRef}
+                  src={image.url}
+                  className="w-full h-full object-cover cursor-pointer"
+                  autoPlay
+                  muted
+                  playsInline
+                  loop
+                  onError={() => {
+                    console.error("🎥 Video failed to load:", image.url);
+                    setIsVideoError(true);
+                  }}
+                  onLoadedData={handleVideoLoaded}
+                  onClick={handleVideoClick}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+                {showExitButton && (
+                  <button
+                    onClick={handleExitFullscreen}
+                    className="absolute top-2 right-2 z-20 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 transition text-xl shadow-lg backdrop-blur-sm"
+                    aria-label="Exit fullscreen"
+                  >
+                    ✕
+                  </button>
+                )}
+              </>
             ) : (
               <img
                 src={image.url}
                 alt={item.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover cursor-pointer"
                 onError={() => console.error("🖼️ Image failed to load:", image.url)}
+                onClick={() => {
+                  if (itemIsVideo) {
+                    handleVideoClick();
+                  }
+                }}
+                onContextMenu={(e) => e.preventDefault()}
               />
+            )}
+            {itemIsVideo && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-black/60 backdrop-blur opacity-80 group-hover:opacity-100 transition-opacity">
+                  <span className="ml-1 text-[#D4AF37] text-2xl">▶</span>
+                </div>
+              </div>
             )}
           </>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-4xl opacity-20">
-            {isVideoCategory ? "🎬" : "📷"}
+            📷
             <span className="text-xs opacity-60">Unavailable</span>
           </div>
         )}
@@ -397,7 +557,7 @@ function SingleCard({ item }: { item: Album }) {
         <h3 className="text-lg font-serif text-white leading-tight">{item.name}</h3>
         {item.description && (
           <div
-            className="text-white/40 text-xs leading-relaxed mt-2 line-clamp-2 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+            className="text-white/40 text-xs leading-relaxed mt-2 line-clamp-2 album-description"
             dangerouslySetInnerHTML={{ __html: item.description }}
           />
         )}
@@ -550,11 +710,12 @@ export default function PhotoAerialsVideos() {
       <footer className="py-16 text-center border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
+            {/* Instagram – Film (Videos) */}
             <a
               href="https://www.instagram.com/topfilmz1?igsh=MTM5MG02YnNudzJqZw=="
               target="_blank"
               rel="noreferrer"
-              className="text-white/40 hover:text-white transition-colors"
+              className="group flex items-center gap-3 text-white/40 hover:text-white transition-colors"
               aria-label="Instagram Film"
             >
               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -562,12 +723,15 @@ export default function PhotoAerialsVideos() {
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
               </svg>
+              <span className="text-[9px] uppercase tracking-[0.3em]">@topfilmz1</span>
             </a>
+
+            {/* Instagram – Drone (Aerials) */}
             <a
               href="https://www.instagram.com/topdronez1?igsh=MWo0OWh3N2xrcWdzdg=="
               target="_blank"
               rel="noreferrer"
-              className="text-white/40 hover:text-white transition-colors"
+              className="group flex items-center gap-3 text-white/40 hover:text-white transition-colors"
               aria-label="Instagram Drone"
             >
               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -575,19 +739,24 @@ export default function PhotoAerialsVideos() {
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
               </svg>
+              <span className="text-[9px] uppercase tracking-[0.3em]">@topdronez1</span>
             </a>
+
+            {/* Facebook */}
             <a
-              href="https://www.facebook.com/share/19fqFjS3Bw/"
+              href="https://www.facebook.com/share/1DL1xouwqS"
               target="_blank"
               rel="noreferrer"
-              className="text-white/40 hover:text-white transition-colors"
+              className="group flex items-center gap-3 text-white/40 hover:text-white transition-colors"
               aria-label="Facebook"
             >
               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
               </svg>
+              <span className="text-[9px] uppercase tracking-[0.3em]">Facebook</span>
             </a>
           </div>
+
           <div className="flex flex-col items-center gap-4">
             <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />
             <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP • All Right Reserve</p>
@@ -614,6 +783,16 @@ export default function PhotoAerialsVideos() {
           <GalleryView album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />
         )}
       </AnimatePresence>
+
+      {/* ─── GLOBAL STYLES FOR DESCRIPTION PARAGRAPH SPACING ─────────── */}
+      <style>{`
+        .album-description p {
+          margin-bottom: 0.5rem;
+        }
+        .album-description p:last-child {
+          margin-bottom: 0;
+        }
+      `}</style>
     </div>
   );
 }

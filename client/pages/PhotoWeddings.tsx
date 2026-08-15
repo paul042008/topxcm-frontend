@@ -492,7 +492,7 @@ export default function PhotoWeddings() {
         <BackButton />
         <div className="flex flex-col items-center gap-0.5">
           <p className="text-[#D4AF37] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">
-            Weddings & Events
+            Weddings & Other Events
           </p>
           <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">
             The Official Photography
@@ -515,7 +515,7 @@ export default function PhotoWeddings() {
               className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none"
               style={{ fontFamily: "Impact, 'Arial Black', sans-serif" }}
             >
-              Weddings & Events
+              Weddings & Other Events
             </h1>
           </div>
           <p className="text-white/30 text-sm font-light max-w-sm leading-relaxed">

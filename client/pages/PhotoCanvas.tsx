@@ -246,7 +246,7 @@ export default function PhotoCanvas() {
               </svg>
             </a>
             <a
-              href="https://www.instagram.com/topdronez1"
+              href="https://www.instagram.com/topstudios1?igsh=YmxrMGN0dGdnbWgy"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"
@@ -259,7 +259,7 @@ export default function PhotoCanvas() {
               </svg>
             </a>
             <a
-              href="https://www.facebook.com/share/19fqFjS3Bw/"
+              href="https://www.facebook.com/share/19BAP9fi8Q/"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"

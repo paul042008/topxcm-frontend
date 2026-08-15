@@ -68,7 +68,7 @@ export default function PhotoMenu({
             {[
               { name: "Weddings & Other Events", path: "/photography/weddings" },
               { name: "Studio & Outdoors", path: "/photography/studio-outdoors" },
-              { name: "Drone Aerials & Videos", path: "/photography/aerials-videos" },
+              { name: "Videos & Drone Aerials", path: "/photography/aerials-videos" },
               { name: "Frames & Canvas", path: "/photography/canvas" },
               { name: "Contact Us", path: "/photography/contact" },
             ].map((link) => (

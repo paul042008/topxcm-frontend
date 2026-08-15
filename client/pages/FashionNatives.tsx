@@ -507,7 +507,7 @@ function ProductCard({
   );
 }
 
-// ─── GALLERY VIEW (UPDATED with second‑image exclusion fix) ────────────────
+// ─── GALLERY VIEW ────────────────────────────────────────────────────────────
 
 function GalleryView({
   album,
@@ -635,16 +635,11 @@ function GalleryView({
   );
 }
 
-// ─── ALBUM CARD ─────────────────────────────────────────────────────────────
+// ─── ALBUM CARD (UPDATED: "View Gallery" button, description spacing) ─────
 
-function AlbumCard({ album }: { album: Album }) {
+function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const displayImage = album.cover || (album.images.length > 0 ? album.images[0].url : null);
-
-  const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering from the *${album.name}* collection${album.price ? ` (starting at ${album.price})` : ""}. Please let me know the details.`;
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-  };
 
   return (
     <motion.div
@@ -654,19 +649,21 @@ function AlbumCard({ album }: { album: Album }) {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-black/40 relative">
+      <div
+        className="aspect-[4/3] overflow-hidden bg-black/40 relative cursor-pointer"
+        onClick={onViewGallery}
+      >
         {displayImage ? (
           <img
             src={displayImage}
             alt={album.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-4xl opacity-20">🧵</span>
           </div>
         )}
-        {/* REMOVED item count badge */}
       </div>
 
       <div className="p-5 flex flex-col gap-3 flex-1">
@@ -680,7 +677,7 @@ function AlbumCard({ album }: { album: Album }) {
         {album.description && (
           <>
             <div
-              className={`text-white/50 text-xs leading-relaxed ${
+              className={`text-white/50 text-xs leading-relaxed album-description ${
                 !expanded ? "line-clamp-3" : ""
               }`}
               dangerouslySetInnerHTML={{ __html: album.description }}
@@ -699,10 +696,10 @@ function AlbumCard({ album }: { album: Album }) {
         )}
 
         <button
-          onClick={handleOrder}
-          className="mt-auto w-full bg-[#00AEEF] text-black rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition flex items-center justify-center gap-2"
+          onClick={onViewGallery}
+          className="mt-auto w-full border border-[#00AEEF]/40 text-[#00AEEF] rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#00AEEF]/10 active:scale-[0.98] transition flex items-center justify-center gap-2"
         >
-          <span>Order Now</span>
+          <span>View Gallery</span>
           <span className="text-base">→</span>
         </button>
       </div>
@@ -710,9 +707,9 @@ function AlbumCard({ album }: { album: Album }) {
   );
 }
 
-// ─── SINGLE CARD ────────────────────────────────────────────────────────────
+// ─── SINGLE CARD (unchanged – still "Order Now") ──────────────────────────
 
-function SingleCard({ album }: { album: Album }) {
+function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () => void }) {
   const image = album.images[0];
   const [expanded, setExpanded] = useState(false);
 
@@ -729,13 +726,15 @@ function SingleCard({ album }: { album: Album }) {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-black/40 relative">
+      <div
+        className="aspect-[4/3] overflow-hidden bg-black/40 relative cursor-pointer"
+        onClick={onViewSingle}
+      >
         <img
           src={image?.url}
           alt={album.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
         />
-        {/* REMOVED item count badge */}
       </div>
 
       <div className="p-5 flex flex-col gap-3 flex-1">
@@ -749,7 +748,7 @@ function SingleCard({ album }: { album: Album }) {
         {album.description && (
           <>
             <div
-              className={`text-white/50 text-xs leading-relaxed ${
+              className={`text-white/50 text-xs leading-relaxed album-description ${
                 !expanded ? "line-clamp-3" : ""
               }`}
               dangerouslySetInnerHTML={{ __html: album.description }}
@@ -907,9 +906,17 @@ export default function FashionNatives() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {albums.map((album) =>
                 album.isSingle ? (
-                  <SingleCard key={album.id} album={album} />
+                  <SingleCard
+                    key={album.id}
+                    album={album}
+                    onViewSingle={() => handleViewSingle(album)}
+                  />
                 ) : (
-                  <AlbumCard key={album.id} album={album} />
+                  <AlbumCard
+                    key={album.id}
+                    album={album}
+                    onViewGallery={() => setOpenAlbum(album)}
+                  />
                 )
               )}
             </div>
@@ -937,6 +944,16 @@ export default function FashionNatives() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* ─── GLOBAL STYLES FOR DESCRIPTION PARAGRAPH SPACING ─────────── */}
+      <style>{`
+        .album-description p {
+          margin-bottom: 0.5rem;
+        }
+        .album-description p:last-child {
+          margin-bottom: 0;
+        }
+      `}</style>
     </div>
   );
 }

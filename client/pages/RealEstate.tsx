@@ -173,7 +173,7 @@ function ImageOnlyCard({
   );
 }
 
-// ─── SLIDING RAIL (direction-aware touch handling) ────────────────────────
+// ─── SLIDING RAIL ──────────────────────────────────────────────────────────
 
 function SlidingRail({
   items,
@@ -442,8 +442,9 @@ export default function RealEstate() {
     >
       {/* ─── MENU ── */}
       <RealEstateMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
         onOpenAction={() => setIsMenuOpen(true)}
-        onCloseAction={() => setIsMenuOpen(false)}
       />
 
       {/* LIGHTBOX */}
@@ -502,19 +503,16 @@ export default function RealEstate() {
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
-        {/* HEADER */}
+        {/* HEADER – LOGO ONLY (no sub‑text) */}
         <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between border-b border-white/5 bg-black/80 px-5 py-5 backdrop-blur-md md:px-10">
-          <div className="flex flex-col gap-1">
-            <img
-              src="/images/your-logo.png"
-              alt="XCM Logo"
-              className="max-h-8 w-auto md:max-h-10 object-contain -ml-1 -mt-3"
-            />
-            <span className="text-[9px] uppercase tracking-[0.55em] text-[#B0D4E8]/85 md:text-[11px]">
-              Homes And Properties
-            </span>
-          </div>
-          {/* ─── NO HAMBURGER HERE ─── */}
+        <div className="flex items-center bg-white/5 border border-white/10 rounded-2xl p-2">
+  <img
+    src="/images/your-logo12.png"
+    alt="XCM Logo"
+    className="h-12 w-auto md:h-12 object-contain"
+  />
+</div>
+          {/* ─── NO HAMBURGER (the menu is triggered by the "View all" button) ─── */}
         </header>
 
         {/* ─── HERO ─── */}
@@ -623,7 +621,7 @@ export default function RealEstate() {
           </div>
         </section>
 
-        {/* ─── CONTACT SECTION ─── (UPDATED) */}
+        {/* ─── CONTACT SECTION ─── */}
         <section className="relative overflow-hidden border-t border-[#B0D4E8]/10 bg-[#0a0a0a] px-5 py-20 md:px-10 md:py-28">
           <div className="absolute -left-20 top-12 h-72 w-72 rounded-full bg-[#B0D4E8]/10 blur-3xl" />
           <div className="absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-[#B0D4E8]/10 blur-3xl" />
@@ -666,7 +664,6 @@ export default function RealEstate() {
                   </a>
                 </div>
 
-                {/* ─── UPDATED EMAIL ─── */}
                 <a
                   href="mailto:xcminternational@gmail.com"
                   className="inline-flex items-center gap-3 rounded-2xl border border-black/10 px-6 py-4 text-xs font-semibold uppercase tracking-[0.28em] text-black transition-colors hover:border-[#B0D4E8]/30 hover:text-[#B0D4E8]"
@@ -676,7 +673,6 @@ export default function RealEstate() {
 
                 <div className="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-black/20 to-transparent" />
 
-                {/* ─── UPDATED SOCIAL LINKS (no Twitter) ─── */}
                 <div className="flex flex-wrap justify-center gap-3">
                   <p className="w-full text-[10px] uppercase tracking-[0.45em] text-[#B0D4E8]">Connect With Us</p>
                   <a
@@ -695,7 +691,6 @@ export default function RealEstate() {
                   >
                     Instagram
                   </a>
-                  {/* Twitter removed */}
                 </div>
               </div>
             </div>
