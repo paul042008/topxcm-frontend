@@ -402,22 +402,18 @@ export default function PhotoWeddings() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch albums
         const albumsRes = await fetch(`${API}/api/fashion-albums`);
         const albumsData: Album[] = await albumsRes.json();
 
-        // Fetch single items
         const itemsRes = await fetch(`${API}/api/items`);
         const itemsData = await itemsRes.json();
 
         const categories = ["weddings", "events"];
 
-        // Filter albums by category
         const filteredAlbums = albumsData.filter((album) =>
           categories.includes(album.category)
         );
 
-        // Fetch standalone items (no album_id) with category weddings or events
         const standaloneItems = itemsData.filter(
           (item: any) =>
             !item.album_id &&
@@ -425,7 +421,6 @@ export default function PhotoWeddings() {
             item.image
         );
 
-        // Convert standalone items to virtual albums
         const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
           id: `single-${item.id}`,
           name: item.title || "Untitled",
@@ -445,7 +440,29 @@ export default function PhotoWeddings() {
           ],
         }));
 
-        setAlbums([...filteredAlbums, ...singleItemsAsAlbums]);
+        // ─── DEDUPLICATE: remove duplicates by id, then by cover URL ───
+        const combined = [...filteredAlbums, ...singleItemsAsAlbums];
+        const seenIds = new Set<string>();
+        const seenCovers = new Set<string>();
+        const unique: Album[] = [];
+
+        for (const album of combined) {
+          // Skip if id already seen
+          if (seenIds.has(album.id)) continue;
+          seenIds.add(album.id);
+
+          // If cover exists and we've seen this URL before, skip
+          if (album.cover) {
+            // Normalize URL (remove query params) for better matching
+            const cleanUrl = album.cover.split('?')[0];
+            if (seenCovers.has(cleanUrl)) continue;
+            seenCovers.add(cleanUrl);
+          }
+
+          unique.push(album);
+        }
+
+        setAlbums(unique);
       } catch (error) {
         console.error("Error fetching data:", error);
         setAlbums([]);
@@ -457,19 +474,15 @@ export default function PhotoWeddings() {
     fetchData();
   }, []);
 
-  // Filter albums based on active tab
   const filteredAlbums =
     activeTab === "all"
       ? albums
       : albums.filter((a) => a.category === activeTab);
 
-  // Separate into featured, editorial, compact (only for non-single albums)
   const nonSingleAlbums = filteredAlbums.filter((a) => !a.isSingle);
   const featured = nonSingleAlbums[0] || null;
   const editorial = nonSingleAlbums.slice(1, 5);
   const compact = nonSingleAlbums.slice(5);
-
-  // Single items (to be displayed separately, perhaps in a grid)
   const singleItems = filteredAlbums.filter((a) => a.isSingle);
 
   const handleCardClick = (album: Album) => {
@@ -551,7 +564,7 @@ export default function PhotoWeddings() {
         </div>
       )}
 
-      {/* ─── FEATURED (only if there is at least one non-single album) ─── */}
+      {/* ─── FEATURED ─── */}
       {featured && <FeaturedAlbum item={featured} onClick={() => handleCardClick(featured)} />}
 
       {/* ─── EDITORIAL CARDS ─── */}
@@ -568,7 +581,7 @@ export default function PhotoWeddings() {
         </section>
       )}
 
-      {/* ─── SINGLE ITEMS (displayed in a grid) ─── */}
+      {/* ─── SINGLE ITEMS ─── */}
       {singleItems.length > 0 && (
         <section className="px-6 md:px-16 py-20">
           <div className="flex items-center gap-6 mb-12">
@@ -579,7 +592,7 @@ export default function PhotoWeddings() {
             <div className="flex-1 h-[1px] bg-white/5" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {singleItems.map((item, i) => (
+            {singleItems.map((item) => (
               <div
                 key={item.id}
                 className="group relative overflow-hidden border border-white/5 hover:border-[#D4AF37]/30 transition-colors duration-500 cursor-pointer"
@@ -615,7 +628,7 @@ export default function PhotoWeddings() {
         </section>
       )}
 
-      {/* ─── COMPACT CARDS (more albums) ─── */}
+      {/* ─── COMPACT CARDS ─── */}
       {compact.length > 0 && (
         <section className="px-6 md:px-16 py-20">
           <div className="flex items-center gap-6 mb-12">
@@ -687,7 +700,6 @@ export default function PhotoWeddings() {
         Book Us
       </a>
 
-      {/* ─── MODALS ─── */}
       <AnimatePresence>
         {selectedAlbum && <GalleryView album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
       </AnimatePresence>

@@ -8,14 +8,12 @@ export default function RealEstateContact() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
-      {/* ─── REAL ESTATE MENU (overlay) ─────────────────────────────── */}
       <RealEstateMenu
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
         onOpenAction={() => setMenuOpen(true)}
       />
 
-      {/* ─── MAIN CONTENT (blurred when menu is open) ──────────── */}
       <div
         className="transition-all duration-500"
         style={{
@@ -24,19 +22,20 @@ export default function RealEstateContact() {
           pointerEvents: menuOpen ? "none" : "auto",
         }}
       >
-        {/* Dark background gradient */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(176,212,232,0.12),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(176,212,232,0.08),transparent_22%)]" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black/90 to-black/95" />
         </div>
 
-        {/* Header with hamburger button */}
         <header className="relative z-10 flex items-center justify-between border-b border-[#B0D4E8]/10 bg-black/80 px-6 md:px-10 py-5 backdrop-blur-md">
           <div className="flex flex-col items-center gap-0.5">
-            <p className="text-[#B0D4E8] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">Contact Us</p>
-            <span className="text-[#B0D4E8]/40 text-[8px] tracking-[0.3em] uppercase">XCM Homes</span>
+            <p className="text-[#B0D4E8] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">
+              XCM Homes &amp; Properties
+            </p>
+            <span className="text-[#B0D4E8]/40 text-[8px] tracking-[0.3em] uppercase">
+              Construction &amp; Real Estate
+            </span>
           </div>
-          {/* Hamburger button */}
           <button
             onClick={() => setMenuOpen(true)}
             className="flex flex-col gap-[5px] group"
@@ -58,47 +57,47 @@ export default function RealEstateContact() {
         </div>
 
         <main className="relative z-10 px-6 md:px-16 py-16 max-w-3xl mx-auto space-y-16">
-          {/* ─── ABOUT US (full text) ────────────────────────────── */}
+          {/* ─── ABOUT US (UPDATED – Construction & Real Estate focus) ─── */}
           <div>
             <p className="text-[#B0D4E8] text-[9px] uppercase tracking-[0.6em] font-bold mb-6">About Us</p>
             
             <div className="space-y-6 text-white/70 text-sm leading-relaxed">
               <p>
-                XCM Real Estate is more than property — it's about placing you in spaces that inspire.
+                XCM Homes &amp; Properties is a full‑service construction, management, and real estate firm based in Lagos.
+                We don’t just sell properties — we build them, manage them, and help you find the perfect space to live, work, and invest.
               </p>
               <p>
-                We understand that a home is more than just a structure; it's where life happens, memories are made, 
-                and futures are built. That’s why we approach real estate with the same care and attention that we 
-                bring to fashion — it’s personal, it’s meaningful, and it deserves to be done right.
+                Our expertise spans every stage of the property lifecycle. From groundbreaking to handover, we oversee 
+                construction projects with precision, integrity, and a commitment to quality. We also offer comprehensive 
+                property management services, ensuring your assets are well‑maintained and profitable.
               </p>
               <p>
-                What began as a vision to connect people with exceptional properties has grown into a trusted 
-                name in Lagos real estate. Our portfolio spans premium homes, apartments, and investment 
-                opportunities across the city’s most desirable neighbourhoods.
+                Whether you’re looking to buy land, build a home, invest in commercial real estate, or need a reliable 
+                partner to manage your properties, we bring decades of experience and a network of trusted professionals 
+                to every project.
               </p>
               <p>
-                At XCM Real Estate, we don’t just sell properties — we help you find your place. Whether 
-                you're looking for a luxury penthouse with a view, a family home in a secure community, 
-                or a smart investment with high returns, we’re here to guide you every step of the way.
+                At XCM, we believe that real estate is more than transactions — it’s about building futures, creating 
+                communities, and delivering lasting value. Our portfolio includes residential developments, commercial 
+                spaces, and luxury homes across Lagos’s most desirable neighbourhoods.
               </p>
               <p>
-                We pride ourselves on transparency, integrity, and a deep understanding of the Lagos property 
-                market. Our team works tirelessly to ensure that every transaction is seamless, every client 
-                is satisfied, and every home we help you find feels like it was always meant for you.
+                We take pride in our transparent approach, our deep understanding of the local market, and our ability 
+                to turn ambitious visions into reality. From foundation to finish, we are with you every step of the way.
               </p>
               <div className="bg-[#B0D4E8]/5 border border-[#B0D4E8]/10 rounded-2xl p-6 my-6">
                 <p className="text-[#B0D4E8] text-xs uppercase tracking-[0.5em] font-bold mb-2">Our Philosophy</p>
-                <p className="text-white/90 text-sm font-light italic">“We don’t just find you a house; we help you find home.”</p>
+                <p className="text-white/90 text-sm font-light italic">“We build more than structures – we build trust.”</p>
               </div>
               <p>
-                From the first viewing to the final handover, we are committed to excellence. We listen, we advise, 
-                and we deliver — because your dream home deserves nothing less.
+                Whether you need a custom‑built home, a turnkey property management solution, or a prime piece of land 
+                for development, XCM Homes &amp; Properties is your trusted partner. Let us help you build, own, and grow.
               </p>
               <p className="text-white/80 text-base font-serif italic">
-                This is XCM Real Estate — where every property tells a story, and every client finds their place.
+                This is XCM — where quality meets commitment, and every project tells a story of excellence.
               </p>
               <p className="text-[#B0D4E8] text-sm font-light tracking-wider">
-                Your space. Your story. XCM.
+                Build with us. Grow with us. XCM.
               </p>
             </div>
 
@@ -147,7 +146,6 @@ export default function RealEstateContact() {
                 Inquiries
               </p>
 
-              {/* Call Us button */}
               <a
                 href="tel:+2348061587993"
                 className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
@@ -174,7 +172,6 @@ export default function RealEstateContact() {
                 </span>
               </a>
 
-              {/* WhatsApp button */}
               <a
                 href={WA}
                 target="_blank"
@@ -207,7 +204,6 @@ export default function RealEstateContact() {
 
             <div style={{ height: "1px", backgroundColor: "rgba(176,212,232,0.1)" }} />
 
-            {/* Connect With Us */}
             <div>
               <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#B0D4E8" }}>Connect With Us</p>
               <div className="flex items-center gap-3 flex-wrap">
@@ -231,7 +227,6 @@ export default function RealEstateContact() {
                   </svg>
                   <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#B0D4E8] transition-colors">Instagram</span>
                 </a>
-                {/* Twitter removed – follow the pattern from RealEstate.tsx */}
                 <a href="mailto:xcminternational@gmail.com"
                   className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                   style={{ border: "1px solid rgba(176,212,232,0.25)", backgroundColor: "rgba(176,212,232,0.04)" }}
@@ -248,12 +243,11 @@ export default function RealEstateContact() {
           </div>
         </main>
 
-        {/* Footer */}
         <footer className="relative z-10 border-t border-[#B0D4E8]/8 bg-black py-14 text-center">
           <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-5">
             <div className="h-8 w-px bg-gradient-to-b from-[#B0D4E8]/35 to-transparent" />
             <p className="text-[8px] uppercase tracking-[1em] text-white/20">
-              © 2026 XCM Real Estate • All Rights Reserved
+              © 2026 XCM Homes &amp; Properties • All Rights Reserved
             </p>
           </div>
         </footer>

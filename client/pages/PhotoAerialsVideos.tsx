@@ -47,7 +47,6 @@ async function enterLandscapeFullscreen(el: HTMLVideoElement | null) {
 
   const anyEl = el as any;
 
-  // iOS Safari: native fullscreen video player
   if (typeof anyEl.webkitEnterFullscreen === "function") {
     try {
       anyEl.webkitEnterFullscreen();
@@ -55,14 +54,12 @@ async function enterLandscapeFullscreen(el: HTMLVideoElement | null) {
     } catch {}
   }
 
-  // Standard Fullscreen API
   try {
     if (!document.fullscreenElement) {
       await el.requestFullscreen();
     }
   } catch {}
 
-  // Orientation lock
   try {
     const orientation = screen.orientation as any;
     if (orientation && orientation.lock) {
@@ -87,7 +84,129 @@ function exitLandscapeFullscreenAndMute(video: HTMLVideoElement | null) {
   video.muted = true;
 }
 
-// ─── GALLERY VIEW ──────────────────────────────────────────────────────────
+// ─── SINGLE ITEM LIGHTBOX (playlist for singles) ──────────────────────────
+
+function SingleItemLightbox({
+  items,
+  currentIndex,
+  onClose,
+}: {
+  items: Album[];
+  currentIndex: number;
+  onClose: () => void;
+}) {
+  const [index, setIndex] = useState(currentIndex);
+  const item = items[index];
+  const image = item?.images?.[0];
+  const isVideo = isVideoUrl(image?.url);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (isVideo) {
+      const video = videoRef.current;
+      if (video) {
+        video.play().catch(() => {});
+        enterLandscapeFullscreen(video);
+      }
+    }
+    return () => {
+      if (videoRef.current) {
+        exitLandscapeFullscreenAndMute(videoRef.current);
+      }
+    };
+  }, [index, isVideo]);
+
+  const handlePrev = () => {
+    setIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
+  };
+
+  if (!item || !image) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative max-w-6xl w-full h-full flex items-center justify-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 text-white/60 hover:text-white text-2xl"
+        >
+          ✕
+        </button>
+
+        {items.length > 1 && (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+            >
+              ‹
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleNext(); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+            >
+              ›
+            </button>
+          </>
+        )}
+
+        {isVideo ? (
+          <video
+            ref={videoRef}
+            src={image.url}
+            className="max-h-[90vh] max-w-[90vw] w-auto"
+            controls
+            autoPlay
+            playsInline
+            onContextMenu={(e) => e.preventDefault()}
+            onClick={() => {
+              const video = videoRef.current;
+              if (video) {
+                if (!document.fullscreenElement) {
+                  enterLandscapeFullscreen(video);
+                } else {
+                  exitLandscapeFullscreenAndMute(video);
+                }
+              }
+            }}
+          />
+        ) : (
+          <img
+            src={image.url}
+            alt={image.title || item.name}
+            className="max-h-[90vh] max-w-[90vw] object-contain"
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        )}
+
+        {image.title && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
+            {image.title}
+          </div>
+        )}
+        {isVideo && (
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#D4AF37]/20 text-[#D4AF37] text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-[#D4AF37]/30">
+            🎬 Click video to toggle fullscreen
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── GALLERY VIEW (for albums) ────────────────────────────────────────────
 
 function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -425,7 +544,7 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
 
 // ─── SINGLE CARD (video plays directly on card) ────────────────────────────
 
-function SingleCard({ item }: { item: Album }) {
+function SingleCard({ item, onClick }: { item: Album; onClick: () => void }) {
   const image = item.images[0];
   const hasUrl = !!image?.url;
   const itemIsVideo = isVideoUrl(image?.url);
@@ -485,7 +604,8 @@ function SingleCard({ item }: { item: Album }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6 }}
-      className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-lg"
+      className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer"
+      onClick={onClick}
     >
       <div className="relative h-64 md:h-72 overflow-hidden bg-zinc-800">
         {hasUrl ? (
@@ -495,7 +615,7 @@ function SingleCard({ item }: { item: Album }) {
                 <video
                   ref={videoRef}
                   src={image.url}
-                  className="w-full h-full object-cover cursor-pointer"
+                  className="w-full h-full object-cover"
                   autoPlay
                   muted
                   playsInline
@@ -522,7 +642,7 @@ function SingleCard({ item }: { item: Album }) {
               <img
                 src={image.url}
                 alt={item.name}
-                className="w-full h-full object-cover cursor-pointer"
+                className="w-full h-full object-cover"
                 onError={() => console.error("🖼️ Image failed to load:", image.url)}
                 onClick={() => {
                   if (itemIsVideo) {
@@ -573,6 +693,7 @@ export default function PhotoAerialsVideos() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [selectedSingleIndex, setSelectedSingleIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "aerials" | "videos">("all");
 
   useEffect(() => {
@@ -630,6 +751,9 @@ export default function PhotoAerialsVideos() {
 
   const filteredAlbums =
     activeTab === "all" ? albums : albums.filter((a) => a.category === activeTab);
+
+  const singleItems = filteredAlbums.filter((a) => a.isSingle === true);
+  const albumItems = filteredAlbums.filter((a) => !a.isSingle);
 
   return (
     <div className="min-h-screen bg-[#080808] text-white overflow-x-hidden">
@@ -692,17 +816,20 @@ export default function PhotoAerialsVideos() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredAlbums.map((album) =>
-              album.isSingle ? (
-                <SingleCard key={album.id} item={album} />
-              ) : (
-                <AlbumCard
-                  key={album.id}
-                  album={album}
-                  onClick={() => setSelectedAlbum(album)}
-                />
-              )
-            )}
+            {albumItems.map((album) => (
+              <AlbumCard
+                key={album.id}
+                album={album}
+                onClick={() => setSelectedAlbum(album)}
+              />
+            ))}
+            {singleItems.map((item, idx) => (
+              <SingleCard
+                key={item.id}
+                item={item}
+                onClick={() => setSelectedSingleIndex(idx)}
+              />
+            ))}
           </div>
         )}
       </main>
@@ -710,7 +837,6 @@ export default function PhotoAerialsVideos() {
       <footer className="py-16 text-center border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
-            {/* Instagram – Film (Videos) */}
             <a
               href="https://www.instagram.com/topfilmz1?igsh=MTM5MG02YnNudzJqZw=="
               target="_blank"
@@ -725,8 +851,6 @@ export default function PhotoAerialsVideos() {
               </svg>
               <span className="text-[9px] uppercase tracking-[0.3em]">@topfilmz1</span>
             </a>
-
-            {/* Instagram – Drone (Aerials) */}
             <a
               href="https://www.instagram.com/topdronez1?igsh=MWo0OWh3N2xrcWdzdg=="
               target="_blank"
@@ -741,8 +865,6 @@ export default function PhotoAerialsVideos() {
               </svg>
               <span className="text-[9px] uppercase tracking-[0.3em]">@topdronez1</span>
             </a>
-
-            {/* Facebook */}
             <a
               href="https://www.facebook.com/share/1DL1xouwqS"
               target="_blank"
@@ -756,7 +878,6 @@ export default function PhotoAerialsVideos() {
               <span className="text-[9px] uppercase tracking-[0.3em]">Facebook</span>
             </a>
           </div>
-
           <div className="flex flex-col items-center gap-4">
             <div className="h-10 w-[1px] bg-gradient-to-b from-[#D4AF37] to-transparent" />
             <p className="text-[8px] tracking-[1em] text-white/15 uppercase">© 2026 TOP • All Right Reserve</p>
@@ -778,13 +899,24 @@ export default function PhotoAerialsVideos() {
         Book Us
       </a>
 
+      {/* ─── ALBUM GALLERY MODAL ── */}
       <AnimatePresence>
         {selectedAlbum && (
           <GalleryView album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />
         )}
       </AnimatePresence>
 
-      {/* ─── GLOBAL STYLES FOR DESCRIPTION PARAGRAPH SPACING ─────────── */}
+      {/* ─── SINGLE ITEM PLAYLIST LIGHTBOX ── */}
+      <AnimatePresence>
+        {selectedSingleIndex !== null && singleItems.length > 0 && (
+          <SingleItemLightbox
+            items={singleItems}
+            currentIndex={selectedSingleIndex}
+            onClose={() => setSelectedSingleIndex(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <style>{`
         .album-description p {
           margin-bottom: 0.5rem;

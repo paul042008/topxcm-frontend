@@ -74,40 +74,42 @@ const fallbackListings: ListingCard[] = [
 
 const featureTiles = [
   {
-    title: "Prime Locations",
-    description: "Handpicked properties in Nigeria’s finest neighbourhoods.",
+    title: "Construction",
+    description: "Building your vision from the ground up.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-        <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
-        <circle cx="12" cy="10" r="3" />
+        <path d="M2 20L12 4l10 16H2z" />
+        <path d="M12 4v16" />
       </svg>
     ),
   },
   {
-    title: "Luxury Homes",
-    description: "Curated listings of the most exclusive estates.",
+    title: "Property Management",
+    description: "Seamless management of your assets.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6" />
+        <rect x="2" y="2" width="20" height="20" rx="2" />
+        <path d="M6 2v20" />
+        <path d="M18 2v20" />
       </svg>
     ),
   },
   {
-    title: "Expert Advisors",
-    description: "Your trusted partners in finding the perfect property.",
+    title: "Real Estate",
+    description: "Prime land and homes across Lagos.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
+        <path d="M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6" />
       </svg>
     ),
   },
   {
-    title: "Fast Transactions",
-    description: "Seamless process from viewing to handover.",
+    title: "Investment Advisory",
+    description: "Smart guidance for high‑return opportunities.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        <path d="M12 2v4M12 22v-4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M22 12h-4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+        <circle cx="12" cy="12" r="2" />
       </svg>
     ),
   },
@@ -415,7 +417,7 @@ export default function RealEstate() {
     return fallbackListings;
   }, [heroListings]);
 
-  const heroCopy = "Discover exceptional properties tailored to your lifestyle.";
+  const heroCopy = "Building, managing, and connecting you to exceptional properties in Lagos.";
 
   const handleImageClick = (card: ListingCard) => {
     setSelectedItem(card);
@@ -440,14 +442,12 @@ export default function RealEstate() {
         selectedItem ? "h-screen overflow-hidden" : ""
       }`}
     >
-      {/* ─── MENU ── */}
       <RealEstateMenu
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onOpenAction={() => setIsMenuOpen(true)}
       />
 
-      {/* LIGHTBOX */}
       <AnimatePresence>
         {selectedItem && (
           <motion.div
@@ -494,7 +494,6 @@ export default function RealEstate() {
         )}
       </AnimatePresence>
 
-      {/* MAIN CONTENT */}
       <div
         className="transition-all duration-500"
         style={{
@@ -503,21 +502,19 @@ export default function RealEstate() {
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
-        {/* HEADER – LOGO ONLY (no sub‑text) */}
+        {/* ─── HEADER – LOGO WITHOUT BOX ─── */}
         <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between border-b border-white/5 bg-black/80 px-5 py-5 backdrop-blur-md md:px-10">
-        <div className="flex items-center bg-white/5 border border-white/10 rounded-2xl p-2">
-  <img
-    src="/images/your-logo12.png"
-    alt="XCM Logo"
-    className="h-12 w-auto md:h-12 object-contain"
-  />
-</div>
-          {/* ─── NO HAMBURGER (the menu is triggered by the "View all" button) ─── */}
+          <div className="flex items-center">
+            <img
+              src="/images/your-logo12.png"
+              alt="XCM Logo"
+              className="h-12 w-auto md:h-14 object-contain"
+            />
+          </div>
         </header>
 
         {/* ─── HERO ─── */}
         <section className="relative h-screen w-full overflow-hidden pt-[80px]">
-          {/* Background slides – full screen */}
           <div className="absolute inset-0 z-0">
             <AnimatePresence mode="wait">
               <motion.div
@@ -530,12 +527,10 @@ export default function RealEstate() {
                 style={{ backgroundImage: `url(${heroSlides[currentSlide]})` }}
               />
             </AnimatePresence>
-            {/* Overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/90" />
           </div>
 
-          {/* Hero text */}
           <div className="relative z-10 flex h-full items-center px-5 md:px-10">
             <div className="max-w-2xl">
               <motion.h1
@@ -544,10 +539,10 @@ export default function RealEstate() {
                 transition={{ duration: 1.1, delay: 0.1, ease: "easeOut" }}
                 className="mt-4 max-w-[11ch] text-4xl font-semibold uppercase leading-[0.9] tracking-[-0.04em] text-white sm:text-5xl md:text-6xl lg:text-7xl"
               >
-                <span className="block">Find</span>
+                <span className="block">Build</span>
+                <span className="block text-[#B0D4E8]">Your Future.</span>
+                <span className="block">Own</span>
                 <span className="block text-[#B0D4E8]">Your Space.</span>
-                <span className="block">Live</span>
-                <span className="block text-[#B0D4E8]">Your Story.</span>
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 18 }}
@@ -567,14 +562,13 @@ export default function RealEstate() {
                   onClick={scrollToListings}
                   className="inline-flex items-center gap-3 rounded-2xl border border-[#B0D4E8]/40 bg-[#B0D4E8] px-4 py-3 text-[9px] font-semibold uppercase tracking-[0.26em] text-black shadow-[0_0_28px_rgba(176,212,232,0.32)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_0_40px_rgba(176,212,232,0.42)] sm:px-5 sm:py-3 md:px-6 md:py-4 md:text-xs"
                 >
-                  View Listings
+                  Explore Projects
                   <span className="text-lg">→</span>
                 </button>
               </motion.div>
             </div>
           </div>
 
-          {/* Scroll indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

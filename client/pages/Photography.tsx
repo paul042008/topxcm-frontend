@@ -254,11 +254,14 @@ export default function Photography() {
     "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=2000",
     "/images/slide7.jpg",
     "/images/slide3.jpg",
-    "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000",
+    "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000",  
     "/images/slide1.jpg",
     "/images/slide4.jpg",
     "/images/slide6.jpg",
-  ];
+    "/images/slide22.jpg",
+    "/images/slide23.jpg",
+    "/images/slide24.jpg",
+    ];
 
   const sloganText = "...your official photographer";
 
