@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
@@ -36,51 +36,113 @@ function isVideoUrl(url?: string | null): boolean {
   return /\.(mp4|mov|webm|avi|mkv|m4v|ogg)(\?.*)?$/i.test(url);
 }
 
-// ─── HELPER: fullscreen + landscape lock + unmute for videos ──────────────
+// ─── LAZY LOAD VIDEO (loads src when near viewport, pauses when off-screen) ─
+// Pausing off-screen videos (instead of just deferring the initial load) is
+// what actually kills the page lag: with many autoplaying videos on a grid,
+// the browser was decoding/rendering every one of them at once even though
+// only a few were visible at any given time.
 
-async function enterLandscapeFullscreen(el: HTMLVideoElement | null) {
-  if (!el) return;
-  try {
-    el.muted = false;
-    el.controls = true;
-  } catch {}
+const LazyVideo = memo(({ src, className, ...props }: { src: string; className?: string; [key: string]: any }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
 
-  const anyEl = el as any;
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
 
-  if (typeof anyEl.webkitEnterFullscreen === "function") {
-    try {
-      anyEl.webkitEnterFullscreen();
-      return;
-    } catch {}
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          // Give the browser a tick to attach the src before playing.
+          requestAnimationFrame(() => {
+            videoEl.play().catch(() => {});
+          });
+        } else {
+          videoEl.pause();
+        }
+      },
+      { rootMargin: "150px", threshold: 0.15 }
+    );
+
+    observer.observe(videoEl);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      src={shouldLoad ? src : undefined}
+      className={className}
+      preload="none"
+      {...props}
+    />
+  );
+});
+LazyVideo.displayName = "LazyVideo";
+
+// ─── LAZY LOAD IMAGE ──────────────────────────────────────────────────────
+
+const LazyImage = memo(({ src, alt, className, ...props }: { src: string; alt: string; className?: string; [key: string]: any }) => {
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setLoaded(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    if (imgRef.current) observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <img
+      ref={imgRef}
+      src={loaded ? src : undefined}
+      alt={alt}
+      className={className}
+      loading="lazy"
+      {...props}
+    />
+  );
+});
+LazyImage.displayName = "LazyImage";
+
+// ─── HELPER: play a lightbox video unmuted, with a muted fallback ─────────
+// We deliberately do NOT force the browser/iOS native fullscreen API anymore.
+// Native fullscreen (webkitEnterFullscreen on iOS, requestFullscreen on
+// desktop/Android) takes the video out of normal document flow and hides any
+// sibling overlay controls — which is exactly why Prev/Next stopped working
+// once a video started playing. The lightbox itself already covers the full
+// viewport, so we get a "fullscreen" experience for free, in both portrait
+// and landscape, without ever losing access to our own controls.
+
+function playVideoUnmuted(video: HTMLVideoElement | null) {
+  if (!video) return;
+  video.muted = false;
+  video.controls = true;
+  const playPromise = video.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch(() => {
+      // Some browsers block unmuted autoplay outside of a direct gesture.
+      // Fall back to muted playback so navigation never just silently stalls;
+      // the visible native controls let the user unmute with one tap.
+      video.muted = true;
+      video.play().catch(() => {});
+    });
   }
-
-  try {
-    if (!document.fullscreenElement) {
-      await el.requestFullscreen();
-    }
-  } catch {}
-
-  try {
-    const orientation = screen.orientation as any;
-    if (orientation && orientation.lock) {
-      await orientation.lock("landscape");
-    }
-  } catch {}
 }
 
-function exitLandscapeFullscreenAndMute(video: HTMLVideoElement | null) {
+function pauseAndMute(video: HTMLVideoElement | null) {
   if (!video) return;
-  try {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    }
-  } catch {}
-  try {
-    const orientation = screen.orientation as any;
-    if (orientation && orientation.unlock) {
-      orientation.unlock();
-    }
-  } catch {}
+  video.pause();
   video.muted = true;
 }
 
@@ -103,26 +165,31 @@ function SingleItemLightbox({
 
   useEffect(() => {
     if (isVideo) {
-      const video = videoRef.current;
-      if (video) {
-        video.play().catch(() => {});
-        enterLandscapeFullscreen(video);
-      }
+      playVideoUnmuted(videoRef.current);
     }
     return () => {
-      if (videoRef.current) {
-        exitLandscapeFullscreenAndMute(videoRef.current);
-      }
+      pauseAndMute(videoRef.current);
     };
   }, [index, isVideo]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     setIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
-  };
+  }, [items.length]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
-  };
+  }, [items.length]);
+
+  // Keyboard support — arrow keys work regardless of orientation/fullscreen state.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") handlePrev();
+      if (e.key === "ArrowRight") handleNext();
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handlePrev, handleNext, onClose]);
 
   if (!item || !image) return null;
 
@@ -140,27 +207,10 @@ function SingleItemLightbox({
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 text-white/60 hover:text-white text-2xl"
+          className="absolute top-4 right-4 z-30 text-white/60 hover:text-white text-2xl"
         >
           ✕
         </button>
-
-        {items.length > 1 && (
-          <>
-            <button
-              onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
-            >
-              ‹
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); handleNext(); }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
-            >
-              ›
-            </button>
-          </>
-        )}
 
         {isVideo ? (
           <video
@@ -171,16 +221,6 @@ function SingleItemLightbox({
             autoPlay
             playsInline
             onContextMenu={(e) => e.preventDefault()}
-            onClick={() => {
-              const video = videoRef.current;
-              if (video) {
-                if (!document.fullscreenElement) {
-                  enterLandscapeFullscreen(video);
-                } else {
-                  exitLandscapeFullscreenAndMute(video);
-                }
-              }
-            }}
           />
         ) : (
           <img
@@ -191,14 +231,54 @@ function SingleItemLightbox({
           />
         )}
 
-        {image.title && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
-            {image.title}
-          </div>
+        {/* ─── SIDE PREV/NEXT (big tap targets, always on top, work in any orientation) ─── */}
+        {items.length > 1 && (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition"
+              aria-label="Previous video"
+            >
+              ‹
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleNext(); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition"
+              aria-label="Next video"
+            >
+              ›
+            </button>
+          </>
         )}
-        {isVideo && (
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#D4AF37]/20 text-[#D4AF37] text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-[#D4AF37]/30">
-            🎬 Click video to toggle fullscreen
+
+        {/* ─── FLOATING CONTROLS (always visible) ─── */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10 z-30">
+          {items.length > 1 ? (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                className="text-white/70 hover:text-white text-sm font-medium px-2 py-1 hover:bg-white/10 rounded transition"
+              >
+                ‹ Prev
+              </button>
+              <span className="text-white/40 text-xs">
+                {index + 1} / {items.length}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                className="text-white/70 hover:text-white text-sm font-medium px-2 py-1 hover:bg-white/10 rounded transition"
+              >
+                Next ›
+              </button>
+            </>
+          ) : (
+            <span className="text-white/40 text-xs">1 / 1</span>
+          )}
+        </div>
+
+        {image.title && (
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm z-30">
+            {image.title}
           </div>
         )}
       </div>
@@ -217,20 +297,34 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
 
   const selectedIsVideo = selectedIndex !== null && isVideoUrl(images[selectedIndex]?.url);
 
+  const goPrev = useCallback(() => {
+    setSelectedIndex((prev) => (prev === null ? 0 : (prev - 1 + images.length) % images.length));
+  }, [images.length]);
+
+  const goNext = useCallback(() => {
+    setSelectedIndex((prev) => (prev === null ? 0 : (prev + 1) % images.length));
+  }, [images.length]);
+
   useEffect(() => {
     if (selectedIndex !== null && selectedIsVideo) {
-      const video = lightboxVideoRef.current;
-      if (video) {
-        video.play().catch(() => {});
-        enterLandscapeFullscreen(video);
-      }
+      playVideoUnmuted(lightboxVideoRef.current);
     }
     return () => {
-      if (lightboxVideoRef.current) {
-        exitLandscapeFullscreenAndMute(lightboxVideoRef.current);
-      }
+      pauseAndMute(lightboxVideoRef.current);
     };
   }, [selectedIndex, selectedIsVideo]);
+
+  // Keyboard support for the open lightbox.
+  useEffect(() => {
+    if (selectedIndex === null) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+      if (e.key === "Escape") setSelectedIndex(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedIndex, goPrev, goNext]);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -256,10 +350,9 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
     }
     if (isVideoUrl(coverImage)) {
       return (
-        <video
+        <LazyVideo
           src={coverImage}
           className="w-full h-full object-cover"
-          autoPlay
           muted
           loop
           playsInline
@@ -269,7 +362,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         />
       );
     }
-    return <img src={coverImage} alt={album.name} className="w-full h-full object-cover" />;
+    return <LazyImage src={coverImage} alt={album.name} className="w-full h-full object-cover" />;
   };
 
   const renderThumbnail = (img: AlbumImage, idx: number) => {
@@ -282,11 +375,10 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
     }
     if (isVideoUrl(img.url)) {
       return (
-        <video
-          ref={(el) => { videoRefs.current[img.id || String(idx)] = el; }}
+        <LazyVideo
+          ref={(el: HTMLVideoElement | null) => { videoRefs.current[img.id || String(idx)] = el; }}
           src={img.url}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          autoPlay
           muted
           loop
           playsInline
@@ -295,7 +387,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
       );
     }
     return (
-      <img
+      <LazyImage
         src={img.url}
         alt={img.title}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -386,31 +478,23 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
             >
               <button
                 onClick={() => setSelectedIndex(null)}
-                className="absolute top-4 right-4 z-10 text-white/60 hover:text-white text-2xl"
+                className="absolute top-4 right-4 z-30 text-white/60 hover:text-white text-2xl"
               >
                 ✕
               </button>
               {images.length > 1 && (
                 <>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedIndex((prev) =>
-                        prev !== null ? (prev - 1 + images.length) % images.length : 0
-                      );
-                    }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                    onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                    aria-label="Previous item"
                   >
                     ‹
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedIndex((prev) =>
-                        prev !== null ? (prev + 1) % images.length : 0
-                      );
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                    onClick={(e) => { e.stopPropagation(); goNext(); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                    aria-label="Next item"
                   >
                     ›
                   </button>
@@ -425,16 +509,6 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                   autoPlay
                   playsInline
                   onContextMenu={(e) => e.preventDefault()}
-                  onClick={() => {
-                    const video = lightboxVideoRef.current;
-                    if (video) {
-                      if (!document.fullscreenElement) {
-                        enterLandscapeFullscreen(video);
-                      } else {
-                        exitLandscapeFullscreenAndMute(video);
-                      }
-                    }
-                  }}
                 />
               ) : (
                 <img
@@ -444,14 +518,35 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                   onContextMenu={(e) => e.preventDefault()}
                 />
               )}
-              {images[selectedIndex].title && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
+
+              {/* ─── FLOATING CONTROLS (always visible) ─── */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10 z-30">
+                {images.length > 1 ? (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                      className="text-white/70 hover:text-white text-sm font-medium px-2 py-1 hover:bg-white/10 rounded transition"
+                    >
+                      ‹ Prev
+                    </button>
+                    <span className="text-white/40 text-xs">
+                      {selectedIndex + 1} / {images.length}
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); goNext(); }}
+                      className="text-white/70 hover:text-white text-sm font-medium px-2 py-1 hover:bg-white/10 rounded transition"
+                    >
+                      Next ›
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-white/40 text-xs">1 / 1</span>
+                )}
+              </div>
+
+              {images[selectedIndex]?.title && (
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm z-30">
                   {images[selectedIndex].title}
-                </div>
-              )}
-              {selectedIsVideo && (
-                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#D4AF37]/20 text-[#D4AF37] text-xs px-3 py-1 rounded-full backdrop-blur-sm border border-[#D4AF37]/30">
-                  🎬 Click video to toggle fullscreen
                 </div>
               )}
             </div>
@@ -464,10 +559,9 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
 
 // ─── ALBUM CARD (with "View Gallery" button) ──────────────────────────────
 
-function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
+const AlbumCard = memo(({ album, onClick }: { album: Album; onClick: () => void }) => {
   const displayImage = album.cover || (album.images.length > 0 ? album.images[0].url : null);
   const displayIsVideo = isVideoUrl(displayImage);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   return (
     <motion.div
@@ -484,18 +578,16 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
         {displayImage ? (
           <>
             {displayIsVideo ? (
-              <video
-                ref={videoRef}
+              <LazyVideo
                 src={displayImage}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                autoPlay
                 muted
                 loop
                 playsInline
                 onContextMenu={(e) => e.preventDefault()}
               />
             ) : (
-              <img
+              <LazyImage
                 src={displayImage}
                 alt={album.name}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -540,63 +632,21 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
       </div>
     </motion.div>
   );
-}
+});
+AlbumCard.displayName = "AlbumCard";
 
-// ─── SINGLE CARD (video plays directly on card) ────────────────────────────
+// ─── SINGLE CARD (video preview only — full playback happens in the lightbox) ─
+// Previously this card tried to grab native fullscreen the moment its video
+// was tapped, which fought with the lightbox that opens right after. That's
+// been removed: the card is now just a lightweight, muted looping preview
+// like every other thumbnail, and the real playback/controls live in
+// SingleItemLightbox.
 
-function SingleCard({ item, onClick }: { item: Album; onClick: () => void }) {
+const SingleCard = memo(({ item, onClick }: { item: Album; onClick: () => void }) => {
   const image = item.images[0];
   const hasUrl = !!image?.url;
   const itemIsVideo = isVideoUrl(image?.url);
   const [isVideoError, setIsVideoError] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const handleVideoLoaded = () => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {
-        console.log("Autoplay blocked for:", item.name);
-      });
-    }
-  };
-
-  const handleVideoClick = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = false;
-    video.controls = true;
-    video.play().catch(() => {});
-    enterLandscapeFullscreen(video);
-  };
-
-  const handleExitFullscreen = () => {
-    const video = videoRef.current;
-    if (video) {
-      exitLandscapeFullscreenAndMute(video);
-      setIsFullscreen(false);
-    }
-  };
-
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      const video = videoRef.current;
-      if (!document.fullscreenElement && video) {
-        video.muted = true;
-        setIsFullscreen(false);
-      } else if (document.fullscreenElement && video) {
-        setIsFullscreen(true);
-      }
-    };
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
-    };
-  }, []);
-
-  const showExitButton = isFullscreen && itemIsVideo;
 
   return (
     <motion.div
@@ -604,51 +654,27 @@ function SingleCard({ item, onClick }: { item: Album; onClick: () => void }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6 }}
-      className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer"
+      className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group"
       onClick={onClick}
     >
       <div className="relative h-64 md:h-72 overflow-hidden bg-zinc-800">
         {hasUrl ? (
           <>
             {itemIsVideo && !isVideoError ? (
-              <>
-                <video
-                  ref={videoRef}
-                  src={image.url}
-                  className="w-full h-full object-cover"
-                  autoPlay
-                  muted
-                  playsInline
-                  loop
-                  onError={() => {
-                    console.error("🎥 Video failed to load:", image.url);
-                    setIsVideoError(true);
-                  }}
-                  onLoadedData={handleVideoLoaded}
-                  onClick={handleVideoClick}
-                  onContextMenu={(e) => e.preventDefault()}
-                />
-                {showExitButton && (
-                  <button
-                    onClick={handleExitFullscreen}
-                    className="absolute top-2 right-2 z-20 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 transition text-xl shadow-lg backdrop-blur-sm"
-                    aria-label="Exit fullscreen"
-                  >
-                    ✕
-                  </button>
-                )}
-              </>
+              <LazyVideo
+                src={image.url}
+                className="w-full h-full object-cover"
+                muted
+                playsInline
+                loop
+                onError={() => setIsVideoError(true)}
+                onContextMenu={(e) => e.preventDefault()}
+              />
             ) : (
-              <img
+              <LazyImage
                 src={image.url}
                 alt={item.name}
                 className="w-full h-full object-cover"
-                onError={() => console.error("🖼️ Image failed to load:", image.url)}
-                onClick={() => {
-                  if (itemIsVideo) {
-                    handleVideoClick();
-                  }
-                }}
                 onContextMenu={(e) => e.preventDefault()}
               />
             )}
@@ -684,7 +710,8 @@ function SingleCard({ item, onClick }: { item: Album; onClick: () => void }) {
       </div>
     </motion.div>
   );
-}
+});
+SingleCard.displayName = "SingleCard";
 
 // ─── MAIN PAGE ──────────────────────────────────────────────────────────────
 
@@ -749,11 +776,23 @@ export default function PhotoAerialsVideos() {
     fetchData();
   }, []);
 
-  const filteredAlbums =
-    activeTab === "all" ? albums : albums.filter((a) => a.category === activeTab);
+  const filteredAlbums = useMemo(
+    () => (activeTab === "all" ? albums : albums.filter((a) => a.category === activeTab)),
+    [albums, activeTab]
+  );
 
-  const singleItems = filteredAlbums.filter((a) => a.isSingle === true);
-  const albumItems = filteredAlbums.filter((a) => !a.isSingle);
+  const singleItems = useMemo(
+    () => filteredAlbums.filter((a) => a.isSingle === true),
+    [filteredAlbums]
+  );
+  const albumItems = useMemo(
+    () => filteredAlbums.filter((a) => !a.isSingle),
+    [filteredAlbums]
+  );
+
+  const handleOpenAlbum = useCallback((album: Album) => setSelectedAlbum(album), []);
+  const handleCloseAlbum = useCallback(() => setSelectedAlbum(null), []);
+  const handleCloseSingle = useCallback(() => setSelectedSingleIndex(null), []);
 
   return (
     <div className="min-h-screen bg-[#080808] text-white overflow-x-hidden">
@@ -820,7 +859,7 @@ export default function PhotoAerialsVideos() {
               <AlbumCard
                 key={album.id}
                 album={album}
-                onClick={() => setSelectedAlbum(album)}
+                onClick={() => handleOpenAlbum(album)}
               />
             ))}
             {singleItems.map((item, idx) => (
@@ -902,7 +941,7 @@ export default function PhotoAerialsVideos() {
       {/* ─── ALBUM GALLERY MODAL ── */}
       <AnimatePresence>
         {selectedAlbum && (
-          <GalleryView album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />
+          <GalleryView album={selectedAlbum} onClose={handleCloseAlbum} />
         )}
       </AnimatePresence>
 
@@ -912,7 +951,7 @@ export default function PhotoAerialsVideos() {
           <SingleItemLightbox
             items={singleItems}
             currentIndex={selectedSingleIndex}
-            onClose={() => setSelectedSingleIndex(null)}
+            onClose={handleCloseSingle}
           />
         )}
       </AnimatePresence>
