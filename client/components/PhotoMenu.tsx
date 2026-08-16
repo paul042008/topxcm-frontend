@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { X, Facebook, Instagram, Twitter } from "lucide-react";
+import { X, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 
 export default function PhotoMenu({
   isOpen,
@@ -104,14 +104,37 @@ export default function PhotoMenu({
           </nav>
 
           <div className="w-full flex justify-center gap-10 pb-20 relative z-10">
-            <a href="https://www.facebook.com/share/1KToiX8cS4/" target="_blank" rel="noreferrer" className="text-[#D4AF37]/50 hover:text-[#D4AF37] transition-colors">
+            <a
+              href="https://www.facebook.com/topweddings1"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#D4AF37]/50 hover:text-[#D4AF37] transition-colors"
+            >
               <Facebook size={18} />
             </a>
-            <a href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA==" target="_blank" rel="noreferrer" className="text-[#D4AF37]/50 hover:text-[#D4AF37] transition-colors">
+            <a
+              href="https://www.instagram.com/topstudios1"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#D4AF37]/50 hover:text-[#D4AF37] transition-colors"
+            >
               <Instagram size={18} />
             </a>
-            <a href="#" target="_blank" rel="noreferrer" className="text-[#D4AF37]/50 hover:text-[#D4AF37] transition-colors">
+            <a
+              href="https://twitter.com/theofficialpho"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#D4AF37]/50 hover:text-[#D4AF37] transition-colors"
+            >
               <Twitter size={18} />
+            </a>
+            <a
+              href="https://www.youtube.com/@topfilmz1"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#D4AF37]/50 hover:text-[#D4AF37] transition-colors"
+            >
+              <Youtube size={18} />
             </a>
           </div>
         </div>

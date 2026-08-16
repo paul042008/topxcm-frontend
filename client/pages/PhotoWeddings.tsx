@@ -1,3 +1,5 @@
+// ─── FULL PhotoWeddings.tsx with cache‑busting ─────────────────────────
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
@@ -398,79 +400,84 @@ export default function PhotoWeddings() {
   const [singleImage, setSingleImage] = useState<AlbumImage | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "weddings" | "events">("all");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const albumsRes = await fetch(`${API}/api/fashion-albums`);
-        const albumsData: Album[] = await albumsRes.json();
+  // ─── FETCH DATA WITH CACHE-BUSTING ─────────────────────────────────────
+  const fetchData = async () => {
+    setLoading(true);
+    const ts = Date.now(); // force fresh fetch
+    try {
+      const albumsRes = await fetch(`${API}/api/fashion-albums?_t=${ts}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      const albumsData: Album[] = await albumsRes.json();
 
-        const itemsRes = await fetch(`${API}/api/items`);
-        const itemsData = await itemsRes.json();
+      const itemsRes = await fetch(`${API}/api/items?_t=${ts}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      const itemsData = await itemsRes.json();
 
-        const categories = ["weddings", "events"];
+      const categories = ["weddings", "events"];
 
-        const filteredAlbums = albumsData.filter((album) =>
-          categories.includes(album.category)
-        );
+      const filteredAlbums = albumsData.filter((album) =>
+        categories.includes(album.category)
+      );
 
-        const standaloneItems = itemsData.filter(
-          (item: any) =>
-            !item.album_id &&
-            categories.includes(item.category) &&
-            item.image
-        );
+      const standaloneItems = itemsData.filter(
+        (item: any) =>
+          !item.album_id &&
+          categories.includes(item.category) &&
+          item.image
+      );
 
-        const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
-          id: `single-${item.id}`,
-          name: item.title || "Untitled",
-          category: item.category,
-          description: item.description || "",
-          price: item.price || "",
-          cover: item.secureImage || item.image,
-          isSingle: true,
-          images: [
-            {
-              url: item.secureImage || item.image,
-              title: item.title || "Untitled",
-              description: item.description || "",
-              price: item.price || "",
-              extra_text: item.extra_text || "",
-            },
-          ],
-        }));
+      const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
+        id: `single-${item.id}`,
+        name: item.title || "Untitled",
+        category: item.category,
+        description: item.description || "",
+        price: item.price || "",
+        cover: item.secureImage || item.image,
+        isSingle: true,
+        images: [
+          {
+            url: item.secureImage || item.image,
+            title: item.title || "Untitled",
+            description: item.description || "",
+            price: item.price || "",
+            extra_text: item.extra_text || "",
+          },
+        ],
+      }));
 
-        // ─── DEDUPLICATE: remove duplicates by id, then by cover URL ───
-        const combined = [...filteredAlbums, ...singleItemsAsAlbums];
-        const seenIds = new Set<string>();
-        const seenCovers = new Set<string>();
-        const unique: Album[] = [];
+      // ─── DEDUPLICATE ────────────────────────────────────────────────────
+      const combined = [...filteredAlbums, ...singleItemsAsAlbums];
+      const seenIds = new Set<string>();
+      const seenCovers = new Set<string>();
+      const unique: Album[] = [];
 
-        for (const album of combined) {
-          // Skip if id already seen
-          if (seenIds.has(album.id)) continue;
-          seenIds.add(album.id);
+      for (const album of combined) {
+        if (seenIds.has(album.id)) continue;
+        seenIds.add(album.id);
 
-          // If cover exists and we've seen this URL before, skip
-          if (album.cover) {
-            // Normalize URL (remove query params) for better matching
-            const cleanUrl = album.cover.split('?')[0];
-            if (seenCovers.has(cleanUrl)) continue;
-            seenCovers.add(cleanUrl);
-          }
-
-          unique.push(album);
+        if (album.cover) {
+          const cleanUrl = album.cover.split('?')[0];
+          if (seenCovers.has(cleanUrl)) continue;
+          seenCovers.add(cleanUrl);
         }
 
-        setAlbums(unique);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setAlbums([]);
-      } finally {
-        setLoading(false);
+        unique.push(album);
       }
-    };
 
+      setAlbums(unique);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setAlbums([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 

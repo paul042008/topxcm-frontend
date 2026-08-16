@@ -76,7 +76,7 @@ const fallbackCollections: CollectionCard[] = [
     description: "Bold. Urban. Fearless.",
     image: "/images/hero3.jpeg",
     count: "10 Items",
-    targetRoute: "/fashion/agbadas",
+    targetRoute: "/fashion/agbada",
   },
   {
     id: "minimal-luxe",
@@ -84,7 +84,7 @@ const fallbackCollections: CollectionCard[] = [
     description: "Iconic pieces, defining style.",
     image: "/images/hero4.jpeg",
     count: "14 Items",
-    targetRoute: "/fashion/agbadas",
+    targetRoute: "/fashion/agbada",
   },
   {
     id: "xcm-signature",
@@ -104,10 +104,19 @@ const fallbackCollections: CollectionCard[] = [
   },
 ];
 
-const DEFAULT_ROUTE = "/fashion/latest";
+const DEFAULT_ROUTE = "/fashion/suits";
+
+// ─── VALID ROUTES (must match your actual route definitions) ─────────────
+const VALID_ROUTES = [
+  "/fashion/suits",
+  "/fashion/agbada",
+  "/fashion/natives",
+  "/fashion/casuals",
+];;
 
 function getRouteForCard(card: CollectionCard): string {
-  return card.targetRoute || DEFAULT_ROUTE;
+  const route = card.targetRoute || DEFAULT_ROUTE;
+  return VALID_ROUTES.includes(route) ? route : DEFAULT_ROUTE;
 }
 
 // ─── WAKE‑UP HELPERS (copied from admin) ────────────────────────────────
@@ -561,7 +570,7 @@ export default function FashionPage() {
       description: album.description || "Exclusive pieces",
       image: album.cover || fallbackCollections[index % fallbackCollections.length].image,
       count: `${album.images?.length || 0} Items`,
-      targetRoute: "/fashion/latest",
+      targetRoute: DEFAULT_ROUTE,
     }));
   }, [latestAlbums]);
 
@@ -606,7 +615,12 @@ export default function FashionPage() {
   };
 
   const handleViewMore = (card: CollectionCard) => {
-    const route = getRouteForCard(card);
+    let route = getRouteForCard(card);
+    // Fallback if route still invalid (extra safety)
+    if (!VALID_ROUTES.includes(route)) {
+      console.warn(`Invalid route "${route}" for "${card.title}", falling back to "${DEFAULT_ROUTE}"`);
+      route = DEFAULT_ROUTE;
+    }
     navigate(route);
     setSelectedItem(null);
   };

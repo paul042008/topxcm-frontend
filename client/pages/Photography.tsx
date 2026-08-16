@@ -268,13 +268,13 @@ export default function Photography() {
   // ─── DETERMINE IF CURRENT SLIDE IS SLIDE6 ──────────────────────────────
   const isSlide6 = heroSlides[currentSlide] === "/images/slide6.jpg";
 
-// No zoom – all slides just fade in/out
-const initialScale = 1;
-const animateScale = 1;
-const exitScale = 1;
+  // No zoom – all slides just fade in/out
+  const initialScale = 1;
+  const animateScale = 1;
+  const exitScale = 1;
 
-// All slides use "cover" (fill the container without cropping)
-const bgSize = "cover";
+  // All slides use "cover" (fill the container without cropping)
+  const bgSize = "cover";
 
   useEffect(() => {
     fetch(`${API}/api/items`)
@@ -661,6 +661,7 @@ const bgSize = "cover";
                   aerial imagery—transforming fleeting moments into elegant, timeless memories.
                 </p>
 
+                {/* ─── UPDATED CONTACT BOX ─── */}
                 <div
                   className="mt-8 rounded-2xl p-6 space-y-6"
                   style={{ border: "1px solid rgba(212,175,55,0.15)", backgroundColor: "rgba(212,175,55,0.03)" }}
@@ -726,11 +727,32 @@ const bgSize = "cover";
 
                   <div style={{ height: "1px", backgroundColor: "rgba(212,175,55,0.1)" }} />
 
+                  {/* ─── CONNECT WITH US (UPDATED) ─── */}
                   <div>
-                    <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>Connect With Us</p>
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>
+                      Connect With Us
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
+
+                      {/* YouTube – @topfilms1 */}
                       <a
-                        href="https://www.facebook.com/share/19fqFjS3Bw/"
+                        href="https://www.youtube.com/@topfilms1"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                        style={{ border: "1px solid rgba(212,175,55,0.25)", backgroundColor: "rgba(212,175,55,0.04)" }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.04)"; }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37">
+                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.016 3.016 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">YouTube</span>
+                      </a>
+
+                      {/* Facebook – @topweddings1 */}
+                      <a
+                        href="https://www.facebook.com/topweddings1"
                         target="_blank"
                         rel="noreferrer"
                         className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
@@ -743,8 +765,10 @@ const bgSize = "cover";
                         </svg>
                         <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Facebook</span>
                       </a>
+
+                      {/* Instagram – @topstudios1 */}
                       <a
-                        href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA=="
+                        href="https://www.instagram.com/topstudios1"
                         target="_blank"
                         rel="noreferrer"
                         className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
@@ -759,8 +783,10 @@ const bgSize = "cover";
                         </svg>
                         <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Instagram</span>
                       </a>
+
+                      {/* Twitter – @theofficialpho */}
                       <a
-                        href="https://twitter.com/topstudios1"
+                        href="https://twitter.com/theofficialpho"
                         target="_blank"
                         rel="noreferrer"
                         className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
@@ -773,6 +799,8 @@ const bgSize = "cover";
                         </svg>
                         <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">Twitter</span>
                       </a>
+
+                      {/* Email – unchanged */}
                       <a
                         href="mailto:theofficialphotography1@email.com"
                         className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"

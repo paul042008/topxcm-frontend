@@ -2,7 +2,6 @@ import { useState } from "react";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 
-// Only one WhatsApp number now
 const WA1 = "https://wa.me/2348132799299";
 
 export default function PhotoContact() {
@@ -71,18 +70,17 @@ export default function PhotoContact() {
           </div>
         </div>
 
-        {/* ─── UNIFIED CONTACT BOX (updated with Call Us + WhatsApp buttons) ─── */}
+        {/* ─── UNIFIED CONTACT BOX ─── */}
         <div
           className="rounded-2xl p-6 space-y-6"
           style={{ border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.03)" }}
         >
-          {/* Inquiries – now with Call Us and WhatsApp buttons */}
+          {/* Inquiries – Call Us & WhatsApp */}
           <div className="space-y-3">
             <p className="text-[9px] font-bold tracking-[0.5em] uppercase" style={{ color: "#D4AF37" }}>
               Inquiries
             </p>
 
-            {/* Call Us button */}
             <a
               href="tel:+2348132799299"
               className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
@@ -109,7 +107,6 @@ export default function PhotoContact() {
               </span>
             </a>
 
-            {/* WhatsApp button */}
             <a
               href={WA1}
               target="_blank"
@@ -142,38 +139,90 @@ export default function PhotoContact() {
 
           <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.08)" }} />
 
-          {/* Connect With Us – unchanged (already has TOP links) */}
+          {/* ─── CONNECT WITH US (UPDATED) ─── */}
           <div>
-            <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>Connect With Us</p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <a href="https://www.facebook.com/share/19fqFjS3Bw/" target="_blank" rel="noreferrer"
+            <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>
+              Connect With Us
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+
+              {/* YouTube – @topfilms1 */}
+              <a
+                href="https://www.youtube.com/@topfilms1"
+                target="_blank"
+                rel="noreferrer"
                 className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                 style={{ border: "1px solid rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.04)" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.016 3.016 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">YouTube</span>
+              </a>
+
+              {/* Facebook – @topweddings1 */}
+              <a
+                href="https://www.facebook.com/topweddings1"
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                style={{ border: "1px solid rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.04)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                </svg>
                 <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">Facebook</span>
               </a>
-              <a href="https://www.instagram.com/topweddings1?igsh=MW11dTE5OWw5c3l1MA==" target="_blank" rel="noreferrer"
+
+              {/* Instagram – @topstudios1 */}
+              <a
+                href="https://www.instagram.com/topstudios1"
+                target="_blank"
+                rel="noreferrer"
                 className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                 style={{ border: "1px solid rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.04)" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#D4AF37" stroke="none"/>
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <circle cx="12" cy="12" r="4"/>
+                  <circle cx="17.5" cy="6.5" r="1" fill="#D4AF37" stroke="none"/>
                 </svg>
                 <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">Instagram</span>
               </a>
-              <a href="mailto:theofficialphotography1@email.com"
+
+              {/* Twitter / X – @theofficialpho */}
+              <a
+                href="https://twitter.com/theofficialpho"
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                style={{ border: "1px solid rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.04)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#D4AF37">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.736-8.835L2.25 2.25h6.918l4.265 5.638 4.811-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/>
+                </svg>
+                <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">Twitter</span>
+              </a>
+
+              {/* Email – unchanged */}
+              <a
+                href="mailto:theofficialphotography1@email.com"
                 className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                 style={{ border: "1px solid rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.04)" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.12)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
                 <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-[#D4AF37] transition-colors">Email</span>
               </a>

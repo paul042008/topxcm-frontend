@@ -91,10 +91,9 @@ const SHOWCASE_ROUTE_OPTIONS = [
 
 const CAROUSEL_ROUTE_OPTIONS = [
   { value: "/fashion/suits", label: "Suits" },
-  { value: "/fashion/agbadas", label: "Agbadas" },
+  { value: "/fashion/agbada", label: "Agbada" },   // note: "agbada" not "agbadas"
   { value: "/fashion/natives", label: "Natives" },
   { value: "/fashion/casuals", label: "Casuals" },
-  { value: "/fashion/latest", label: "Latest Collection" },
 ];
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
@@ -476,6 +475,15 @@ function CategoryManager({
   const [imgExtraText, setImgExtraText] = useState("");
   const [addingImg, setAddingImg] = useState(false);
   const [addImgMsg, setAddImgMsg] = useState("");
+
+  // ─── NEW: EDIT CAROUSEL STATE ─────────────────────────────────────────────
+  const [editingCarousel, setEditingCarousel] = useState<SingleItem | null>(null);
+  const [editCarouselTitle, setEditCarouselTitle] = useState("");
+  const [editCarouselDesc, setEditCarouselDesc] = useState("");
+  const [editCarouselRoute, setEditCarouselRoute] = useState<string>("");
+  const [editCarouselFile, setEditCarouselFile] = useState<File | null>(null);
+  const [editCarouselLoading, setEditCarouselLoading] = useState(false);
+  const [editCarouselMsg, setEditCarouselMsg] = useState("");
 
   // ─── FETCH FUNCTIONS ───────────────────────────────────────────────────────
 
@@ -1134,6 +1142,68 @@ function CategoryManager({
     }
   };
 
+  // ─── NEW: EDIT CAROUSEL FUNCTIONS ────────────────────────────────────────
+
+  const openEditCarousel = (item: SingleItem) => {
+    setEditingCarousel(item);
+    setEditCarouselTitle(item.title || "");
+    setEditCarouselDesc(item.description || "");
+    setEditCarouselRoute(item.extra_text || CAROUSEL_ROUTE_OPTIONS[0]?.value || "");
+    setEditCarouselFile(null);
+    setEditCarouselMsg("");
+  };
+
+  const handleEditCarousel = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingCarousel) return;
+    setEditCarouselLoading(true);
+    setEditCarouselMsg("");
+    try {
+      let res: Response;
+      const hasFile = !!editCarouselFile;
+      const bodyData = {
+        title: editCarouselTitle,
+        category: "fashion-carousel",
+        description: editCarouselDesc,
+        extra_text: editCarouselRoute,
+      };
+
+      if (hasFile) {
+        const fd = new FormData();
+        fd.append("image", editCarouselFile);
+        fd.append("title", editCarouselTitle);
+        fd.append("category", "fashion-carousel");
+        fd.append("description", editCarouselDesc);
+        fd.append("extra_text", editCarouselRoute);
+        res = await fetchWithWakeup(
+          `${API}/api/items/${editingCarousel.id}`,
+          { method: "PUT", headers: AUTH_HEADER, body: fd },
+          setEditCarouselMsg
+        );
+      } else {
+        res = await fetchWithWakeup(
+          `${API}/api/items/${editingCarousel.id}`,
+          {
+            method: "PUT",
+            headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
+            body: JSON.stringify(bodyData),
+          },
+          setEditCarouselMsg
+        );
+      }
+
+      const d = await res.json();
+      if (!res.ok) return setEditCarouselMsg(d.message || "Update failed");
+      setEditCarouselMsg("✅ Carousel item updated!");
+      setEditingCarousel(null);
+      fetchCarousel();
+    } catch {
+      setEditCarouselMsg("❌ Update failed. Try again.");
+    } finally {
+      setEditCarouselLoading(false);
+    }
+  };
+
   // ─── RENDER ─────────────────────────────────────────────────────────────────
 
   const isPhoto = type === "photo";
@@ -1248,6 +1318,27 @@ function CategoryManager({
                       <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
                       <p className="text-xs text-white/35 truncate">→ {item.extra_text || "No route"}</p>
                     </div>
+                    {/* ─── EDIT BUTTON ─── */}
+                    <button
+                      onClick={() => openEditCarousel(item)}
+                      className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
+                      title="Edit carousel item"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
                     <button
                       onClick={() => deleteCarousel(item.id)}
                       disabled={deletingCarouselId === item.id}
@@ -1283,6 +1374,65 @@ function CategoryManager({
               </div>
             )}
           </div>
+
+          {/* ─── EDIT CAROUSEL MODAL ────────────────────────────────────────── */}
+          {editingCarousel && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+              <div className="w-full max-w-lg bg-[#111] rounded-2xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto">
+                <h3 className="text-lg font-serif text-[#D4AF37] mb-4">Edit Carousel Item</h3>
+                <form onSubmit={handleEditCarousel} className="space-y-4">
+                  <Field label="Title *">
+                    <input
+                      value={editCarouselTitle}
+                      onChange={(e) => setEditCarouselTitle(e.target.value)}
+                      className={inputCls}
+                      required
+                    />
+                  </Field>
+                  <Field label="Description">
+                    <RichTextEditor
+                      value={editCarouselDesc}
+                      onChange={setEditCarouselDesc}
+                      placeholder="Describe this collection…"
+                    />
+                  </Field>
+                  <Field label="Target Route (where 'See More' goes)">
+                    <select
+                      value={editCarouselRoute}
+                      onChange={(e) => setEditCarouselRoute(e.target.value)}
+                      className={inputCls}
+                    >
+                      {CAROUSEL_ROUTE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <UploadBox
+                    label="Replace Image (optional)"
+                    single
+                    onChange={(f) => setEditCarouselFile(f[0] || null)}
+                    previewFiles={editCarouselFile ? [editCarouselFile] : []}
+                    accept="image/*"
+                  />
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingCarousel(null)}
+                      className="text-white/50 hover:text-white text-sm transition px-4 py-2 border border-white/10 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={editCarouselLoading} className={btnGold}>
+                      {editCarouselLoading ? "Saving…" : "Save Changes"}
+                    </button>
+                  </div>
+                  <StatusMsg msg={editCarouselMsg} />
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       ) : mode === "single" ? (
         <div className="space-y-5">

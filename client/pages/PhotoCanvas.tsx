@@ -71,18 +71,63 @@ function ItemModal({ item, onClose }: { item: Product; onClose: () => void }) {
   );
 }
 
+// ─── SIZE CHART MODAL ──────────────────────────────────────────────────────
+
+function SizeChartModal({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="relative max-w-3xl w-full bg-zinc-900 rounded-2xl overflow-hidden border border-white/10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm hover:bg-white/20 transition"
+        >
+          ✕
+        </button>
+        <div className="p-4">
+          <img
+            src="/images/sizechart.jpg"
+            alt="Size Chart"
+            className="w-full h-auto object-contain"
+            onContextMenu={(e) => e.preventDefault()}
+            draggable={false}
+          />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function PhotoCanvas() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showSizeChart, setShowSizeChart] = useState(false);
   const [activeCategory, setActiveCategory] = useState<"all" | "canvas" | "frames">("all");
 
   useEffect(() => {
     fetch(`${API}/api/items`)
       .then((res) => res.json())
       .then((data: any[]) => {
-        // Transform items: use secureImage if available, fallback to image
         const transformed = data.map((item) => ({
           ...item,
           image: item.secureImage || item.image,
@@ -229,28 +274,26 @@ export default function PhotoCanvas() {
         )}
       </main>
 
+      {/* ─── SIZE CHART BUTTON ────────────────────────────────────────────── */}
+      <div className="flex justify-center px-6 pb-8">
+        <button
+          onClick={() => setShowSizeChart(true)}
+          className="border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-xl px-8 py-3 text-xs font-bold uppercase tracking-widest transition-colors"
+        >
+          📐 Size Chart
+        </button>
+      </div>
+
       <footer className="py-16 text-center border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
-            <a
-              href="https://www.instagram.com/topfilmz1"
-              target="_blank"
-              rel="noreferrer"
-              className="text-white/40 hover:text-white transition-colors"
-              aria-label="Instagram"
-            >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-              </svg>
-            </a>
+            {/* Only one Instagram */}
             <a
               href="https://www.instagram.com/topstudios1?igsh=YmxrMGN0dGdnbWgy"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"
-              aria-label="Instagram Drone"
+              aria-label="Instagram"
             >
               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
@@ -293,6 +336,10 @@ export default function PhotoCanvas() {
 
       <AnimatePresence>
         {selectedProduct && <ItemModal item={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSizeChart && <SizeChartModal onClose={() => setShowSizeChart(false)} />}
       </AnimatePresence>
     </div>
   );

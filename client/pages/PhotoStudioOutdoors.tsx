@@ -340,57 +340,84 @@ export default function PhotoStudioOutdoors() {
   const [singleImage, setSingleImage] = useState<AlbumImage | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "studio" | "outdoors">("all");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const albumsRes = await fetch(`${API}/api/fashion-albums`);
-        const albumsData: Album[] = await albumsRes.json();
+  // ─── FETCH DATA WITH CACHE-BUSTING AND DEDUPLICATION ──────────────────
+  const fetchData = async () => {
+    setLoading(true);
+    const ts = Date.now(); // force fresh fetch
+    try {
+      const albumsRes = await fetch(`${API}/api/fashion-albums?_t=${ts}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      const albumsData: Album[] = await albumsRes.json();
 
-        const itemsRes = await fetch(`${API}/api/items`);
-        const itemsData = await itemsRes.json();
+      const itemsRes = await fetch(`${API}/api/items?_t=${ts}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      const itemsData = await itemsRes.json();
 
-        const photoCategories = ["studio", "outdoors"];
+      const photoCategories = ["studio", "outdoors"];
 
-        const filteredAlbums = albumsData.filter((album) =>
-          photoCategories.includes(album.category)
-        );
+      const filteredAlbums = albumsData.filter((album) =>
+        photoCategories.includes(album.category)
+      );
 
-        const standaloneItems = itemsData.filter(
-          (item: any) =>
-            !item.album_id &&
-            photoCategories.includes(item.category) &&
-            item.image
-        );
+      const standaloneItems = itemsData.filter(
+        (item: any) =>
+          !item.album_id &&
+          photoCategories.includes(item.category) &&
+          item.image
+      );
 
-        const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
-          id: `single-${item.id}`,
-          name: item.title || "Untitled",
-          category: item.category,
-          description: item.description || "",
-          price: item.price || "",
-          cover: item.secureImage || item.image,
-          isSingle: true,
-          images: [
-            {
-              url: item.secureImage || item.image,
-              title: item.title || "Untitled",
-              description: item.description || "",
-              price: item.price || "",
-              extra_text: item.extra_text || "",
-            },
-          ],
-        }));
+      const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
+        id: `single-${item.id}`,
+        name: item.title || "Untitled",
+        category: item.category,
+        description: item.description || "",
+        price: item.price || "",
+        cover: item.secureImage || item.image,
+        isSingle: true,
+        images: [
+          {
+            url: item.secureImage || item.image,
+            title: item.title || "Untitled",
+            description: item.description || "",
+            price: item.price || "",
+            extra_text: item.extra_text || "",
+          },
+        ],
+      }));
 
-        setAlbums([...filteredAlbums, ...singleItemsAsAlbums]);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setAlbums([]);
-      } finally {
-        setLoading(false);
+      // ─── DEDUPLICATE by id and cover URL ──────────────────────────────
+      const combined = [...filteredAlbums, ...singleItemsAsAlbums];
+      const seenIds = new Set<string>();
+      const seenCovers = new Set<string>();
+      const unique: Album[] = [];
+
+      for (const album of combined) {
+        if (seenIds.has(album.id)) continue;
+        seenIds.add(album.id);
+
+        if (album.cover) {
+          const cleanUrl = album.cover.split('?')[0];
+          if (seenCovers.has(cleanUrl)) continue;
+          seenCovers.add(cleanUrl);
+        }
+
+        unique.push(album);
       }
-    };
 
+      setAlbums(unique);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setAlbums([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -399,7 +426,6 @@ export default function PhotoStudioOutdoors() {
 
   const handleCardClick = (album: Album) => {
     if (album.isSingle) {
-      // Single item: open lightbox with the image
       if (album.images.length > 0) {
         setSingleImage(album.images[0]);
       }
@@ -442,6 +468,7 @@ export default function PhotoStudioOutdoors() {
         </div>
       </div>
 
+      {/* ─── FILTER TABS (Refresh button removed) ─── */}
       <div className="px-6 md:px-16 py-6 flex gap-6 border-b border-white/5 overflow-x-auto">
         {(["all", "studio", "outdoors"] as const).map((tab) => (
           <button

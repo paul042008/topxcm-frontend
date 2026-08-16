@@ -105,7 +105,7 @@ export default function RealEstateContact() {
             <div className="flex justify-center mt-8">
               <div className="aspect-[3/4] max-w-sm w-full rounded-2xl overflow-hidden border border-[#B0D4E8]/15 bg-[#B0D4E8]/5">
                 <img
-                  src="/images/1777805031168~2.png"
+                  src="/images/realabout.jpg"
                   alt="XCM Real Estate"
                   className="w-full h-full object-cover"
                   onError={(e) => {
