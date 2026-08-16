@@ -216,7 +216,11 @@ function AutoScrollRow({
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            onClick={() => onItemClick(item)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onItemClick(item);
+            }}
             className="w-[240px] sm:w-[280px] md:w-[320px] shrink-0 cursor-pointer overflow-hidden rounded-lg"
           >
             <div className={`relative w-full ${getAspectClass(i)} overflow-hidden`}>
@@ -248,6 +252,21 @@ export default function Photography() {
   const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const isObscured = useAntiCaptureProtection();
+
+  // ─── SCROLL POSITION FIX ──────────────────────────────────────────────
+  const scrollPositionRef = useRef(0);
+
+  // ─── DYNAMIC HEADER SCROLL STATE ──────────────────────────────────────
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const threshold = window.innerHeight * 0.2; // 20% of viewport
+      setHeaderScrolled(window.scrollY > threshold);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const heroSlides = [
     "/images/slide5.jpg",
@@ -309,6 +328,29 @@ export default function Photography() {
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? "hidden" : "unset";
   }, [isMenuOpen]);
+
+  // ─── LIGHTBOX SCROLL LOCK ──────────────────────────────────────────────
+  useEffect(() => {
+    if (selectedItem) {
+      scrollPositionRef.current = window.scrollY;
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.top = `-${scrollPositionRef.current}px`;
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.top = "";
+      window.scrollTo(0, scrollPositionRef.current);
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.top = "";
+    };
+  }, [selectedItem]);
 
   const handleImageClick = (item: ShowcaseItem) => {
     setSelectedItem(item);
@@ -439,7 +481,7 @@ export default function Photography() {
         </AnimatePresence>
 
         {/* ── HERO SECTION ── */}
-        <section className="relative h-screen w-full overflow-hidden flex flex-col">
+        <section className="relative h-screen w-full overflow-hidden flex flex-col pt-[72px] md:pt-[80px]">
           <div className="absolute inset-0 z-0">
             <AnimatePresence mode="wait">
               <motion.div
@@ -459,7 +501,14 @@ export default function Photography() {
             <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-[#D4AF37]/5 to-black/95" />
           </div>
 
-          <header className="relative z-50 flex justify-between items-center p-6 md:p-10">
+          {/* ─── DYNAMIC HEADER ─── */}
+          <header
+            className={`fixed top-0 left-0 w-full z-50 flex justify-between items-center p-6 md:p-10 transition-all duration-300 ${
+              headerScrolled
+                ? "bg-black/70 backdrop-blur-md border-b border-white/5"
+                : ""
+            }`}
+          >
             <div className="flex flex-col gap-0.5">
               <span
                 className="font-serif italic text-white text-lg md:text-xl leading-none"
@@ -727,7 +776,7 @@ export default function Photography() {
 
                   <div style={{ height: "1px", backgroundColor: "rgba(212,175,55,0.1)" }} />
 
-                  {/* ─── CONNECT WITH US (UPDATED) ─── */}
+                  {/* ─── CONNECT WITH US ─── */}
                   <div>
                     <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>
                       Connect With Us

@@ -30,6 +30,7 @@ interface Album {
   price: string;
   cover?: string;
   images: AlbumImage[];
+  linked_video_id?: string; // ─── NEW ───
 }
 
 interface SingleItem {
@@ -91,7 +92,7 @@ const SHOWCASE_ROUTE_OPTIONS = [
 
 const CAROUSEL_ROUTE_OPTIONS = [
   { value: "/fashion/suits", label: "Suits" },
-  { value: "/fashion/agbada", label: "Agbada" },   // note: "agbada" not "agbadas"
+  { value: "/fashion/agbada", label: "Agbada" },
   { value: "/fashion/natives", label: "Natives" },
   { value: "/fashion/casuals", label: "Casuals" },
 ];
@@ -424,6 +425,8 @@ function CategoryManager({
   const [editAlbumCover, setEditAlbumCover] = useState<File | null>(null);
   const [editAlbumLoading, setEditAlbumLoading] = useState(false);
   const [editAlbumMsg, setEditAlbumMsg] = useState("");
+  // ─── NEW: linked video ID ──────────────────────────────────────────────────
+  const [editLinkedVideoId, setEditLinkedVideoId] = useState<string>("");
 
   // ─── IMAGE EDIT STATE ──────────────────────────────────────────────────────
   const [editingImage, setEditingImage] = useState<{ albumId: string; image: AlbumImage } | null>(null);
@@ -952,6 +955,8 @@ function CategoryManager({
     setEditAlbumDesc(album.description || "");
     setEditAlbumPrice(album.price || "");
     setEditAlbumCover(null);
+    // ─── NEW: set linked video ID ───
+    setEditLinkedVideoId(album.linked_video_id || "");
     setEditAlbumMsg("");
   };
 
@@ -966,6 +971,8 @@ function CategoryManager({
       fd.append("category", editAlbumCategory);
       fd.append("description", editAlbumDesc);
       fd.append("price", editAlbumPrice);
+      // ─── NEW: append linked video ID ───
+      fd.append("linked_video_id", editLinkedVideoId);
       if (editAlbumCover) fd.append("cover", editAlbumCover);
 
       const res = await fetchWithWakeup(
@@ -987,6 +994,7 @@ function CategoryManager({
                 category: editAlbumCategory,
                 description: editAlbumDesc,
                 price: editAlbumPrice,
+                linked_video_id: editLinkedVideoId,
               }
             : prev
         );
@@ -1735,11 +1743,11 @@ function CategoryManager({
                     .map((album) => (
                       <div
                         key={album.id}
-                        className={`flex items-center gap-2 rounded-xl px-3 py-2 transition border ${
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2 transition border ${(
                           selectedAlbum?.id === album.id
                             ? "border-[#D4AF37]/60 bg-[#D4AF37]/10"
                             : "border-white/[0.07] bg-[#0d0d0d] hover:border-white/20"
-                        }`}
+                        )}`}
                       >
                         <button
                           onClick={() => setSelectedAlbum(album)}
@@ -2030,6 +2038,26 @@ function CategoryManager({
               </Field>
               <Field label="Price">
                 <PriceInput value={editAlbumPrice} onChange={setEditAlbumPrice} placeholder="e.g. 60,000" />
+              </Field>
+              {/* ─── NEW: LINK TO VIDEO ─────────────────────────────────── */}
+              <Field label="Link to Video (optional)">
+                <select
+                  value={editLinkedVideoId}
+                  onChange={(e) => setEditLinkedVideoId(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">None</option>
+                  {singles
+                    .filter((s) => s.category === "videos" || s.category === "aerials")
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.title || "Untitled"} ({item.category})
+                      </option>
+                    ))}
+                </select>
+                <p className="text-[9px] text-white/40 mt-1">
+                  Select a video to link to this album. The "View Video" button will appear inside the album gallery.
+                </p>
               </Field>
               <UploadBox
                 label="Replace Cover (optional)"

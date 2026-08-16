@@ -112,7 +112,7 @@ const VALID_ROUTES = [
   "/fashion/agbada",
   "/fashion/natives",
   "/fashion/casuals",
-];;
+];
 
 function getRouteForCard(card: CollectionCard): string {
   const route = card.targetRoute || DEFAULT_ROUTE;
@@ -301,173 +301,71 @@ function ImageOnlyCard({
   );
 }
 
-// ─── SLIDING RAIL ──────────────────────────────────────────────────────────
+// ─── AUTO-SCROLLING RAIL (FIXED) ────────────────────────────────────────────
 
-function SlidingRail({
+function AutoScrollRail({
   items,
   onClick,
   reverse = false,
+  speed = 0.4,
 }: {
   items: CollectionCard[];
   onClick: (item: CollectionCard, e: React.MouseEvent) => void;
   reverse?: boolean;
+  speed?: number;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [translateX, setTranslateX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [startTranslate, setStartTranslate] = useState(0);
-  const speed = reverse ? -0.45 : 0.45;
-  const setWidthRef = useRef(0);
-  const animRef = useRef<number | null>(null);
-  const pauseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isPausedRef = useRef(false);
-
-  const touchStartYRef = useRef(0);
-  const touchDirectionRef = useRef<"undecided" | "horizontal" | "vertical">("undecided");
+  const trackRef = useRef<HTMLDivElement>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const isUserScrolling = useRef(false);
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const direction = reverse ? -speed : speed;
 
   useEffect(() => {
-    if (containerRef.current) {
-      const totalWidth = containerRef.current.scrollWidth;
-      setWidthRef.current = totalWidth / 2;
-    }
-  }, [items]);
+    const track = trackRef.current;
+    if (!track) return;
 
-  useEffect(() => {
     const step = () => {
-      if (!isPausedRef.current && !isDragging && setWidthRef.current > 0) {
-        setTranslateX((prev) => {
-          let newX = prev + speed;
-          if (newX <= -setWidthRef.current) {
-            newX += setWidthRef.current;
-          } else if (newX > 0) {
-            newX -= setWidthRef.current;
-          }
-          return newX;
-        });
+      if (!isUserScrolling.current && track) {
+        track.scrollLeft += direction;
+        const half = track.scrollWidth / 2;
+        if (direction > 0 && track.scrollLeft >= half) {
+          track.scrollLeft -= half;
+        } else if (direction < 0 && track.scrollLeft <= 0) {
+          track.scrollLeft += half;
+        }
       }
-      animRef.current = requestAnimationFrame(step);
+      animFrameRef.current = requestAnimationFrame(step);
     };
 
-    animRef.current = requestAnimationFrame(step);
+    animFrameRef.current = requestAnimationFrame(step);
     return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-      if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [speed, isDragging]);
+  }, [direction]);
 
   const pauseAutoScroll = () => {
-    isPausedRef.current = true;
-    if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
-    pauseTimeoutRef.current = setTimeout(() => {
-      isPausedRef.current = false;
-    }, 50);
-  };
-
-  const resumeAutoScroll = () => {
-    isPausedRef.current = false;
-    if (pauseTimeoutRef.current) {
-      clearTimeout(pauseTimeoutRef.current);
-      pauseTimeoutRef.current = null;
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    setStartX(e.clientX);
-    setStartTranslate(translateX);
-    isPausedRef.current = true;
-    if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const delta = e.clientX - startX;
-    setTranslateX(startTranslate + delta);
-  };
-
-  const handleMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      pauseAutoScroll();
-    }
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchDirectionRef.current = "undecided";
-    setStartX(e.touches[0].clientX);
-    touchStartYRef.current = e.touches[0].clientY;
-    setStartTranslate(translateX);
-    isPausedRef.current = true;
-    if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startX;
-    const deltaY = touch.clientY - touchStartYRef.current;
-
-    if (touchDirectionRef.current === "undecided") {
-      if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) return;
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        touchDirectionRef.current = "horizontal";
-        setIsDragging(true);
-      } else {
-        touchDirectionRef.current = "vertical";
-        resumeAutoScroll();
-        return;
-      }
-    }
-
-    if (touchDirectionRef.current === "vertical") return;
-    e.preventDefault();
-    setTranslateX(startTranslate + deltaX);
-  };
-
-  const handleTouchEnd = () => {
-    if (touchDirectionRef.current === "horizontal") {
-      setIsDragging(false);
-      pauseAutoScroll();
-    }
-    touchDirectionRef.current = "undecided";
-  };
-
-  const handleTouchCancel = () => {
-    if (isDragging) setIsDragging(false);
-    touchDirectionRef.current = "undecided";
-    resumeAutoScroll();
+    isUserScrolling.current = true;
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    scrollTimeout.current = setTimeout(() => {
+      isUserScrolling.current = false;
+    }, 3000);
   };
 
   const loopedItems = [...items, ...items];
 
+  if (items.length === 0) return null;
+
   return (
     <div
-      ref={containerRef}
       className="relative w-full overflow-hidden"
-      style={{ touchAction: "pan-y" }}
-      onMouseEnter={pauseAutoScroll}
-      onMouseLeave={() => {
-        if (!isDragging) resumeAutoScroll();
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchCancel}
+      onWheel={pauseAutoScroll}
+      onTouchStart={pauseAutoScroll}
+      onMouseDown={pauseAutoScroll}
     >
       <div
-        className="flex gap-4 py-2 px-1 no-scrollbar select-none"
-        style={{
-          transform: `translateX(${translateX}px)`,
-          transition: "none",
-          width: "max-content",
-          cursor: isDragging ? "grabbing" : "grab",
-        }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        ref={trackRef}
+        className="flex overflow-x-auto gap-4 py-2 px-1 no-scrollbar select-none items-center"
+        style={{ scrollBehavior: "auto" }}
       >
         {loopedItems.map((item, index) => (
           <div key={`${item.id}-${index}`} className="w-[220px] shrink-0 sm:w-[250px]">
@@ -696,7 +594,7 @@ export default function FashionPage() {
         }}
       >
         {/* HEADER */}
-        <header className="relative z-50 flex items-center justify-between border-b border-white/5 bg-black/80 px-5 py-5 backdrop-blur-md md:px-10">
+        <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between border-b border-white/5 bg-black/80 px-5 py-5 backdrop-blur-md md:px-10">
           <div className="flex flex-col gap-1">
             <img
               src="/images/your-logo.png"
@@ -719,7 +617,7 @@ export default function FashionPage() {
         </header>
 
         {/* HERO */}
-        <section className="relative min-h-screen overflow-hidden bg-black">
+        <section className="relative min-h-screen overflow-hidden bg-black pt-[72px] md:pt-[80px]">
           <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(0,174,239,0.2),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(0,174,239,0.12),transparent_22%)]" />
             <div className="absolute inset-0 bg-gradient-to-b from-black via-black/85 to-black/95" />
@@ -898,8 +796,8 @@ export default function FashionPage() {
                 </div>
               ) : (
                 <>
-                  <SlidingRail items={railItems} onClick={handleImageClick} />
-                  <SlidingRail items={[...railItems].reverse()} onClick={handleImageClick} reverse />
+                  <AutoScrollRail items={railItems} onClick={handleImageClick} />
+                  <AutoScrollRail items={[...railItems].reverse()} onClick={handleImageClick} reverse />
                 </>
               )}
             </div>

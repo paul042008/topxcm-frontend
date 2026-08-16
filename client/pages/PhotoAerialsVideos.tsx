@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 
@@ -27,6 +28,7 @@ interface Album {
   cover?: string;
   images: AlbumImage[];
   isSingle?: boolean;
+  linked_video_id?: string; // for consistency, though not used here
 }
 
 // ─── HELPER: detect video by actual file extension ────────────────────────
@@ -716,6 +718,10 @@ SingleCard.displayName = "SingleCard";
 // ─── MAIN PAGE ──────────────────────────────────────────────────────────────
 
 export default function PhotoAerialsVideos() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const videoId = searchParams.get("video");
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
@@ -790,9 +796,26 @@ export default function PhotoAerialsVideos() {
     [filteredAlbums]
   );
 
+  // ─── Auto‑open linked video from query param ─────────────────────────────
+  useEffect(() => {
+    if (videoId && !loading && singleItems.length > 0) {
+      const idx = singleItems.findIndex((item) => item.id === `single-${videoId}`);
+      if (idx !== -1) {
+        setSelectedSingleIndex(idx);
+      }
+    }
+  }, [videoId, loading, singleItems]);
+
   const handleOpenAlbum = useCallback((album: Album) => setSelectedAlbum(album), []);
   const handleCloseAlbum = useCallback(() => setSelectedAlbum(null), []);
-  const handleCloseSingle = useCallback(() => setSelectedSingleIndex(null), []);
+
+  // ─── Close single lightbox and clear query param ────────────────────────
+  const handleCloseSingle = useCallback(() => {
+    setSelectedSingleIndex(null);
+    if (videoId) {
+      navigate("/photography/aerials-videos", { replace: true });
+    }
+  }, [videoId, navigate]);
 
   return (
     <div className="min-h-screen bg-[#080808] text-white overflow-x-hidden">
@@ -893,7 +916,7 @@ export default function PhotoAerialsVideos() {
 
             {/* Instagram – icon only */}
             <a
-              href="https://www.instagram.com/topstudios1"
+              href="https://www.instagram.com/topfilmz1"
               target="_blank"
               rel="noreferrer"
               className="text-white/40 hover:text-white transition-colors"

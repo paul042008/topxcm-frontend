@@ -1,5 +1,3 @@
-// ─── FULL PhotoWeddings.tsx with cache‑busting ─────────────────────────
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
@@ -30,6 +28,7 @@ interface Album {
   cover?: string;
   images: AlbumImage[];
   isSingle?: boolean;
+  linked_video_id?: string;
 }
 
 // ─── SIMPLE LIGHTBOX (for single images) ──────────────────────────────────
@@ -93,17 +92,10 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   const images = album.images || [];
   const coverImage = album.cover || (images.length > 0 ? images[0].url : "");
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: album.name,
-        text: `Check out ${album.name}'s gallery`,
-        url: window.location.href,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(window.location.href)
-        .then(() => alert("Link copied!"))
-        .catch(() => {});
+  // ─── View Video handler ──────────────────────────────────────────────────
+  const handleViewVideo = () => {
+    if (album.linked_video_id) {
+      window.location.href = `/photography/aerials-videos?video=${album.linked_video_id}`;
     }
   };
 
@@ -138,19 +130,22 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               dangerouslySetInnerHTML={{ __html: album.description }}
             />
           )}
-          <button
-            onClick={handleShare}
-            className="mt-4 flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
-            Share
-          </button>
+
+          {/* ─── VIEW VIDEO BUTTON (COVER OVERLAY) ─── */}
+          {album.linked_video_id && (
+            <div className="mt-4">
+              <button
+                onClick={handleViewVideo}
+                className="flex items-center gap-2 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/40 text-[#D4AF37] text-xs px-4 py-2 rounded-full backdrop-blur-sm transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                View Video
+              </button>
+            </div>
+          )}
+          {/* ─── SHARE BUTTON REMOVED ─── */}
         </div>
       </div>
 
@@ -176,6 +171,21 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
             </motion.div>
           ))}
         </div>
+
+        {/* ─── VIEW VIDEO BUTTON AT THE BOTTOM ─── */}
+        {album.linked_video_id && (
+          <div className="mt-12 flex justify-center">
+            <button
+              onClick={handleViewVideo}
+              className="flex items-center gap-3 bg-[#D4AF37] hover:bg-[#e0c04a] text-black font-bold uppercase tracking-widest text-sm px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              View Video
+            </button>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

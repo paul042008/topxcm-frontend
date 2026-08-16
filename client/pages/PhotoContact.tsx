@@ -2,7 +2,8 @@ import { useState } from "react";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 
-const WA1 = "https://wa.me/2348132799299";
+const WA_BOOKINGS = "https://wa.me/2348132799299";
+const WA_GENERAL = "https://wa.me/2348061587993";
 
 export default function PhotoContact() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -75,7 +76,7 @@ export default function PhotoContact() {
           className="rounded-2xl p-6 space-y-6"
           style={{ border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.03)" }}
         >
-          {/* Inquiries – Call Us & WhatsApp */}
+          {/* Inquiries – Call Us & Two WhatsApps */}
           <div className="space-y-3">
             <p className="text-[9px] font-bold tracking-[0.5em] uppercase" style={{ color: "#D4AF37" }}>
               Inquiries
@@ -107,8 +108,9 @@ export default function PhotoContact() {
               </span>
             </a>
 
+            {/* WhatsApp – Bookings (existing) */}
             <a
-              href={WA1}
+              href={WA_BOOKINGS}
               target="_blank"
               rel="noreferrer"
               className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
@@ -132,14 +134,44 @@ export default function PhotoContact() {
                 </svg>
               </div>
               <span className="text-sm font-medium text-white/70 group-hover:text-[#D4AF37] transition-colors">
-                WhatsApp
+                WhatsApp (Bookings)
+              </span>
+            </a>
+
+            {/* WhatsApp – General (new number) */}
+            <a
+              href={WA_GENERAL}
+              target="_blank"
+              rel="noreferrer"
+              className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
+              style={{ border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.03)" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(212,175,55,0.4)";
+                (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(212,175,55,0.07)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.1)";
+                (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "rgba(255,255,255,0.03)";
+              }}
+            >
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                style={{ border: "1px solid rgba(212,175,55,0.3)", backgroundColor: "rgba(212,175,55,0.07)" }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#D4AF37">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                  <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.126 1.524 5.868L.057 23.5l5.806-1.524A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.18-1.433l-.371-.221-3.844 1.009 1.028-3.752-.242-.386A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-white/70 group-hover:text-[#D4AF37] transition-colors">
+                WhatsApp (General)
               </span>
             </a>
           </div>
 
           <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.08)" }} />
 
-          {/* ─── CONNECT WITH US (UPDATED) ─── */}
+          {/* ─── CONNECT WITH US ─── */}
           <div>
             <p className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4" style={{ color: "#D4AF37" }}>
               Connect With Us
@@ -148,7 +180,7 @@ export default function PhotoContact() {
 
               {/* YouTube – @topfilms1 */}
               <a
-                href="https://www.youtube.com/@topfilms1"
+                href="https://www.youtube.com/@topfilmz1"
                 target="_blank"
                 rel="noreferrer"
                 className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
