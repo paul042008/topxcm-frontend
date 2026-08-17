@@ -87,6 +87,7 @@ function SingleImageLightbox({
 
 function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
   const images = album.images || [];
   const coverImage = album.cover || (images.length > 0 ? images[0].url : "");
 
@@ -94,6 +95,14 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const isSwiping = useRef(false);
+
+  // ─── Auto-hide swipe hint after 3 seconds ───────────────────────────────
+  useEffect(() => {
+    if (images.length > 1) {
+      const timer = setTimeout(() => setShowSwipeHint(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [images.length]);
 
   // ─── View Video handler ──────────────────────────────────────────────────
   const handleViewVideo = () => {
@@ -265,13 +274,39 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                 </>
               )}
 
-              <img
-                src={images[selectedIndex].url}
-                alt={images[selectedIndex].title}
-                className="max-h-[90vh] max-w-[90vw] object-contain select-none"
-                onContextMenu={(e) => e.preventDefault()}
-                draggable={false}
-              />
+              {/* ─── IMAGE WITH SWIPE INSTRUCTION ─── */}
+              <div className="relative max-h-[90vh] max-w-[90vw]">
+                <img
+                  src={images[selectedIndex].url}
+                  alt={images[selectedIndex].title}
+                  className="max-h-[90vh] max-w-[90vw] object-contain select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                  draggable={false}
+                />
+
+                {/* Swipe instruction (only if multiple images) */}
+                {images.length > 1 && showSwipeHint && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10 whitespace-nowrap">
+                    <span className="text-white/60 text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M9 18l-6-6 6-6" />
+                        <path d="M15 6l6 6-6 6" />
+                      </svg>
+                      Swipe to browse
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {/* Image counter */}
               {images.length > 1 && (

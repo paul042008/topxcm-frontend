@@ -139,15 +139,27 @@ function ItemModal({
         )}
 
         {/* Image */}
-        <div className="w-full aspect-[4/5] overflow-hidden bg-zinc-800">
-          <img
-            src={currentItem.image}
-            alt={currentItem.title}
-            className="w-full h-full object-cover select-none"
-            onContextMenu={(e) => e.preventDefault()}
-            draggable={false}
-          />
-        </div>
+        <div className="w-full aspect-[4/5] overflow-hidden bg-zinc-800 relative">
+  <img
+    src={currentItem.image}
+    alt={currentItem.title}
+    className="w-full h-full object-cover select-none"
+    onContextMenu={(e) => e.preventDefault()}
+    draggable={false}
+  />
+  {/* ─── SWIPE INSTRUCTION ─── */}
+  {items.length > 1 && (
+    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10">
+      <span className="text-white/60 text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 18l-6-6 6-6" />
+          <path d="M15 6l6 6-6 6" />
+        </svg>
+        Swipe to browse
+      </span>
+    </div>
+  )}
+</div>
 
         {/* Content */}
         <div className="p-6">
