@@ -146,16 +146,54 @@ export default function Header() {
 
             </motion.nav>
 
-            {/* Social Icons */}
+            {/* ─── SOCIAL ICONS (UPDATED) ─── */}
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1, duration: 0.8 }}
               className="relative w-full flex justify-center gap-10 pb-16 md:pb-24 z-20"
             >
-              <a href="#" className="text-white/30 hover:text-[#D4AF37] transition-colors"><Facebook size={20} /></a>
-              <a href="#" className="text-white/30 hover:text-[#D4AF37] transition-colors"><Instagram size={20} /></a>
-              <a href="#" className="text-white/30 hover:text-[#D4AF37] transition-colors"><Twitter size={20} /></a>
+              {/* Facebook – @topxcm */}
+              <a
+                href="https://www.facebook.com/topxcm"
+                target="_blank"
+                rel="noreferrer"
+                className="text-white/30 hover:text-[#D4AF37] transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook size={20} />
+              </a>
+
+              {/* Instagram – @topxcm.comm */}
+              <a
+                href="https://www.instagram.com/topxcm.comm"
+                target="_blank"
+                rel="noreferrer"
+                className="text-white/30 hover:text-[#D4AF37] transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram size={20} />
+              </a>
+
+              {/* TikTok – @topxcm.com (replaced Twitter) */}
+              <a
+                href="https://www.tiktok.com/@topxcm.com"
+                target="_blank"
+                rel="noreferrer"
+                className="text-white/30 hover:text-[#D4AF37] transition-colors"
+                aria-label="TikTok"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  stroke="none"
+                >
+                  <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-2.98 3.37-2.22V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.89a7.32 7.32 0 0 0 4.26 1.35V8.94a4.43 4.43 0 0 1-2.49-1.12z" />
+                </svg>
+              </a>
             </motion.div>
           </motion.div>
         )}

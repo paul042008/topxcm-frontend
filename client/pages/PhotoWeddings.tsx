@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
@@ -92,11 +92,64 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   const images = album.images || [];
   const coverImage = album.cover || (images.length > 0 ? images[0].url : "");
 
+  // ─── Touch swipe refs ─────────────────────────────────────────────────────
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isSwiping = useRef(false);
+
   // ─── View Video handler ──────────────────────────────────────────────────
   const handleViewVideo = () => {
     if (album.linked_video_id) {
       window.location.href = `/photography/aerials-videos?video=${album.linked_video_id}`;
     }
+  };
+
+  // ─── Navigation helpers ──────────────────────────────────────────────────
+  const goPrev = () => {
+    setSelectedIndex((prev) =>
+      prev !== null ? (prev - 1 + images.length) % images.length : 0
+    );
+  };
+
+  const goNext = () => {
+    setSelectedIndex((prev) =>
+      prev !== null ? (prev + 1) % images.length : 0
+    );
+  };
+
+  // ─── Touch handlers ──────────────────────────────────────────────────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    isSwiping.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX.current || !touchStartY.current) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = touch.clientY - touchStartY.current;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
+      isSwiping.current = true;
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isSwiping.current) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const threshold = 50;
+    if (deltaX > threshold) {
+      goPrev();
+    } else if (deltaX < -threshold) {
+      goNext();
+    }
+    touchStartX.current = 0;
+    touchStartY.current = 0;
+    isSwiping.current = false;
   };
 
   return (
@@ -188,6 +241,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         )}
       </div>
 
+      {/* ─── LIGHTBOX WITH SWIPE SUPPORT ────────────────────────────────── */}
       <AnimatePresence>
         {selectedIndex !== null && (
           <motion.div
@@ -196,6 +250,9 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4"
             onClick={() => setSelectedIndex(null)}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             <div
               className="relative max-w-6xl w-full h-full flex items-center justify-center"
@@ -207,40 +264,42 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               >
                 ✕
               </button>
+
               {images.length > 1 && (
                 <>
+                  {/* Left arrow (desktop) */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedIndex((prev) =>
-                        prev !== null ? (prev - 1 + images.length) % images.length : 0
-                      );
-                    }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                    onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition hidden md:flex"
                   >
                     ‹
                   </button>
+                  {/* Right arrow (desktop) */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedIndex((prev) =>
-                        prev !== null ? (prev + 1) % images.length : 0
-                      );
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                    onClick={(e) => { e.stopPropagation(); goNext(); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition hidden md:flex"
                   >
                     ›
                   </button>
                 </>
               )}
+
               <img
                 src={images[selectedIndex].url}
                 alt={images[selectedIndex].title}
-                className="max-h-[90vh] max-w-[90vw] object-contain"
+                className="max-h-[90vh] max-w-[90vw] object-contain select-none"
                 onContextMenu={(e) => e.preventDefault()}
                 draggable={false}
               />
-              {images[selectedIndex].title && (
+
+              {/* Image counter */}
+              {images.length > 1 && (
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/60 text-white/80 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
+                  {selectedIndex + 1} / {images.length}
+                </div>
+              )}
+
+              {images[selectedIndex]?.title && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
                   {images[selectedIndex].title}
                 </div>

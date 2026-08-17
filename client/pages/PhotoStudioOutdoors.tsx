@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
@@ -27,6 +27,7 @@ interface Album {
   cover?: string;
   images: AlbumImage[];
   isSingle?: boolean;
+  linked_video_id?: string;
 }
 
 // ─── SIMPLE LIGHTBOX (for single images) ──────────────────────────────────
@@ -89,18 +90,65 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
   const images = album.images || [];
   const coverImage = album.cover || (images.length > 0 ? images[0].url : "");
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: album.name,
-        text: `Check out ${album.name}'s gallery`,
-        url: window.location.href,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(window.location.href)
-        .then(() => alert("Link copied!"))
-        .catch(() => {});
+  // ─── Touch swipe refs ─────────────────────────────────────────────────────
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isSwiping = useRef(false);
+
+  // ─── View Video handler ──────────────────────────────────────────────────
+  const handleViewVideo = () => {
+    if (album.linked_video_id) {
+      window.location.href = `/photography/aerials-videos?video=${album.linked_video_id}`;
     }
+  };
+
+  // ─── Navigation helpers ──────────────────────────────────────────────────
+  const goPrev = () => {
+    setSelectedIndex((prev) =>
+      prev !== null ? (prev - 1 + images.length) % images.length : 0
+    );
+  };
+
+  const goNext = () => {
+    setSelectedIndex((prev) =>
+      prev !== null ? (prev + 1) % images.length : 0
+    );
+  };
+
+  // ─── Touch handlers ──────────────────────────────────────────────────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    isSwiping.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX.current || !touchStartY.current) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = touch.clientY - touchStartY.current;
+
+    // Determine if horizontal swipe (ignore if vertical)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
+      isSwiping.current = true;
+      e.preventDefault(); // Prevent vertical scroll while swiping horizontally
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isSwiping.current) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const threshold = 50;
+    if (deltaX > threshold) {
+      goPrev();
+    } else if (deltaX < -threshold) {
+      goNext();
+    }
+    touchStartX.current = 0;
+    touchStartY.current = 0;
+    isSwiping.current = false;
   };
 
   return (
@@ -133,19 +181,6 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               dangerouslySetInnerHTML={{ __html: album.description }}
             />
           )}
-          <button
-            onClick={handleShare}
-            className="mt-4 flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
-            Share
-          </button>
         </div>
       </div>
 
@@ -170,8 +205,24 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
             </motion.div>
           ))}
         </div>
+
+        {/* ─── VIEW VIDEO BUTTON AT THE BOTTOM ─── */}
+        {album.linked_video_id && (
+          <div className="mt-12 flex justify-center">
+            <button
+              onClick={handleViewVideo}
+              className="flex items-center gap-3 bg-[#D4AF37] hover:bg-[#e0c04a] text-black font-bold uppercase tracking-widest text-sm px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              View Video
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* ─── LIGHTBOX WITH SWIPE SUPPORT ────────────────────────────────── */}
       <AnimatePresence>
         {selectedIndex !== null && (
           <motion.div
@@ -180,6 +231,9 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4"
             onClick={() => setSelectedIndex(null)}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             <div
               className="relative max-w-6xl w-full h-full flex items-center justify-center"
@@ -191,39 +245,42 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               >
                 ✕
               </button>
+
               {images.length > 1 && (
                 <>
+                  {/* Left arrow (desktop) */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedIndex((prev) =>
-                        prev !== null ? (prev - 1 + images.length) % images.length : 0
-                      );
-                    }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                    onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition hidden md:flex"
                   >
                     ‹
                   </button>
+                  {/* Right arrow (desktop) */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedIndex((prev) =>
-                        prev !== null ? (prev + 1) % images.length : 0
-                      );
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                    onClick={(e) => { e.stopPropagation(); goNext(); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition hidden md:flex"
                   >
                     ›
                   </button>
                 </>
               )}
+
               <img
                 src={images[selectedIndex].url}
                 alt={images[selectedIndex].title}
-                className="max-h-[90vh] max-w-[90vw] object-contain"
+                className="max-h-[90vh] max-w-[90vw] object-contain select-none"
                 onContextMenu={(e) => e.preventDefault()}
+                draggable={false}
               />
-              {images[selectedIndex].title && (
+
+              {/* Image counter */}
+              {images.length > 1 && (
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/60 text-white/80 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
+                  {selectedIndex + 1} / {images.length}
+                </div>
+              )}
+
+              {images[selectedIndex]?.title && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm">
                   {images[selectedIndex].title}
                 </div>
@@ -468,7 +525,7 @@ export default function PhotoStudioOutdoors() {
         </div>
       </div>
 
-      {/* ─── FILTER TABS (Refresh button removed) ─── */}
+      {/* ─── FILTER TABS ─── */}
       <div className="px-6 md:px-16 py-6 flex gap-6 border-b border-white/5 overflow-x-auto">
         {(["all", "studio", "outdoors"] as const).map((tab) => (
           <button

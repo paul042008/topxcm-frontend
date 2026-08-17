@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
@@ -17,18 +17,92 @@ interface Product {
   tag?: "BEST SELLER" | "PREMIUM";
 }
 
-function ItemModal({ item, onClose }: { item: Product; onClose: () => void }) {
+// ─── PRODUCT MODAL WITH SWIPE SUPPORT ──────────────────────────────────────
+
+function ItemModal({
+  items,
+  initialIndex,
+  onClose,
+}: {
+  items: Product[];
+  initialIndex: number;
+  onClose: () => void;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const currentItem = items[currentIndex];
+
+  // ─── Touch swipe refs ─────────────────────────────────────────────────────
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isSwiping = useRef(false);
+
+  // ─── Keyboard support ────────────────────────────────────────────────────
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // ─── Navigation helpers ──────────────────────────────────────────────────
+  const goPrev = () => {
+    setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
+  };
+
+  const goNext = () => {
+    setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
+  };
+
+  // ─── Touch handlers ──────────────────────────────────────────────────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    isSwiping.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX.current || !touchStartY.current) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = touch.clientY - touchStartY.current;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
+      isSwiping.current = true;
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isSwiping.current) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const threshold = 50;
+    if (deltaX > threshold) {
+      goPrev();
+    } else if (deltaX < -threshold) {
+      goNext();
+    }
+    touchStartX.current = 0;
+    touchStartY.current = 0;
+    isSwiping.current = false;
+  };
+
+  if (!currentItem) return null;
+
   return (
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
       onClick={onClose}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -38,33 +112,79 @@ function ItemModal({ item, onClose }: { item: Product; onClose: () => void }) {
         className="relative w-full max-w-lg bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm hover:bg-white/20 transition">✕</button>
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm hover:bg-white/20 transition"
+        >
+          ✕
+        </button>
+
+        {/* Navigation arrows (desktop) */}
+        {items.length > 1 && (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); goPrev(); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl hidden md:flex"
+            >
+              ‹
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); goNext(); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl hidden md:flex"
+            >
+              ›
+            </button>
+          </>
+        )}
+
+        {/* Image */}
         <div className="w-full aspect-[4/5] overflow-hidden bg-zinc-800">
-          <img src={item.image} alt={item.title} className="w-full h-full object-cover" onContextMenu={(e) => e.preventDefault()} draggable={false} />
+          <img
+            src={currentItem.image}
+            alt={currentItem.title}
+            className="w-full h-full object-cover select-none"
+            onContextMenu={(e) => e.preventDefault()}
+            draggable={false}
+          />
         </div>
+
+        {/* Content */}
         <div className="p-6">
           <p className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-1">
-            {item.category === "canvas" ? "Canvas Print" : "Luxury Frame"}
+            {currentItem.category === "canvas" ? "Canvas Print" : "Luxury Frame"}
           </p>
-          <h3 className="text-xl font-serif text-white mb-2">{item.title}</h3>
-          {item.description && (
+          <h3 className="text-xl font-serif text-white mb-2">{currentItem.title}</h3>
+          {currentItem.description && (
             <div
               className="text-white/50 text-sm leading-relaxed mb-4 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-              dangerouslySetInnerHTML={{ __html: item.description }}
+              dangerouslySetInnerHTML={{ __html: currentItem.description }}
             />
           )}
-          {item.price && (
-            <p className="text-[#D4AF37] text-2xl font-bold mb-4">₦{parseInt(item.price).toLocaleString()}</p>
+          {currentItem.price && (
+            <p className="text-[#D4AF37] text-2xl font-bold mb-4">
+              ₦{parseInt(currentItem.price).toLocaleString()}
+            </p>
           )}
-          <a
-            href={`https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20order%20*${item.title}*%20(₦${item.price})`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-black text-xs font-bold uppercase tracking-widest transition hover:opacity-90"
-            style={{ backgroundColor: "#D4AF37" }}
-          >
-            Order Now
-          </a>
+
+          <div className="flex items-center justify-between">
+            <a
+              href={`https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20order%20*${currentItem.title}*%20(₦${currentItem.price})`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-black text-xs font-bold uppercase tracking-widest transition hover:opacity-90"
+              style={{ backgroundColor: "#D4AF37" }}
+            >
+              Order Now
+            </a>
+
+            {/* Counter */}
+            {items.length > 1 && (
+              <span className="text-white/40 text-xs">
+                {currentIndex + 1} / {items.length}
+              </span>
+            )}
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -116,11 +236,13 @@ function SizeChartModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── MAIN PAGE ──────────────────────────────────────────────────────────────
+
 export default function PhotoCanvas() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProductIndex, setSelectedProductIndex] = useState<number | null>(null);
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [activeCategory, setActiveCategory] = useState<"all" | "canvas" | "frames">("all");
 
@@ -216,7 +338,7 @@ export default function PhotoCanvas() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.06 }}
                   className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-[#D4AF37]/30 transition-colors group cursor-pointer"
-                  onClick={() => setSelectedProduct(product)}
+                  onClick={() => setSelectedProductIndex(idx)}
                 >
                   <div className="relative aspect-square overflow-hidden bg-zinc-800">
                     <img
@@ -335,7 +457,13 @@ export default function PhotoCanvas() {
       </a>
 
       <AnimatePresence>
-        {selectedProduct && <ItemModal item={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+        {selectedProductIndex !== null && (
+          <ItemModal
+            items={filteredProducts}
+            initialIndex={selectedProductIndex}
+            onClose={() => setSelectedProductIndex(null)}
+          />
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
