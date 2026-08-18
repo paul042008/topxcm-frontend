@@ -106,7 +106,8 @@ const fallbackCollections: CollectionCard[] = [
 
 const DEFAULT_ROUTE = "/fashion/suits";
 
-// ─── VALID ROUTES (must match your actual route definitions) ─────────────
+// ─── VALID ROUTES ──────────────────────────────────────────────────────────
+
 const VALID_ROUTES = [
   "/fashion/suits",
   "/fashion/agbada",
@@ -119,7 +120,7 @@ function getRouteForCard(card: CollectionCard): string {
   return VALID_ROUTES.includes(route) ? route : DEFAULT_ROUTE;
 }
 
-// ─── WAKE‑UP HELPERS (copied from admin) ────────────────────────────────
+// ─── WAKE‑UP HELPERS ──────────────────────────────────────────────────────
 
 async function pingServer(): Promise<boolean> {
   const start = Date.now();
@@ -139,7 +140,6 @@ async function pingServer(): Promise<boolean> {
 }
 
 async function fetchWithWakeup(url: string, options: RequestInit): Promise<Response> {
-  // First check if server is alive
   let alive = false;
   try {
     const probe = await fetch(`${API}/api/items`, {
@@ -209,65 +209,34 @@ const featureTiles = [
   },
 ];
 
-// ─── REVIEWS DATA ──────────────────────────────────────────────────────────
+// ─── REVIEWS DATA (FASHION ONLY) ──────────────────────────────────────────
 
 interface Review {
   id: string;
   name: string;
   text: string;
-  avatar?: string; // optional
 }
 
 const REVIEWS: Review[] = [
   {
     id: "1",
-    name: "Omotayo",
-    text: "Thank you. I love them. You my photography plug for life 🥰🥰",
+    name: "Jonathan Moore",
+    text: "Thank you so much for everything. The outfits are very good. My wife is super pleased",
   },
   {
     id: "2",
-    name: "Ovo",
-    text: "Woooowwwww. These are so beautiful 💃🏻💃🏻💃🏻💃🏻💃🏻💃🏻 My parents are so happy here",
+    name: "Albert",
+    text: "Suit is nice. Fits me properly",
   },
   {
     id: "3",
-    name: "Hennessy",
-    text: "Yea...got it 2day. It's lovely i must confess. We were so happy wit it. Tnx",
+    name: "Olumide",
+    text: "I got good reviews on the last outfit. Top stuff 👌🏽",
   },
   {
     id: "4",
     name: "Abraham",
     text: "I really love your work",
-  },
-  {
-    id: "5",
-    name: "Olumide",
-    text: "I got good reviews on the last outfit. Top stuff 👌🏽",
-  },
-  {
-    id: "6",
-    name: "Jonathan Moore",
-    text: "Thank you so much for everything. The outfits are very good. My wife is super pleased",
-  },
-  {
-    id: "7",
-    name: "Albert",
-    text: "Suit is nice. Fits me properly",
-  },
-  {
-    id: "8",
-    name: "Damilola Ogunejimite",
-    text: "I saw our beautiful pics. Eseun",
-  },
-  {
-    id: "9",
-    name: "Oluwatoyin",
-    text: "Pictures are awesome 🤗 thanks for a Job welldone 👍🏽💯",
-  },
-  {
-    id: "10",
-    name: "Wedding Guest",
-    text: "😔😔😔 this is soooo lovely. Damn!!! The moments are priceless. FR. Wifey Loves it too very much",
   },
 ];
 
@@ -363,7 +332,7 @@ function ImageOnlyCard({
   );
 }
 
-// ─── AUTO-SCROLLING RAIL (FIXED) ────────────────────────────────────────────
+// ─── AUTO-SCROLLING RAIL ────────────────────────────────────────────────────
 
 function AutoScrollRail({
   items,
@@ -450,7 +419,6 @@ export default function FashionPage() {
   const [carouselItems, setCarouselItems] = useState<CollectionCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingCarousel, setLoadingCarousel] = useState(true);
-  // Review modal state
   const [showReviewModal, setShowReviewModal] = useState(false);
 
   const collectionsRef = useRef<HTMLDivElement>(null);
@@ -484,7 +452,7 @@ export default function FashionPage() {
     };
   }, []);
 
-  // Fetch fashion carousel items (category = "fashion-carousel") with wake-up
+  // Fetch fashion carousel items
   useEffect(() => {
     let isMounted = true;
     setLoadingCarousel(true);
@@ -590,9 +558,7 @@ export default function FashionPage() {
 
   const handleViewMore = (card: CollectionCard) => {
     let route = getRouteForCard(card);
-    // Fallback if route still invalid (extra safety)
     if (!VALID_ROUTES.includes(route)) {
-      console.warn(`Invalid route "${route}" for "${card.title}", falling back to "${DEFAULT_ROUTE}"`);
       route = DEFAULT_ROUTE;
     }
     navigate(route);
@@ -607,9 +573,8 @@ export default function FashionPage() {
   const openReviewModal = () => setShowReviewModal(true);
   const closeReviewModal = () => setShowReviewModal(false);
 
-  // Show first 5 reviews initially
-  const visibleReviews = REVIEWS.slice(0, 5);
-  const hiddenReviews = REVIEWS.slice(5);
+  // Only show 4 reviews, no hidden ones (so no "View More" button)
+  const visibleReviews = REVIEWS; // all 4
 
   return (
     <div className="relative w-full overflow-x-hidden bg-black text-white">
@@ -668,7 +633,7 @@ export default function FashionPage() {
         )}
       </AnimatePresence>
 
-      {/* REVIEW MODAL */}
+      {/* REVIEW MODAL (only if there are hidden reviews, but here none, so we can keep but it won't be used) */}
       <AnimatePresence>
         {showReviewModal && (
           <motion.div
@@ -939,16 +904,9 @@ export default function FashionPage() {
           <div className="mx-auto max-w-7xl">
             <div className="flex items-end justify-between gap-6">
               <SectionLabel eyebrow="Client Reviews" title="What They Say" light />
-              {hiddenReviews.length > 0 && (
-                <button
-                  onClick={openReviewModal}
-                  className="inline-flex border-b border-[#00AEEF]/45 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#00AEEF] transition-colors hover:border-[#00AEEF]"
-                >
-                  View More →
-                </button>
-              )}
+              {/* No "View More" because we have only 4 reviews, all shown */}
             </div>
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {visibleReviews.map((review) => (
                 <div
                   key={review.id}
