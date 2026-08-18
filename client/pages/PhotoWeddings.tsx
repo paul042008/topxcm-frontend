@@ -811,7 +811,7 @@ export default function PhotoWeddings() {
       </a>
 
       <AnimatePresence>
-        {selectedAlbum && <GalleryView album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
+        {selectedAlbum && <GalleryView album={selectedAlbum} onClose={()   => setSelectedAlbum(null)} />}
       </AnimatePresence>
 
       <AnimatePresence>

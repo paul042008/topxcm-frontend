@@ -209,6 +209,68 @@ const featureTiles = [
   },
 ];
 
+// ─── REVIEWS DATA ──────────────────────────────────────────────────────────
+
+interface Review {
+  id: string;
+  name: string;
+  text: string;
+  avatar?: string; // optional
+}
+
+const REVIEWS: Review[] = [
+  {
+    id: "1",
+    name: "Omotayo",
+    text: "Thank you. I love them. You my photography plug for life 🥰🥰",
+  },
+  {
+    id: "2",
+    name: "Ovo",
+    text: "Woooowwwww. These are so beautiful 💃🏻💃🏻💃🏻💃🏻💃🏻💃🏻 My parents are so happy here",
+  },
+  {
+    id: "3",
+    name: "Hennessy",
+    text: "Yea...got it 2day. It's lovely i must confess. We were so happy wit it. Tnx",
+  },
+  {
+    id: "4",
+    name: "Abraham",
+    text: "I really love your work",
+  },
+  {
+    id: "5",
+    name: "Olumide",
+    text: "I got good reviews on the last outfit. Top stuff 👌🏽",
+  },
+  {
+    id: "6",
+    name: "Jonathan Moore",
+    text: "Thank you so much for everything. The outfits are very good. My wife is super pleased",
+  },
+  {
+    id: "7",
+    name: "Albert",
+    text: "Suit is nice. Fits me properly",
+  },
+  {
+    id: "8",
+    name: "Damilola Ogunejimite",
+    text: "I saw our beautiful pics. Eseun",
+  },
+  {
+    id: "9",
+    name: "Oluwatoyin",
+    text: "Pictures are awesome 🤗 thanks for a Job welldone 👍🏽💯",
+  },
+  {
+    id: "10",
+    name: "Wedding Guest",
+    text: "😔😔😔 this is soooo lovely. Damn!!! The moments are priceless. FR. Wifey Loves it too very much",
+  },
+];
+
 // ─── FEATURE BLOCK ──────────────────────────────────────────────────────────
 
 function FeatureBlock({
@@ -388,6 +450,8 @@ export default function FashionPage() {
   const [carouselItems, setCarouselItems] = useState<CollectionCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingCarousel, setLoadingCarousel] = useState(true);
+  // Review modal state
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const collectionsRef = useRef<HTMLDivElement>(null);
   const WA = "https://wa.me/2348061587993";
@@ -502,6 +566,18 @@ export default function FashionPage() {
     };
   }, [selectedItem]);
 
+  // Lock scroll for review modal
+  useEffect(() => {
+    if (showReviewModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showReviewModal]);
+
   const handleImageClick = (card: CollectionCard, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -526,6 +602,14 @@ export default function FashionPage() {
   const scrollToCollections = () => {
     collectionsRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Review modal handlers
+  const openReviewModal = () => setShowReviewModal(true);
+  const closeReviewModal = () => setShowReviewModal(false);
+
+  // Show first 5 reviews initially
+  const visibleReviews = REVIEWS.slice(0, 5);
+  const hiddenReviews = REVIEWS.slice(5);
 
   return (
     <div className="relative w-full overflow-x-hidden bg-black text-white">
@@ -578,6 +662,52 @@ export default function FashionPage() {
                 >
                   See More →
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* REVIEW MODAL */}
+      <AnimatePresence>
+        {showReviewModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-10"
+            style={{
+              backdropFilter: "blur(14px)",
+              backgroundColor: "rgba(0,0,0,0.6)",
+            }}
+            onClick={closeReviewModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 250, damping: 24 }}
+              className="relative max-h-[80vh] w-full max-w-2xl overflow-auto rounded-2xl border border-[#00AEEF]/20 bg-black/80 p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={closeReviewModal}
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#00AEEF]/20 text-white hover:bg-[#00AEEF]/40"
+              >
+                ✕
+              </button>
+              <h3 className="text-xl font-bold text-white mb-4">All Client Reviews</h3>
+              <div className="space-y-4">
+                {REVIEWS.map((review) => (
+                  <div
+                    key={review.id}
+                    className="border-b border-white/10 pb-4 last:border-0"
+                  >
+                    <p className="text-sm font-semibold text-[#00AEEF]">{review.name}</p>
+                    <p className="text-sm text-white/80 mt-1">{review.text}</p>
+                  </div>
+                ))}
               </div>
             </motion.div>
           </motion.div>
@@ -800,6 +930,42 @@ export default function FashionPage() {
                   <AutoScrollRail items={[...railItems].reverse()} onClick={handleImageClick} reverse />
                 </>
               )}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── CLIENT REVIEWS SECTION ─── */}
+        <section className="bg-black px-5 py-16 md:px-10 md:py-24 border-t border-[#00AEEF]/10">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex items-end justify-between gap-6">
+              <SectionLabel eyebrow="Client Reviews" title="What They Say" light />
+              {hiddenReviews.length > 0 && (
+                <button
+                  onClick={openReviewModal}
+                  className="inline-flex border-b border-[#00AEEF]/45 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#00AEEF] transition-colors hover:border-[#00AEEF]"
+                >
+                  View More →
+                </button>
+              )}
+            </div>
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              {visibleReviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="rounded-2xl border border-[#00AEEF]/15 bg-black/40 p-5 backdrop-blur-sm hover:border-[#00AEEF]/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00AEEF]/10 text-[#00AEEF] font-bold text-sm">
+                      {review.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{review.name}</p>
+                      <div className="flex text-[#00AEEF] text-[10px]">★★★★★</div>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm text-white/70 leading-relaxed">{review.text}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
