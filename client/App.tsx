@@ -100,7 +100,7 @@ function ProtectionOverlay() {
         style={{ opacity: 0.02 }}
       >
         <span className="text-8xl font-black text-[#00AEEF] tracking-widest rotate-[-15deg] select-none">
-          XCM
+          TOPXCM
         </span>
       </div>
 
