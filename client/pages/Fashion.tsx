@@ -220,21 +220,31 @@ interface Review {
 const REVIEWS: Review[] = [
   {
     id: "1",
+    name: "Doyin",
+    text: "My sister love the cloth so also the kids, normally the eldest doesn't like to wear native but he fell in love with it that he requested to wear it to church today and it look so nice on them",
+  },
+  {
+    id: "2",
+    name: "Jonathan Moore",
+    text: "Good morning trust you're well, So sorry about everything you went through behing the closed doors. We give all glory to God for his divine supply to overcome the setback.. You're truly string because despite everything happening to you, all outfits cme out really good and we got lots of compliments. May God keep blessing the works of your hands🙏",
+  },
+  {
+    id: "3",
     name: "Jonathan Moore",
     text: "Thank you so much for everything. The outfits are very good. My wife is super pleased",
   },
   {
-    id: "2",
+    id: "4",
     name: "Albert",
     text: "Suit is nice. Fits me properly",
   },
   {
-    id: "3",
+    id: "5",
     name: "Olumide",
     text: "I got good reviews on the last outfit. Top stuff 👌🏽",
   },
   {
-    id: "4",
+    id: "6",
     name: "Abraham",
     text: "I really love your work",
   },

@@ -28,14 +28,14 @@ interface Review {
 
 const REVIEWS: Review[] = [
   { id: "1", name: "Abayomi", text: "Just getting some of the pictures you snapped at Mr Emmanuel's wedding, very lovely. Can;t stop watching the video" },
-  { id: "1", name: ".....", text: "@TOPWEDDINGS everything about them is TOP! A million thanks to Bro and Sis Asuquo of TOP service" },
-  { id: "1", name: "Omotayo", text: "This is sooo lovely, Damm!! Ther moments are priceless FR. Wifey love is too very much." },
-  { id: "1", name: "Omotayo", text: "Thank you. I love them. You my photography plug for life" },
-  { id: "2", name: "Ovo", text: "Woooowwwww. These are so beautiful. My parents are so happy here" },
-  { id: "3", name: "Hennessy", text: "Yea...got it 2day. It's lovely i must confess. We were so happy wit it. Tnx" },
-  { id: "4", name: "Damilola Ogunejimite", text: "I saw our beautiful pics. Eseun" },
-  { id: "5", name: "Oluwatoyin", text: "Pictures are awesome thanks for a Job welldone" },
-  { id: "6", name: "Wedding Guest", text: "This is soooo lovely. Damn!!! The moments are priceless. FR. Wifey Loves it too very much" },
+  { id: "2", name: "Anonymous", text: "@TOPWEDDINGS🥰🥰 everything about them is TOP! A million thanks to Bro and Sis Asuquo of TOP service!! The photo book na💣wifey is still🥰❤" },
+  { id: "3", name: "Idris", text: "😩😩This is sooo lovely, Damm!! Ther moments are priceless FR. Wifey love is too very much." },
+  { id: "4", name: "Omotayo", text: "Thank you. I love them. You my photography plug for life🥰🥰" },
+  { id: "5", name: "Ovo", text: "Woooowwwww. These are so beautiful🧡❤❤🧡. My parents are so happy here" },
+  { id: "6", name: "Hennessy", text: "Yea...got it 2day. It's lovely i must confess. We were so happy wit it. Tnx" },
+  { id: "7", name: "Damilola Ogunejimite", text: "I saw our beautiful pics. Eseun" },
+  { id: "8", name: "Oluwatoyin", text: "Pictures are awesome 🤗thanks for a Job welldone👍💯" },
+  { id: "9", name: "Wedding Guest", text: "This is soooo lovely. Damn!!! The moments are priceless. FR. Wifey Loves it too very much" },
 ];
 
 function useAntiCaptureProtection() {
