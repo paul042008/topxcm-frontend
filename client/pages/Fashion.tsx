@@ -225,7 +225,7 @@ const REVIEWS: Review[] = [
   },
   {
     id: "2",
-    name: "Jonathan Moore",
+    name: "KB",
     text: "Good morning trust you're well, So sorry about everything you went through behing the closed doors. We give all glory to God for his divine supply to overcome the setback.. You're truly string because despite everything happening to you, all outfits cme out really good and we got lots of compliments. May God keep blessing the works of your hands🙏",
   },
   {
@@ -909,6 +909,11 @@ export default function FashionPage() {
             </div>
           </div>
         </section>
+
+        {/* ─── DIVIDER LINE ─────────────────────────────────────────────── */}
+        <div className="w-full max-w-7xl mx-auto px-5 md:px-10">
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-[#00AEEF]/30 to-transparent" />
+        </div>
 
         {/* ─── CLIENT REVIEWS SECTION ─── */}
         <section className="bg-black px-5 py-16 md:px-10 md:py-24 border-t border-[#00AEEF]/10">
