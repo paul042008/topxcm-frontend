@@ -189,31 +189,44 @@ export default function RealEstatePlans() {
         onOpenAction={() => setMenuOpen(true)}
       />
 
-      {/* ─── MAIN CONTENT (blurred when menu open) ── */}
+      {/* ─── FIXED HEADER (like Construction & Listings) ────────────── */}
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
+        <button
+          onClick={() => navigate("/real-estate")}
+          className="text-[#B0D4E8] text-2xl hover:scale-110 transition-transform"
+        >
+          ←
+        </button>
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-[#B0D4E8] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">
+            2D & 3D Plans
+          </p>
+          <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">
+            TOPXCM Real Estate
+          </span>
+        </div>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="flex flex-col gap-[5px] group"
+          aria-label="Open menu"
+        >
+          <span className="block h-[1.5px] w-7 bg-[#B0D4E8] transition-all group-hover:w-8" />
+          <span className="ml-auto block h-[1.5px] w-5 bg-[#B0D4E8] transition-all group-hover:w-8" />
+          <span className="block h-[1.5px] w-7 bg-[#B0D4E8] transition-all group-hover:w-8" />
+        </button>
+      </header>
+
+      {/* ─── MAIN CONTENT (blurred when menu open, pushed down) ────── */}
       <div
-        className="transition-all duration-500"
+        className="transition-all duration-500 pt-[72px]"
         style={{
           opacity: menuOpen ? 0.18 : 1,
           filter: menuOpen ? "blur(2px)" : "none",
           pointerEvents: menuOpen ? "none" : "auto",
         }}
       >
-        {/* Header */}
-        <header className="fixed top-0 left-0 w-full z-[100] flex items-center justify-between px-5 py-4 bg-black/80 backdrop-blur-xl border-b border-white/5">
-          <button
-            onClick={() => navigate("/real-estate")}
-            className="text-[#B0D4E8] text-xl hover:scale-110 transition-transform"
-          >
-            ←
-          </button>
-          <div className="flex flex-col items-start ml-4 flex-1">
-            <p className="text-[#B0D4E8] text-[10px] tracking-[0.7em] uppercase font-bold">2D & 3D Plans</p>
-            <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">TOPXCM Real Estate</span>
-          </div>
-        </header>
-
         {/* Hero strip */}
-        <div className="pt-24 px-5 py-10 border-b border-white/5 bg-black/30">
+        <div className="pt-24 px-5 pb-12 border-b border-white/5 bg-black/30 backdrop-blur-sm">
           <h1 className="text-3xl md:text-5xl font-serif italic text-white mb-2">2D & 3D Plans</h1>
           <p className="text-white/40 text-sm font-light max-w-sm leading-relaxed">
             Architectural blueprints, floor plans, and 3D visualisations for your future home or project.

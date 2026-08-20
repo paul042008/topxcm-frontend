@@ -718,17 +718,16 @@ export default function Photography() {
           </div>
         </section>
 
-        {/* PHILOSOPHY SECTION - only the text */}
+        {/* ─── PHILOSOPHY (reduced padding, no inner border) ─── */}
         <section
-          className="py-16 px-6 md:px-20"
+          className="py-10 px-6 md:px-20 border-t border-[#D4AF37]/10"
           style={{
             backgroundColor: "rgba(212,175,55,0.02)",
-            borderTop: "1px solid rgba(212,175,55,0.1)",
           }}
         >
           <div className="max-w-6xl mx-auto">
             <div className="space-y-6">
-              <div style={{ borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: "2rem" }}>
+              <div>
                 <h3 className="font-serif italic text-3xl" style={{ color: "#D4AF37" }}>
                   The Philosophy
                 </h3>
@@ -747,9 +746,9 @@ export default function Photography() {
           </div>
         </section>
 
-        {/* REVIEWS SECTION - with "View More" at bottom */}
+        {/* ─── REVIEWS (reduced padding, "View More" at bottom) ─── */}
         <section
-          className="py-16 px-6 md:px-20 border-t border-[#D4AF37]/10"
+          className="py-10 px-6 md:px-20 border-t border-[#D4AF37]/10"
           style={{
             backgroundColor: "rgba(212,175,55,0.02)",
           }}
@@ -764,6 +763,7 @@ export default function Photography() {
                   What They Say
                 </h3>
               </div>
+              {/* No "View More" at the top */}
             </div>
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {visibleReviews.map((review) => (
@@ -784,6 +784,7 @@ export default function Photography() {
                 </div>
               ))}
             </div>
+            {/* "View More" button at the bottom, centered */}
             {hiddenReviews.length > 0 && (
               <div className="mt-10 text-center">
                 <button
@@ -797,7 +798,7 @@ export default function Photography() {
           </div>
         </section>
 
-        {/* CONTACT & SOCIAL - moved back to its original position (after reviews) */}
+        {/* ─── CONTACT & SOCIAL (remains unchanged) ─── */}
         <section
           className="py-16 px-6 md:px-20"
           style={{

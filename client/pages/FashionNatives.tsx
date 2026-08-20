@@ -849,8 +849,36 @@ export default function FashionNatives() {
         hideHamburger={true}
       />
 
+      {/* ─── FIXED HEADER (like Agbada, Casuals, Latest) ─────────────── */}
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
+        <button
+          onClick={() => window.history.back()}
+          className="text-[#00AEEF] text-2xl hover:scale-110 transition-transform"
+        >
+          ←
+        </button>
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-[#00AEEF] text-[10px] tracking-[0.7em] uppercase font-bold leading-none">
+            Native Collection
+          </p>
+          <span className="text-white/20 text-[8px] tracking-[0.3em] uppercase">
+            XCM Wardrobes
+          </span>
+        </div>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="flex flex-col gap-[5px] group"
+          aria-label="Open menu"
+        >
+          <span className="block h-[1.5px] w-7 bg-[#00AEEF] transition-all group-hover:w-8" />
+          <span className="ml-auto block h-[1.5px] w-5 bg-[#00AEEF] transition-all group-hover:w-8" />
+          <span className="block h-[1.5px] w-7 bg-[#00AEEF] transition-all group-hover:w-8" />
+        </button>
+      </header>
+
+      {/* ─── MAIN CONTENT WITH PUSH-DOWN ────────────────────────────── */}
       <div
-        className="transition-all duration-500"
+        className="transition-all duration-500 pt-[72px]"
         style={{
           opacity: menuOpen ? 0.18 : 1,
           filter: menuOpen ? "blur(2px)" : "none",
@@ -861,30 +889,6 @@ export default function FashionNatives() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(0,174,239,0.12),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(0,174,239,0.08),transparent_22%)]" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black/90 to-black/95" />
         </div>
-
-        <header className="relative z-10 flex items-center justify-between border-b border-[#00AEEF]/10 bg-black/80 px-5 py-4 backdrop-blur-md">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => window.history.back()}
-              className="text-[#00AEEF] text-xl hover:scale-110 transition-transform"
-            >
-              ←
-            </button>
-            <div className="flex flex-col">
-              <p className="text-[#00AEEF] text-[10px] tracking-[0.7em] uppercase font-bold">Native Collection</p>
-              <span className="text-[#00AEEF]/40 text-[8px] tracking-[0.3em] uppercase">XCM Wardrobes</span>
-            </div>
-          </div>
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="flex flex-col gap-[5px] group"
-            aria-label="Open menu"
-          >
-            <span className="block h-[1.5px] w-7 bg-[#00AEEF] transition-all group-hover:w-8" />
-            <span className="ml-auto block h-[1.5px] w-5 bg-[#00AEEF] transition-all group-hover:w-8" />
-            <span className="block h-[1.5px] w-7 bg-[#00AEEF] transition-all group-hover:w-8" />
-          </button>
-        </header>
 
         <div className="relative z-10 pt-24 px-5 pb-12 border-b border-[#00AEEF]/10 bg-black/30 backdrop-blur-sm">
           <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">Natives</h1>
