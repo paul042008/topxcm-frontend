@@ -27,9 +27,9 @@ interface Review {
 }
 
 const REVIEWS: Review[] = [
-  { id: "1", name: "Abayomi", text: "Just getting some of the pictures you snapped at Mr Emmanuel's wedding, very lovely. Can;t stop watching the video" },
+  { id: "1", name: "Abayomi", text: "Just getting some of the pictures you snapped at Mr Emmanuel's wedding, very lovely. P:S Can't stop watching the video. Nice song track etc.." },
   { id: "2", name: "Anonymous", text: "@TOPWEDDINGS🥰🥰 everything about them is TOP! A million thanks to Bro and Sis Asuquo of TOP service!! The photo book na💣wifey is still🥰❤" },
-  { id: "3", name: "Idris", text: "😩😩This is sooo lovely, Damm!! Ther moments are priceless FR. Wifey love is too very much." },
+  { id: "3", name: "Idris", text: "😩😩This is sooo lovely, Damm!! Ther moments are priceless FR. Wifey loves it too very much." },
   { id: "4", name: "Omotayo", text: "Thank you. I love them. You my photography plug for life🥰🥰" },
   { id: "5", name: "Ovo", text: "Woooowwwww. These are so beautiful🧡❤❤🧡. My parents are so happy here" },
   { id: "6", name: "Hennessy", text: "Yea...got it 2day. It's lovely i must confess. We were so happy wit it. Tnx" },
@@ -718,6 +718,36 @@ export default function Photography() {
           </div>
         </section>
 
+        {/* PHILOSOPHY SECTION - only the text */}
+        <section
+          className="py-16 px-6 md:px-20"
+          style={{
+            backgroundColor: "rgba(212,175,55,0.02)",
+            borderTop: "1px solid rgba(212,175,55,0.1)",
+          }}
+        >
+          <div className="max-w-6xl mx-auto">
+            <div className="space-y-6">
+              <div style={{ borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: "2rem" }}>
+                <h3 className="font-serif italic text-3xl" style={{ color: "#D4AF37" }}>
+                  The Philosophy
+                </h3>
+                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none text-white">
+                  Every Frame <br />
+                  <span style={{ color: "#D4AF37" }}>is Art</span>
+                </h2>
+                <p className="leading-relaxed text-lg font-light text-white/60 mt-6">
+                  Based in the heart of Lagos, TOP is a creative photography brand dedicated to
+                  crafting timeless visual stories through cinematic weddings, expressive
+                  portraits, and striking aerial imagery—transforming fleeting moments into
+                  elegant, timeless memories.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* REVIEWS SECTION - with "View More" at bottom */}
         <section
           className="py-16 px-6 md:px-20 border-t border-[#D4AF37]/10"
           style={{
@@ -734,14 +764,6 @@ export default function Photography() {
                   What They Say
                 </h3>
               </div>
-              {hiddenReviews.length > 0 && (
-                <button
-                  onClick={openReviewModal}
-                  className="inline-flex border-b border-[#D4AF37]/45 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#D4AF37] transition-colors hover:border-[#D4AF37]"
-                >
-                  View More →
-                </button>
-              )}
             </div>
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {visibleReviews.map((review) => (
@@ -762,9 +784,20 @@ export default function Photography() {
                 </div>
               ))}
             </div>
+            {hiddenReviews.length > 0 && (
+              <div className="mt-10 text-center">
+                <button
+                  onClick={openReviewModal}
+                  className="inline-flex border-b border-[#D4AF37]/45 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#D4AF37] transition-colors hover:border-[#D4AF37]"
+                >
+                  View More →
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
+        {/* CONTACT & SOCIAL - moved back to its original position (after reviews) */}
         <section
           className="py-16 px-6 md:px-20"
           style={{
@@ -774,301 +807,285 @@ export default function Photography() {
         >
           <div className="max-w-6xl mx-auto flex flex-col gap-16">
             <div className="space-y-6">
-              <div style={{ borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: "2rem" }}>
-                <h3 className="font-serif italic text-3xl" style={{ color: "#D4AF37" }}>
-                  The Philosophy
-                </h3>
-                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none text-white">
-                  Every Frame <br />
-                  <span style={{ color: "#D4AF37" }}>is Art</span>
-                </h2>
-                <p className="leading-relaxed text-lg font-light text-white/60 mt-6">
-                  Based in the heart of Lagos, TOP is a creative photography brand dedicated to
-                  crafting timeless visual stories through cinematic weddings, expressive
-                  portraits, and striking aerial imagery—transforming fleeting moments into
-                  elegant, timeless memories.
-                </p>
-
-                <div
-                  className="mt-8 rounded-2xl p-6 space-y-6"
-                  style={{
-                    border: "1px solid rgba(212,175,55,0.15)",
-                    backgroundColor: "rgba(212,175,55,0.03)",
-                  }}
-                >
-                  <div className="space-y-3">
-                    <p
-                      className="text-[9px] font-bold tracking-[0.5em] uppercase"
-                      style={{ color: "#D4AF37" }}
-                    >
-                      Inquiries
-                    </p>
-                    <a
-                      href="tel:+2348132799299"
-                      className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
+              <div
+                className="rounded-2xl p-6 space-y-6"
+                style={{
+                  border: "1px solid rgba(212,175,55,0.15)",
+                  backgroundColor: "rgba(212,175,55,0.03)",
+                }}
+              >
+                <div className="space-y-3">
+                  <p
+                    className="text-[9px] font-bold tracking-[0.5em] uppercase"
+                    style={{ color: "#D4AF37" }}
+                  >
+                    Inquiries
+                  </p>
+                  <a
+                    href="tel:+2348132799299"
+                    className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
+                    style={{
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      backgroundColor: "rgba(255,255,255,0.03)",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                        "rgba(212,175,55,0.4)";
+                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                        "rgba(212,175,55,0.07)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                        "rgba(255,255,255,0.1)";
+                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                        "rgba(255,255,255,0.03)";
+                    }}
+                  >
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
                       style={{
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        backgroundColor: "rgba(255,255,255,0.03)",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                          "rgba(212,175,55,0.4)";
-                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                          "rgba(212,175,55,0.07)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                          "rgba(255,255,255,0.1)";
-                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                          "rgba(255,255,255,0.03)";
+                        border: "1px solid rgba(212,175,55,0.3)",
+                        backgroundColor: "rgba(212,175,55,0.07)",
                       }}
                     >
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                        style={{
-                          border: "1px solid rgba(212,175,55,0.3)",
-                          backgroundColor: "rgba(212,175,55,0.07)",
-                        }}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#D4AF37"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#D4AF37"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6.08 6.08l1.37-1.37a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-medium text-white/70 group-hover:text-[#D4AF37] transition-colors">
-                        Call Us
-                      </span>
-                    </a>
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6.08 6.08l1.37-1.37a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-white/70 group-hover:text-[#D4AF37] transition-colors">
+                      Call Us
+                    </span>
+                  </a>
+                  <a
+                    href="https://wa.me/2348132799299"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
+                    style={{
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      backgroundColor: "rgba(255,255,255,0.03)",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                        "rgba(212,175,55,0.4)";
+                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                        "rgba(212,175,55,0.07)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                        "rgba(255,255,255,0.1)";
+                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                        "rgba(255,255,255,0.03)";
+                    }}
+                  >
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                      style={{
+                        border: "1px solid rgba(212,175,55,0.3)",
+                        backgroundColor: "rgba(212,175,55,0.07)",
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="#D4AF37"
+                      >
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.126 1.524 5.868L.057 23.5l5.806-1.524A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.18-1.433l-.371-.221-3.844 1.009 1.028-3.752-.242-.386A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-white/70 group-hover:text-[#D4AF37] transition-colors">
+                      WhatsApp
+                    </span>
+                  </a>
+                </div>
+
+                <div style={{ height: "1px", backgroundColor: "rgba(212,175,55,0.1)" }} />
+
+                <div>
+                  <p
+                    className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4"
+                    style={{ color: "#D4AF37" }}
+                  >
+                    Connect With Us
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
                     <a
-                      href="https://wa.me/2348132799299"
+                      href="https://www.youtube.com/@topfilms1"
                       target="_blank"
                       rel="noreferrer"
-                      className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
                       style={{
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        backgroundColor: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(212,175,55,0.25)",
+                        backgroundColor: "rgba(212,175,55,0.04)",
                       }}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                          "rgba(212,175,55,0.4)";
                         (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                          "rgba(212,175,55,0.07)";
+                          "rgba(212,175,55,0.12)";
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                          "rgba(255,255,255,0.1)";
                         (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                          "rgba(255,255,255,0.03)";
+                          "rgba(212,175,55,0.04)";
                       }}
                     >
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                        style={{
-                          border: "1px solid rgba(212,175,55,0.3)",
-                          backgroundColor: "rgba(212,175,55,0.07)",
-                        }}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="#D4AF37"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="#D4AF37"
-                        >
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.126 1.524 5.868L.057 23.5l5.806-1.524A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.523-5.18-1.433l-.371-.221-3.844 1.009 1.028-3.752-.242-.386A9.938 9.938 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-medium text-white/70 group-hover:text-[#D4AF37] transition-colors">
-                        WhatsApp
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.016 3.016 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
+                        YouTube
                       </span>
                     </a>
-                  </div>
-
-                  <div style={{ height: "1px", backgroundColor: "rgba(212,175,55,0.1)" }} />
-
-                  <div>
-                    <p
-                      className="text-[9px] font-bold tracking-[0.5em] uppercase mb-4"
-                      style={{ color: "#D4AF37" }}
+                    <a
+                      href="https://www.facebook.com/topweddings1"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                      style={{
+                        border: "1px solid rgba(212,175,55,0.25)",
+                        backgroundColor: "rgba(212,175,55,0.04)",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "rgba(212,175,55,0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "rgba(212,175,55,0.04)";
+                      }}
                     >
-                      Connect With Us
-                    </p>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <a
-                        href="https://www.youtube.com/@topfilms1"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                        style={{
-                          border: "1px solid rgba(212,175,55,0.25)",
-                          backgroundColor: "rgba(212,175,55,0.04)",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.12)";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.04)";
-                        }}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="#D4AF37"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="#D4AF37"
-                        >
-                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.016 3.016 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                        </svg>
-                        <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
-                          YouTube
-                        </span>
-                      </a>
-                      <a
-                        href="https://www.facebook.com/topweddings1"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                        style={{
-                          border: "1px solid rgba(212,175,55,0.25)",
-                          backgroundColor: "rgba(212,175,55,0.04)",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.12)";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.04)";
-                        }}
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
+                        Facebook
+                      </span>
+                    </a>
+                    <a
+                      href="https://www.instagram.com/topstudios1"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                      style={{
+                        border: "1px solid rgba(212,175,55,0.25)",
+                        backgroundColor: "rgba(212,175,55,0.04)",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "rgba(212,175,55,0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "rgba(212,175,55,0.04)";
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#D4AF37"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="#D4AF37"
-                        >
-                          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                        </svg>
-                        <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
-                          Facebook
-                        </span>
-                      </a>
-                      <a
-                        href="https://www.instagram.com/topstudios1"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                        style={{
-                          border: "1px solid rgba(212,175,55,0.25)",
-                          backgroundColor: "rgba(212,175,55,0.04)",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.12)";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.04)";
-                        }}
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                        <circle cx="12" cy="12" r="4" />
+                        <circle cx="17.5" cy="6.5" r="1" fill="#D4AF37" stroke="none" />
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
+                        Instagram
+                      </span>
+                    </a>
+                    <a
+                      href="https://twitter.com/theofficialpho"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                      style={{
+                        border: "1px solid rgba(212,175,55,0.25)",
+                        backgroundColor: "rgba(212,175,55,0.04)",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "rgba(212,175,55,0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "rgba(212,175,55,0.04)";
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="#D4AF37"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#D4AF37"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                          <circle cx="12" cy="12" r="4" />
-                          <circle cx="17.5" cy="6.5" r="1" fill="#D4AF37" stroke="none" />
-                        </svg>
-                        <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
-                          Instagram
-                        </span>
-                      </a>
-                      <a
-                        href="https://twitter.com/theofficialpho"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                        style={{
-                          border: "1px solid rgba(212,175,55,0.25)",
-                          backgroundColor: "rgba(212,175,55,0.04)",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.12)";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.04)";
-                        }}
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.736-8.835L2.25 2.25h6.918l4.265 5.638 4.811-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117Z" />
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
+                        Twitter
+                      </span>
+                    </a>
+                    <a
+                      href="mailto:theofficialphotography1@email.com"
+                      className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
+                      style={{
+                        border: "1px solid rgba(212,175,55,0.25)",
+                        backgroundColor: "rgba(212,175,55,0.04)",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "rgba(212,175,55,0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                          "rgba(212,175,55,0.04)";
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#D4AF37"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="#D4AF37"
-                        >
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.736-8.835L2.25 2.25h6.918l4.265 5.638 4.811-5.638Zm-1.161 17.52h1.833L7.084 4.126H5.117Z" />
-                        </svg>
-                        <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
-                          Twitter
-                        </span>
-                      </a>
-                      <a
-                        href="mailto:theofficialphotography1@email.com"
-                        className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"
-                        style={{
-                          border: "1px solid rgba(212,175,55,0.25)",
-                          backgroundColor: "rgba(212,175,55,0.04)",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.12)";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                            "rgba(212,175,55,0.04)";
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#D4AF37"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <rect x="2" y="4" width="20" height="16" rx="2" />
-                          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                        </svg>
-                        <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
-                          Email
-                        </span>
-                      </a>
-                    </div>
+                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                      </svg>
+                      <span className="text-[9px] uppercase tracking-[0.3em] text-white/50 group-hover:text-[#D4AF37] transition-colors">
+                        Email
+                      </span>
+                    </a>
                   </div>
                 </div>
               </div>

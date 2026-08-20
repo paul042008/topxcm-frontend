@@ -583,8 +583,9 @@ export default function FashionPage() {
   const openReviewModal = () => setShowReviewModal(true);
   const closeReviewModal = () => setShowReviewModal(false);
 
-  // Only show 4 reviews, no hidden ones (so no "View More" button)
-  const visibleReviews = REVIEWS; // all 4
+  // Show only 4 reviews, hide the rest behind a "View More" button at the bottom
+  const visibleReviews = REVIEWS.slice(0, 4);
+  const hiddenReviews = REVIEWS.slice(4);
 
   return (
     <div className="relative w-full overflow-x-hidden bg-black text-white">
@@ -643,7 +644,7 @@ export default function FashionPage() {
         )}
       </AnimatePresence>
 
-      {/* REVIEW MODAL (only if there are hidden reviews, but here none, so we can keep but it won't be used) */}
+      {/* REVIEW MODAL */}
       <AnimatePresence>
         {showReviewModal && (
           <motion.div
@@ -914,7 +915,7 @@ export default function FashionPage() {
           <div className="mx-auto max-w-7xl">
             <div className="flex items-end justify-between gap-6">
               <SectionLabel eyebrow="Client Reviews" title="What They Say" light />
-              {/* No "View More" because we have only 4 reviews, all shown */}
+              {/* No "View More" at the top; it's placed at the bottom */}
             </div>
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {visibleReviews.map((review) => (
@@ -935,6 +936,17 @@ export default function FashionPage() {
                 </div>
               ))}
             </div>
+            {/* "View More" button placed at the bottom, centered */}
+            {hiddenReviews.length > 0 && (
+              <div className="mt-10 text-center">
+                <button
+                  onClick={openReviewModal}
+                  className="inline-flex border-b border-[#00AEEF]/45 pb-1 text-[10px] font-bold uppercase tracking-[0.35em] text-[#00AEEF] transition-colors hover:border-[#00AEEF]"
+                >
+                  View More →
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
