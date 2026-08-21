@@ -27,15 +27,14 @@ interface Review {
 }
 
 const REVIEWS: Review[] = [
-  { id: "1", name: "Abayomi", text: "Just getting some of the pictures you snapped at Mr Emmanuel's wedding, very lovely. P:S Can't stop watching the video. Nice song track etc.." },
-  { id: "2", name: "Anonymous", text: "@TOPWEDDINGS🥰🥰 everything about them is TOP! A million thanks to Bro and Sis Asuquo of TOP service!! The photo book na💣wifey is still🥰❤" },
-  { id: "3", name: "Idris", text: "😩😩This is sooo lovely, Damm!! Ther moments are priceless FR. Wifey loves it too very much." },
-  { id: "4", name: "Omotayo", text: "Thank you. I love them. You my photography plug for life🥰🥰" },
-  { id: "5", name: "Ovo", text: "Woooowwwww. These are so beautiful🧡❤❤🧡. My parents are so happy here" },
-  { id: "6", name: "Hennessy", text: "Yea...got it 2day. It's lovely i must confess. We were so happy wit it. Tnx" },
+  { id: "1", name: "Abayomi", text: "Just getting some of the pictures you snapped at Mr Emmanuel's wedding, very lovely. \n P:S Can't stop watching the video. Nice song track etc.." },
+  { id: "2", name: "Anonymous", text: "@TOPWEDDINGS🥰🥰 \n EVERYTHING ABOUT THEM IS TOP!! \nA million thanks to Bro and Sis Asuquo of TOP service!! \nThe photo book na💣 \nWifey is still dancing." },
+  { id: "3", name: "Idris", text: "😩😩This is sooo lovely, Damm!! The moments are priceless FR.\n Wifey loves it too very much." },
+  { id: "4", name: "Omotayo", text: "Thank you. I love them. \nYou my photography plug for life🥰🥰" },
+  { id: "5", name: "Ovo", text: "Woooowwwww. These are so beautiful🧡❤❤🧡. \nMy parents are so happy here" },
+  { id: "6", name: "Hennessy", text: "Yea...got it 2day. \nIt's lovely i must confess. \nWe were so happy wit it. Tnx" },
   { id: "7", name: "Damilola Ogunejimite", text: "I saw our beautiful pics. Eseun" },
   { id: "8", name: "Oluwatoyin", text: "Pictures are awesome 🤗thanks for a Job welldone👍💯" },
-  { id: "9", name: "Wedding Guest", text: "This is soooo lovely. Damn!!! The moments are priceless. FR. Wifey Loves it too very much" },
 ];
 
 function useAntiCaptureProtection() {
@@ -509,7 +508,12 @@ export default function Photography() {
                   {REVIEWS.map((review) => (
                     <div key={review.id} className="border-b border-white/10 pb-4 last:border-0">
                       <p className="text-sm font-semibold text-[#D4AF37]">{review.name}</p>
-                      <p className="text-sm text-white/80 mt-1">{review.text}</p>
+                      <p
+                        className="text-sm text-white/80 mt-1"
+                        style={{ whiteSpace: "pre-line" }}
+                      >
+                        {review.text}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -780,7 +784,12 @@ export default function Photography() {
                       <div className="flex text-[#D4AF37] text-[10px]">★★★★★</div>
                     </div>
                   </div>
-                  <p className="mt-3 text-sm text-white/70 leading-relaxed">{review.text}</p>
+                  <p
+                    className="mt-3 text-sm text-white/70 leading-relaxed"
+                    style={{ whiteSpace: "pre-line" }}
+                  >
+                    {review.text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -924,7 +933,7 @@ export default function Photography() {
                   </p>
                   <div className="flex flex-wrap items-center gap-3">
                     <a
-                      href="https://www.youtube.com/@topfilms1"
+                      href="https://www.youtube.com/@topfilmz1"
                       target="_blank"
                       rel="noreferrer"
                       className="group flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300"

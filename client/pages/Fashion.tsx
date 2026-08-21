@@ -226,7 +226,7 @@ const REVIEWS: Review[] = [
   {
     id: "2",
     name: "KB",
-    text: "Good morning trust you're well, So sorry about everything you went through behing the closed doors. We give all glory to God for his divine supply to overcome the setback.. You're truly string because despite everything happening to you, all outfits cme out really good and we got lots of compliments. May God keep blessing the works of your hands🙏",
+    text: "Good morning trust you're well, So sorry about everything you went through behing the closed doors. We give all glory to God for his divine supply to overcome the setback. You're truly strong because despite everything happening to you, all outfits came out really good and we got lots of compliments. May God keep blessing the works of your hands🙏",
   },
   {
     id: "3",
@@ -242,11 +242,6 @@ const REVIEWS: Review[] = [
     id: "5",
     name: "Olumide",
     text: "I got good reviews on the last outfit. Top stuff 👌🏽",
-  },
-  {
-    id: "6",
-    name: "Abraham",
-    text: "I really love your work",
   },
 ];
 
