@@ -547,10 +547,11 @@ export default function RealEstate() {
                     {homepageVideo.title}
                   </h3>
                   {homepageVideo.description && (
-                    <p className="text-white/50 text-sm mt-2 max-w-2xl mx-auto leading-relaxed">
-                      {homepageVideo.description}
-                    </p>
-                  )}
+  <div
+    className="text-white/50 text-sm mt-2 max-w-2xl mx-auto leading-relaxed [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+    dangerouslySetInnerHTML={{ __html: homepageVideo.description }}
+  />
+)}
                 </div>
               )}
             </motion.div>
@@ -698,10 +699,11 @@ export default function RealEstate() {
                       {homepageVideo.title || "Watch Our Story"}
                     </h3>
                     {homepageVideo.description && (
-                      <p className="text-white/60 text-xs md:text-sm mt-2 max-w-xl line-clamp-2">
-                        {homepageVideo.description}
-                      </p>
-                    )}
+  <div
+    className="text-white/60 text-xs md:text-sm mt-2 max-w-xl line-clamp-2 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+    dangerouslySetInnerHTML={{ __html: homepageVideo.description }}
+  />
+)}
                   </div>
 
                   {/* Corner badge */}
