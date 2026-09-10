@@ -362,6 +362,9 @@ export default function RealEstate() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  // ─── NEW: homepage video ───
+  const [homepageVideo, setHomepageVideo] = useState<Property | null>(null);
+  const [videoLightboxOpen, setVideoLightboxOpen] = useState(false);
 
   const collectionsRef = useRef<HTMLDivElement>(null);
   const WA = "https://wa.me/2348061587993";
@@ -376,14 +379,18 @@ export default function RealEstate() {
       })
       .then((data: Property[]) => {
         if (!isMounted) return;
-        const realEstate = Array.isArray(data)
-          ? data.filter((item) => item.category === "realestate")
-          : [];
+        const allData = Array.isArray(data) ? data : [];
+        const realEstate = allData.filter((item) => item.category === "realestate");
         setProperties(realEstate);
+
+        // ─── NEW: find homepage video ───
+        const video = allData.find((item) => item.category === "homepage-video");
+        setHomepageVideo(video || null);
       })
       .catch(() => {
         if (!isMounted) return;
         setProperties([]);
+        setHomepageVideo(null);
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -448,6 +455,7 @@ export default function RealEstate() {
         onOpenAction={() => setIsMenuOpen(true)}
       />
 
+      {/* ─── PROPERTY LIGHTBOX ─── */}
       <AnimatePresence>
         {selectedItem && (
           <motion.div
@@ -494,6 +502,62 @@ export default function RealEstate() {
         )}
       </AnimatePresence>
 
+      {/* ─── VIDEO PREVIEW LIGHTBOX ─── */}
+      <AnimatePresence>
+        {videoLightboxOpen && homepageVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
+            className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-10"
+            style={{
+              backdropFilter: "blur(18px)",
+              backgroundColor: "rgba(0,0,0,0.88)",
+            }}
+            onClick={() => setVideoLightboxOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 24, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 24, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 250, damping: 24 }}
+              className="relative w-full max-w-6xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setVideoLightboxOpen(false)}
+                className="absolute -top-12 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-[#B0D4E8]/90 text-lg font-bold text-black transition-colors hover:bg-[#B0D4E8]"
+              >
+                ✕
+              </button>
+              <video
+                src={homepageVideo.image}
+                controls
+                autoPlay
+                playsInline
+                className="w-full rounded-2xl border border-[#B0D4E8]/20 shadow-2xl"
+              />
+              {homepageVideo.title && (
+                <div className="mt-5 text-center">
+                  <p className="text-[#B0D4E8] text-[10px] uppercase tracking-[0.5em] font-bold mb-2">
+                    Featured Film
+                  </p>
+                  <h3 className="text-white text-xl md:text-2xl font-serif italic">
+                    {homepageVideo.title}
+                  </h3>
+                  {homepageVideo.description && (
+                    <p className="text-white/50 text-sm mt-2 max-w-2xl mx-auto leading-relaxed">
+                      {homepageVideo.description}
+                    </p>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div
         className="transition-all duration-500"
         style={{
@@ -502,7 +566,7 @@ export default function RealEstate() {
           pointerEvents: isMenuOpen ? "none" : "auto",
         }}
       >
-        {/* ─── HEADER – LOGO WITHOUT BOX ─── */}
+        {/* ─── HEADER ─── */}
         <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between border-b border-white/5 bg-black/80 px-5 py-5 backdrop-blur-md md:px-10">
           <div className="flex items-center">
             <img
@@ -585,6 +649,72 @@ export default function RealEstate() {
             </div>
           </motion.div>
         </section>
+
+        {/* ─── HOMEPAGE VIDEO (landscape) ─── */}
+        {homepageVideo && homepageVideo.image && (
+          <section className="relative bg-black px-5 py-16 md:px-10 md:py-24 border-t border-white/5">
+            <div className="mx-auto max-w-7xl">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+                <SectionLabel eyebrow="Watch" title="Latest project" light />
+                <p className="text-white/30 text-sm font-light max-w-sm leading-relaxed">
+                  Click the film below to preview it — a glimpse into the spaces we create and the stories we build.
+                </p>
+              </div>
+
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.005 }}
+                whileTap={{ scale: 0.995 }}
+                transition={{ type: "spring", stiffness: 250, damping: 22 }}
+                onClick={() => setVideoLightboxOpen(true)}
+                className="group relative block w-full overflow-hidden rounded-[28px] border border-white/10 bg-black shadow-[0_24px_60px_rgba(0,0,0,0.55)]"
+              >
+                <div className="relative aspect-video w-full overflow-hidden">
+                  <video
+                    src={homepageVideo.image}
+                    muted
+                    loop
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-[1.02]"
+                  />
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/25 transition-colors duration-500" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-[#B0D4E8]/95 backdrop-blur-sm shadow-[0_0_40px_rgba(176,212,232,0.5)] transition-transform duration-300 group-hover:scale-110">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="#000">
+                        <polygon points="6 4 20 12 6 20 6 4" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Bottom info */}
+                  <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent text-left">
+                    <p className="text-[#B0D4E8] text-[10px] uppercase tracking-[0.5em] font-bold mb-2">
+                      Featured Film
+                    </p>
+                    <h3 className="text-white text-2xl md:text-4xl font-serif italic leading-tight">
+                      {homepageVideo.title || "Watch Our Story"}
+                    </h3>
+                    {homepageVideo.description && (
+                      <p className="text-white/60 text-xs md:text-sm mt-2 max-w-xl line-clamp-2">
+                        {homepageVideo.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Corner badge */}
+                  <div className="absolute top-5 right-5 rounded-full border border-[#B0D4E8]/40 bg-black/50 px-3 py-1.5 backdrop-blur-sm">
+                    <span className="text-[#B0D4E8] text-[9px] uppercase tracking-[0.3em] font-bold">
+                      ▶ Play
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+          </section>
+        )}
 
         {/* FEATURES */}
         <section className="border-y border-black/5 bg-white px-3 py-6 md:px-10 md:py-8">

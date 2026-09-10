@@ -328,9 +328,10 @@ function ItemModal({
             {image.price && (
               <p className="text-[#00AEEF] font-bold text-lg mb-3">₦{image.price}</p>
             )}
-            <p className="text-white/60 text-sm leading-relaxed mb-5 whitespace-pre-wrap break-words">
-              {image.description}
-            </p>
+<div
+  className="text-white/60 text-sm leading-relaxed mb-5 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+  dangerouslySetInnerHTML={{ __html: image.description }}
+/>
             <button
               onClick={handleOrder}
               className="w-full bg-[#00AEEF] text-black rounded-xl py-3.5 text-sm font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
@@ -407,11 +408,12 @@ function ProductCard({
           {firstImage.price && (
             <p className="text-[#00AEEF] font-bold text-base">₦{firstImage.price}</p>
           )}
-          {firstImage.description && (
-            <p className="text-white/50 text-xs leading-relaxed line-clamp-2">
-              {firstImage.description}
-            </p>
-          )}
+{firstImage.description && (
+  <div
+    className="text-white/50 text-xs leading-relaxed line-clamp-2 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+    dangerouslySetInnerHTML={{ __html: firstImage.description }}
+  />
+)}
           <button
             onClick={handleOrder}
             className="mt-auto w-full bg-[#00AEEF] text-black rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"

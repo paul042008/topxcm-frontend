@@ -10,7 +10,7 @@ type MainTab = "fashion" | "photo" | "realestate";
 
 type FashionCategory = "casuals" | "natives" | "agbadas" | "suits" | "latest";
 type PhotoCategory = "weddings" | "portraits" | "videos" | "aerials" | "studio" | "outdoors" | "showcase" | "canvas" | "frames";
-type RealEstateCategory = "properties" | "construction" | "plans";
+type RealEstateCategory = "properties" | "construction" | "plans" | "homepage-video";
 
 interface AlbumImage {
   id?: string;
@@ -30,7 +30,7 @@ interface Album {
   price: string;
   cover?: string;
   images: AlbumImage[];
-  linked_video_id?: string; // ─── NEW ───
+  linked_video_id?: string;
 }
 
 interface SingleItem {
@@ -76,6 +76,7 @@ const REAL_ESTATE_CATEGORIES: { value: RealEstateCategory; label: string; icon: 
   { value: "properties", label: "Properties", icon: "🏠" },
   { value: "construction", label: "Construction", icon: "🏗️" },
   { value: "plans", label: "2D & 3D Plans", icon: "📐" },
+  { value: "homepage-video", label: "Homepage Video", icon: "🎬" }, // ─── NEW ───
 ];
 
 // ─── SHOWCASE ROUTE OPTIONS ────────────────────────────────────────────────
@@ -88,7 +89,7 @@ const SHOWCASE_ROUTE_OPTIONS = [
   { value: "portraits", label: "Portraits" },
 ];
 
-// ─── CAROUSEL ROUTE OPTIONS (for fashion) ─────────────────────────────────
+// ─── CAROUSEL ROUTE OPTIONS ────────────────────────────────────────────────
 
 const CAROUSEL_ROUTE_OPTIONS = [
   { value: "/fashion/suits", label: "Suits" },
@@ -310,7 +311,7 @@ function StatusMsg({ msg }: { msg: string }) {
   );
 }
 
-// ─── UPLOAD BOX (supports video files) ─────────────────────────────────────
+// ─── UPLOAD BOX ─────────────────────────────────────────────────────────────
 
 function UploadBox({
   label,
@@ -425,7 +426,6 @@ function CategoryManager({
   const [editAlbumCover, setEditAlbumCover] = useState<File | null>(null);
   const [editAlbumLoading, setEditAlbumLoading] = useState(false);
   const [editAlbumMsg, setEditAlbumMsg] = useState("");
-  // ─── NEW: linked video ID ──────────────────────────────────────────────────
   const [editLinkedVideoId, setEditLinkedVideoId] = useState<string>("");
 
   // ─── IMAGE EDIT STATE ──────────────────────────────────────────────────────
@@ -479,7 +479,7 @@ function CategoryManager({
   const [addingImg, setAddingImg] = useState(false);
   const [addImgMsg, setAddImgMsg] = useState("");
 
-  // ─── NEW: EDIT CAROUSEL STATE ─────────────────────────────────────────────
+  // ─── EDIT CAROUSEL STATE ─────────────────────────────────────────────────
   const [editingCarousel, setEditingCarousel] = useState<SingleItem | null>(null);
   const [editCarouselTitle, setEditCarouselTitle] = useState("");
   const [editCarouselDesc, setEditCarouselDesc] = useState("");
@@ -520,7 +520,6 @@ function CategoryManager({
       const res = await fetch(`${API}/api/items`);
       if (res.ok) {
         const all = await res.json();
-        // Exclude carousel items and filter by category options
         const filtered = all.filter(
           (item: any) =>
             !item.album_id &&
@@ -611,7 +610,6 @@ function CategoryManager({
 
     try {
       await Promise.all([updateOrder(img1, order2), updateOrder(img2, order1)]);
-      // Update local state
       const updatedImages = [...images];
       [updatedImages[index], updatedImages[newIndex]] = [updatedImages[newIndex], updatedImages[index]];
       updatedImages.forEach((img, idx) => {
@@ -823,7 +821,7 @@ function CategoryManager({
     }
   };
 
-  // ─── ADD IMAGES TO ALBUM (supports video) ──────────────────────────────
+  // ─── ADD IMAGES TO ALBUM ──────────────────────────────────────────────
 
   const handleAddImage = async (e: FormEvent) => {
     e.preventDefault();
@@ -869,7 +867,7 @@ function CategoryManager({
     }
   };
 
-  // ─── SINGLE UPLOAD (with video support) ──────────────────────────────────
+  // ─── SINGLE UPLOAD ──────────────────────────────────────────────────────
 
   const handleSingleUpload = async (e: FormEvent) => {
     e.preventDefault();
@@ -955,7 +953,6 @@ function CategoryManager({
     setEditAlbumDesc(album.description || "");
     setEditAlbumPrice(album.price || "");
     setEditAlbumCover(null);
-    // ─── NEW: set linked video ID ───
     setEditLinkedVideoId(album.linked_video_id || "");
     setEditAlbumMsg("");
   };
@@ -971,7 +968,6 @@ function CategoryManager({
       fd.append("category", editAlbumCategory);
       fd.append("description", editAlbumDesc);
       fd.append("price", editAlbumPrice);
-      // ─── NEW: append linked video ID ───
       fd.append("linked_video_id", editLinkedVideoId);
       if (editAlbumCover) fd.append("cover", editAlbumCover);
 
@@ -1150,7 +1146,7 @@ function CategoryManager({
     }
   };
 
-  // ─── NEW: EDIT CAROUSEL FUNCTIONS ────────────────────────────────────────
+  // ─── EDIT CAROUSEL FUNCTIONS ────────────────────────────────────────────
 
   const openEditCarousel = (item: SingleItem) => {
     setEditingCarousel(item);
@@ -1216,14 +1212,14 @@ function CategoryManager({
 
   const isPhoto = type === "photo";
 
-  // ─── UPDATED HELPERS: include "properties" for video support ─────────────
+  // ─── UPDATED HELPERS: include "homepage-video" for video support ────────
   const getMediaAccept = (cat: string) => {
-    const videoCats = ["videos", "aerials", "properties", "construction", "plans"];
+    const videoCats = ["videos", "aerials", "properties", "construction", "plans", "homepage-video"];
     return videoCats.includes(cat) ? "video/*,image/*" : "image/*";
   };
 
   const getMediaLabel = (cat: string, plural: boolean) => {
-    const videoCats = ["videos", "aerials", "properties", "construction", "plans"];
+    const videoCats = ["videos", "aerials", "properties", "construction", "plans", "homepage-video"];
     const type = videoCats.includes(cat) ? "Images/Videos" : "Images";
     return plural ? `${type} * (select multiple)` : `${type} *`;
   };
@@ -1326,7 +1322,6 @@ function CategoryManager({
                       <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
                       <p className="text-xs text-white/35 truncate">→ {item.extra_text || "No route"}</p>
                     </div>
-                    {/* ─── EDIT BUTTON ─── */}
                     <button
                       onClick={() => openEditCarousel(item)}
                       className="shrink-0 w-8 h-8 rounded-lg bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition flex items-center justify-center"
@@ -1383,7 +1378,7 @@ function CategoryManager({
             )}
           </div>
 
-          {/* ─── EDIT CAROUSEL MODAL ────────────────────────────────────────── */}
+          {/* ─── EDIT CAROUSEL MODAL ──────────────────────────────────────── */}
           {editingCarousel && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
               <div className="w-full max-w-lg bg-[#111] rounded-2xl border border-white/10 p-6 max-h-[90vh] overflow-y-auto">
@@ -1548,11 +1543,20 @@ function CategoryManager({
                       key={`${item.id}-${item.order}`}
                       className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] px-3 py-2"
                     >
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-12 h-12 rounded-lg object-cover border border-white/10"
-                      />
+                      {/* ─── Show video thumbnail for homepage-video ─── */}
+                      {item.category === "homepage-video" ? (
+                        <div className="w-12 h-12 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#D4AF37">
+                            <polygon points="6 4 20 12 6 20 6 4" />
+                          </svg>
+                        </div>
+                      ) : (
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-12 h-12 rounded-lg object-cover border border-white/10"
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">{item.title || "Untitled"}</p>
                         <p className="text-xs text-white/35 truncate">
@@ -1562,7 +1566,6 @@ function CategoryManager({
                           <p className="text-[9px] text-[#D4AF37]/60 mt-0.5">→ {item.extra_text}</p>
                         )}
                       </div>
-                      {/* Order buttons */}
                       <button
                         onClick={() => moveSingle(item.id, "up")}
                         disabled={index === 0}
@@ -1701,14 +1704,14 @@ function CategoryManager({
                 single
                 onChange={(f) => setNewAlbumCover(f[0] || null)}
                 previewFiles={newAlbumCover ? [newAlbumCover] : []}
-                accept="image/*,video/*" // ─── allow videos for cover ───
+                accept="image/*,video/*"
               />
               <UploadBox
                 label="Initial Album File (optional)"
                 single
                 onChange={(f) => setNewAlbumInitialImage(f[0] || null)}
                 previewFiles={newAlbumInitialImage ? [newAlbumInitialImage] : []}
-                accept="image/*,video/*" // ─── allow videos for initial ───
+                accept="image/*,video/*"
               />
               <Field label="Extra Text for Initial Image (optional)">
                 <textarea
@@ -2039,7 +2042,6 @@ function CategoryManager({
               <Field label="Price">
                 <PriceInput value={editAlbumPrice} onChange={setEditAlbumPrice} placeholder="e.g. 60,000" />
               </Field>
-              {/* ─── NEW: LINK TO VIDEO ─────────────────────────────────── */}
               <Field label="Link to Video (optional)">
                 <select
                   value={editLinkedVideoId}
