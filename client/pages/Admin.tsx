@@ -8,7 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 
 type MainTab = "fashion" | "photo" | "realestate";
 
-type FashionCategory = "casuals" | "natives" | "agbadas" | "suits" | "latest";
+type FashionCategory = "casuals" | "natives" | "agbadas" | "suits" | "shoes" | "latest";
 type PhotoCategory = "weddings" | "portraits" | "videos" | "aerials" | "studio" | "outdoors" | "showcase" | "canvas" | "frames";
 type RealEstateCategory = "properties" | "construction" | "plans" | "homepage-video";
 
@@ -57,6 +57,7 @@ const FASHION_CATEGORIES: { value: FashionCategory; label: string; icon: string 
   { value: "natives", label: "Natives", icon: "🪡" },
   { value: "agbadas", label: "Agbada", icon: "✨" },
   { value: "suits", label: "Suits", icon: "🤵" },
+  { value: "shoes", label: "Shoes & Accessories", icon: "👟" },
   { value: "latest", label: "Latest Collection", icon: "✨" },
 ];
 

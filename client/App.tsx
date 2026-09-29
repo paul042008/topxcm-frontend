@@ -21,6 +21,7 @@ const FashionSuits = lazy(() => import("./pages/FashionSuits"));
 const FashionAgbada = lazy(() => import("./pages/FashionAgbada"));
 const FashionNatives = lazy(() => import("./pages/FashionNatives"));
 const FashionCasuals = lazy(() => import("./pages/FashionCasuals"));
+const FashionShoes = lazy(() => import("./pages/FashionShoes"));
 const FashionContact = lazy(() => import("./pages/FashionContact"));
 const RealEstate = lazy(() => import("./pages/RealEstate"));
 const RealEstateListings = lazy(() => import("./pages/RealEstateListings"));
@@ -156,6 +157,7 @@ const App = () => (
               <Route path="/fashion/agbada" element={<FashionAgbada />} />
               <Route path="/fashion/natives" element={<FashionNatives />} />
               <Route path="/fashion/casuals" element={<FashionCasuals />} />
+              <Route path="/fashion/shoes" element={<FashionShoes />} />
               <Route path="/fashion/contact" element={<FashionContact />} />
               <Route path="/fashion/latest" element={<FashionLatest />} />
 

@@ -79,6 +79,7 @@ export default function FashionMenu({
               { name: "Agbada", path: "/fashion/agbada" },
               { name: "Natives", path: "/fashion/natives" },
               { name: "Casuals", path: "/fashion/casuals" },
+              { name: "Shoes & Accessories", path: "/fashion/shoes" },
               { name: "Contact", path: "/fashion/contact" },
             ].map((link) => {
               // Conditionally apply brand blue to "Latest Collection"
