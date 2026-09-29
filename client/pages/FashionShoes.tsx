@@ -507,7 +507,7 @@ function ProductCard({
   );
 }
 
-// ─── GALLERY VIEW ──────────────────────────────────────────────────────────
+// ─── GALLERY VIEW (FIXED — every image is its own product) ─────────────────
 
 function GalleryView({
   album,
@@ -519,27 +519,14 @@ function GalleryView({
   const [heroLightbox, setHeroLightbox] = useState<{ url: string; extra_text?: string } | null>(null);
   const [modalImage, setModalImage] = useState<AlbumImage | null>(null);
 
-  const grouped = album.images.reduce((acc, img) => {
-    const key = img.title || 'untitled';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(img);
-    return acc;
-  }, {} as Record<string, AlbumImage[]>);
+  // Sort by order if the API provides it; otherwise keep as-is
+  const images = [...album.images].sort(
+    (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)
+  );
 
-  const productGroups = Object.entries(grouped).map(([title, images]) => ({
-    title,
-    images,
-  }));
-
-  const heroGroup = productGroups.length > 0 ? productGroups[0] : null;
-
-  const secondImage = album.images[1];
-  const restGroups = productGroups.slice(1).map((group) => ({
-    ...group,
-    images: group.images.length > 1
-      ? group.images.filter((img) => img !== secondImage)
-      : group.images,
-  })).filter((group) => group.images.length > 0);
+  // First image = hero banner, rest = individual product cards
+  const heroImage = images[0];
+  const restImages = images.slice(1);
 
   const handleOrder = (title: string, price: string) => {
     const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (₦${price})` : ""}. Please let me know the details.`;
@@ -547,10 +534,10 @@ function GalleryView({
   };
 
   const handleHeroClick = () => {
-    if (heroGroup) {
+    if (heroImage) {
       setHeroLightbox({
-        url: heroGroup.images[0].url,
-        extra_text: heroGroup.images[0].extra_text,
+        url: heroImage.url,
+        extra_text: heroImage.extra_text,
       });
     }
   };
@@ -577,21 +564,22 @@ function GalleryView({
         <span className="ml-auto text-xs text-white/40">{album.images.length} items</span>
       </div>
 
-      {heroGroup && (
+      {/* ─── HERO ─── */}
+      {heroImage && (
         <div className="px-4 pt-4 pb-2">
           <div
             className="relative overflow-hidden rounded-2xl border border-[#00AEEF]/10 cursor-pointer group aspect-[16/9]"
             onClick={handleHeroClick}
           >
             <img
-              src={heroGroup.images[0].url}
-              alt={heroGroup.title}
+              src={heroImage.url}
+              alt={heroImage.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6">
               <div>
                 <p className="text-[#00AEEF] text-[10px] uppercase tracking-[0.4em] font-bold">Featured</p>
-                <p className="text-white text-lg font-bold">{heroGroup.title}</p>
+                <p className="text-white text-lg font-bold">{heroImage.title || album.name}</p>
               </div>
             </div>
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
@@ -603,17 +591,18 @@ function GalleryView({
         </div>
       )}
 
-      {restGroups.length > 0 && (
+      {/* ─── REST OF IMAGES — each one is its own product card ─── */}
+      {restImages.length > 0 && (
         <div className="px-4 py-4 max-w-7xl mx-auto">
           <p className="text-white/40 text-xs uppercase tracking-[0.5em] mb-4">
             More from this collection
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {restGroups.map((group) => (
+            {restImages.map((img, i) => (
               <ProductCard
-                key={group.title}
-                productTitle={group.title}
-                images={group.images}
+                key={`${img.url}-${i}`}
+                productTitle={img.title || album.name}
+                images={[img]}
                 onOrder={handleOrder}
               />
             ))}

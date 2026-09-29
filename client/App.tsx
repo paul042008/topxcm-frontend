@@ -46,9 +46,9 @@ function ProtectionOverlay() {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     document.addEventListener("contextmenu", handleContextMenu);
 
-    // Detect PrintScreen key (key code 44) – works on desktop browsers
+    // Detect PrintScreen key – works on desktop browsers
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "PrintScreen" || e.key === "PrintScreen") {
+      if (e.key === "PrintScreen") {
         setShowWarning(true);
         if (warningTimeout.current) clearTimeout(warningTimeout.current);
         warningTimeout.current = setTimeout(() => setShowWarning(false), 3000);
