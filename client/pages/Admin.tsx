@@ -6,7 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
-type MainTab = "fashion" | "photo" | "realestate";
+type MainTab = "fashion" | "photo" | "realestate" | "texts";
 
 type FashionCategory = "casuals" | "natives" | "agbadas" | "suits" | "shoes" | "latest";
 type PhotoCategory = "weddings" | "portraits" | "videos" | "aerials" | "studio" | "outdoors" | "showcase" | "canvas" | "frames";
@@ -97,6 +97,7 @@ const CAROUSEL_ROUTE_OPTIONS = [
   { value: "/fashion/agbada", label: "Agbada" },
   { value: "/fashion/natives", label: "Natives" },
   { value: "/fashion/casuals", label: "Casuals" },
+  { value: "/fashion/shoes", label: "Shoes & Accessories" },
 ];
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
@@ -2276,6 +2277,154 @@ function FormFooter({ msg, loading, label }: { msg: string; loading: boolean; la
   );
 }
 
+// ─── HERO TEXTS TAB ─────────────────────────────────────────────────────────
+
+const EDITABLE_CATEGORIES: { value: string; label: string; icon: string }[] = [
+  { value: "suits",  label: "Suits",               icon: "🤵" },
+  { value: "agbada", label: "Agbada",              icon: "✨" },
+  { value: "natives", label: "Natives",            icon: "🪡" },
+  { value: "casuals", label: "Casuals",            icon: "👕" },
+  { value: "shoes",  label: "Shoes & Accessories", icon: "👟" },
+  { value: "latest", label: "Latest Collection",   icon: "🌟" },
+];
+
+function CategoryTextEditor({
+  category,
+  label,
+  icon,
+}: {
+  category: string;
+  label: string;
+  icon: string;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API}/api/category-texts`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((arr: any[]) => {
+        const found = arr.find((t) => t.category === category);
+        if (found) {
+          setTitle(found.title || "");
+          setDescription(found.description || "");
+        }
+      })
+      .catch(() => setMsg("❌ Could not load"))
+      .finally(() => setLoading(false));
+  }, [category]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMsg("");
+    try {
+      const res = await fetch(`${API}/api/category-texts/${category}`, {
+        method: "PUT",
+        headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setMsg(d.message || "❌ Save failed");
+      } else {
+        setMsg("✅ Saved!");
+        // Bust the frontend cache so next page visit shows the new text
+        try {
+          const mod = await import("../hooks/useCategoryText");
+          mod.invalidateCategoryTextCache();
+        } catch {}
+        setTimeout(() => setMsg(""), 2500);
+      }
+    } catch {
+      setMsg("❌ Network error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={cardCls}>
+        <p className="text-white/30 text-sm">Loading {label}…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cardCls}>
+      <div className="flex items-center justify-between mb-3">
+        <SectionTitle>
+          {icon} {label}
+        </SectionTitle>
+        <span className="text-[10px] text-white/30 uppercase tracking-wider">
+          key: {category}
+        </span>
+      </div>
+
+      <Field label="Page Title (big italic heading)">
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Suits"
+          className={inputCls}
+        />
+      </Field>
+
+      <Field label="Description (small text under title)">
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="e.g. Bespoke craftsmanship meets modern silhouettes..."
+          className={textareaCls}
+          rows={3}
+          style={{ minHeight: 80 }}
+        />
+      </Field>
+
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={btnGold}
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
+        {msg && (
+          <span className={`text-xs ${msg.startsWith("✅") ? "text-emerald-400" : "text-red-400"}`}>
+            {msg}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HeroTextsTab() {
+  return (
+    <div className="space-y-5">
+      <div className={`${cardCls} border-[#D4AF37]/20`}>
+        <SectionTitle>✏️ Hero Text Editor</SectionTitle>
+        <p className="text-white/50 text-xs leading-relaxed">
+          Edit the big headline and description that appear at the top of each category page.
+          Changes go live immediately after saving.
+        </p>
+      </div>
+
+      {EDITABLE_CATEGORIES.map((cat) => (
+        <CategoryTextEditor
+          key={cat.value}
+          category={cat.value}
+          label={cat.label}
+          icon={cat.icon}
+        />
+      ))}
+    </div>
+  );
+}
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── MAIN ADMIN ──────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2284,6 +2433,7 @@ const TAB_CONFIG: { id: MainTab; label: string; icon: string }[] = [
   { id: "fashion", label: "Fashion", icon: "👗" },
   { id: "photo", label: "Photography", icon: "📷" },
   { id: "realestate", label: "Real Estate", icon: "🏠" },
+  { id: "texts", label: "Hero Texts", icon: "✏️" },
 ];
 
 export default function Admin() {
@@ -2388,9 +2538,10 @@ export default function Admin() {
       </div>
 
       <main className="max-w-5xl mx-auto px-5 py-8">
-        {tab === "fashion" && <FashionTab />}
-        {tab === "photo" && <PhotoTab />}
-        {tab === "realestate" && <RealEstateTab />}
+      {tab === "fashion" && <FashionTab />}
+      {tab === "photo" && <PhotoTab />}
+      {tab === "realestate" && <RealEstateTab />}
+      {tab === "texts" && <HeroTextsTab />}
       </main>
     </div>
   );

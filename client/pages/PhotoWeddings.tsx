@@ -514,51 +514,18 @@ export default function PhotoWeddings() {
       });
       const albumsData: Album[] = await albumsRes.json();
 
-      const itemsRes = await fetch(`${API}/api/items?_t=${ts}`, {
-        cache: "no-store",
-        headers: { "Cache-Control": "no-cache" },
-      });
-      const itemsData = await itemsRes.json();
-
       const categories = ["weddings", "events"];
 
       const filteredAlbums = albumsData.filter((album) =>
         categories.includes(album.category)
       );
 
-      const standaloneItems = itemsData.filter(
-        (item: any) =>
-          !item.album_id &&
-          categories.includes(item.category) &&
-          item.image
-      );
-
-      const singleItemsAsAlbums: Album[] = standaloneItems.map((item: any) => ({
-        id: `single-${item.id}`,
-        name: item.title || "Untitled",
-        category: item.category,
-        description: item.description || "",
-        price: item.price || "",
-        cover: item.secureImage || item.image,
-        isSingle: true,
-        images: [
-          {
-            url: item.secureImage || item.image,
-            title: item.title || "Untitled",
-            description: item.description || "",
-            price: item.price || "",
-            extra_text: item.extra_text || "",
-          },
-        ],
-      }));
-
       // ─── DEDUPLICATE ────────────────────────────────────────────────────
-      const combined = [...filteredAlbums, ...singleItemsAsAlbums];
       const seenIds = new Set<string>();
       const seenCovers = new Set<string>();
       const unique: Album[] = [];
 
-      for (const album of combined) {
+      for (const album of filteredAlbums) {
         if (seenIds.has(album.id)) continue;
         seenIds.add(album.id);
 
@@ -589,20 +556,12 @@ export default function PhotoWeddings() {
       ? albums
       : albums.filter((a) => a.category === activeTab);
 
-  const nonSingleAlbums = filteredAlbums.filter((a) => !a.isSingle);
-  const featured = nonSingleAlbums[0] || null;
-  const editorial = nonSingleAlbums.slice(1, 5);
-  const compact = nonSingleAlbums.slice(5);
-  const singleItems = filteredAlbums.filter((a) => a.isSingle);
+  const featured = filteredAlbums[0] || null;
+  const editorial = filteredAlbums.slice(1, 5);
+  const compact = filteredAlbums.slice(5);
 
   const handleCardClick = (album: Album) => {
-    if (album.isSingle) {
-      if (album.images.length > 0) {
-        setSingleImage(album.images[0]);
-      }
-    } else {
-      setSelectedAlbum(album);
-    }
+    setSelectedAlbum(album);
   };
 
   if (loading) return <LoadingState />;
@@ -691,53 +650,6 @@ export default function PhotoWeddings() {
         </section>
       )}
 
-      {/* ─── SINGLE ITEMS ─── */}
-      {singleItems.length > 0 && (
-        <section className="px-6 md:px-16 py-20">
-          <div className="flex items-center gap-6 mb-12">
-            <div className="w-8 h-[1px] bg-[#D4AF37]/40" />
-            <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.6em] font-bold">
-              Featured Singles
-            </p>
-            <div className="flex-1 h-[1px] bg-white/5" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {singleItems.map((item) => (
-              <div
-                key={item.id}
-                className="group relative overflow-hidden border border-white/5 hover:border-[#D4AF37]/30 transition-colors duration-500 cursor-pointer"
-                onClick={() => handleCardClick(item)}
-              >
-                <div className="relative overflow-hidden bg-zinc-800">
-                  <img
-                    src={item.cover || (item.images.length > 0 ? item.images[0].url : "")}
-                    alt={item.name}
-                    className="w-full h-auto object-contain transition-transform duration-[1.2s] group-hover:scale-110"
-                    onContextMenu={(e) => e.preventDefault()}
-                    draggable={false}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
-                </div>
-                <div className="p-6 bg-[#0d0d0d]">
-                  <h4 className="text-lg font-serif italic text-white group-hover:text-[#D4AF37] transition-colors duration-300 mb-4 leading-snug">
-                    {item.name}
-                  </h4>
-                  {item.description && (
-                    <div
-                      className="text-white/40 text-sm line-clamp-2 mb-4 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-                      dangerouslySetInnerHTML={{ __html: item.description }}
-                    />
-                  )}
-                  <span className="text-[9px] uppercase tracking-[0.4em] text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors font-bold">
-                    View Image →
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* ─── COMPACT CARDS ─── */}
       {compact.length > 0 && (
         <section className="px-6 md:px-16 py-20">
@@ -811,7 +723,7 @@ export default function PhotoWeddings() {
       </a>
 
       <AnimatePresence>
-        {selectedAlbum && <GalleryView album={selectedAlbum} onClose={()   => setSelectedAlbum(null)} />}
+        {selectedAlbum && <GalleryView album={selectedAlbum} onClose={() => setSelectedAlbum(null)} />}
       </AnimatePresence>
 
       <AnimatePresence>

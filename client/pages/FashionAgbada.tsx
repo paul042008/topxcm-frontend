@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
+import { useCategoryText } from "../hooks/useCategoryText";
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ interface Album {
 
 const API = "https://topxcm-backend-1.onrender.com";
 
-// ─── HERO LIGHTBOX (with zoom + pan, NO extra_text) ─────────────────────
+// ─── HERO LIGHTBOX ─────────────────────────────────────────────────────────
 
 function HeroLightbox({
   image,
@@ -167,13 +168,19 @@ function HeroLightbox({
               </div>
             )}
           </div>
+
+          {image.extra_text && (
+            <div className="px-6 py-4 bg-black/80 text-center">
+              <p className="text-white text-lg font-bold">{image.extra_text}</p>
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
 }
 
-// ─── ITEM MODAL (for single items) ─────────────────────────────────────────
+// ─── ITEM MODAL ────────────────────────────────────────────────────────────
 
 function ItemModal({
   image,
@@ -195,7 +202,17 @@ function ItemModal({
   }, [onClose]);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${image.title}*${image.price ? ` (₦${image.price})` : ""}. Please let me know the details.`;
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `👔 *${image.title}*`,
+      image.price ? `💰 Price: \u20A6${image.price}` : "",
+      image.url ? `\n🖼️ Preview: ${image.url}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -320,12 +337,12 @@ function ItemModal({
           <div className="p-6 bg-black/80 backdrop-blur-sm">
             <h3 className="text-xl font-serif text-white mb-1">{image.title}</h3>
             {image.price && (
-              <p className="text-[#00AEEF] font-bold text-lg mb-3">₦{image.price}</p>
+              <p className="text-[#00AEEF] font-bold text-lg mb-3">{"\u20A6"}{image.price}</p>
             )}
-<div
-  className="text-white/60 text-sm leading-relaxed mb-5 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-  dangerouslySetInnerHTML={{ __html: image.description }}
-/>
+            <div
+              className="text-white/60 text-sm leading-relaxed mb-5 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+              dangerouslySetInnerHTML={{ __html: image.description }}
+            />
             <button
               onClick={handleOrder}
               className="w-full bg-[#00AEEF] text-black rounded-xl py-3.5 text-sm font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
@@ -339,7 +356,7 @@ function ItemModal({
   );
 }
 
-// ─── PRODUCT CARD (for grouped images) ─────────────────────────────────────
+// ─── PRODUCT CARD ──────────────────────────────────────────────────────────
 
 function ProductCard({
   productTitle,
@@ -348,7 +365,7 @@ function ProductCard({
 }: {
   productTitle: string;
   images: AlbumImage[];
-  onOrder: (title: string, price: string) => void;
+  onOrder: (title: string, price: string, imageUrl?: string, albumName?: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -367,12 +384,11 @@ function ProductCard({
 
   const handleOrder = () => {
     const price = firstImage.price || '';
-    onOrder(productTitle, price);
+    onOrder(productTitle, price, firstImage.url, productTitle);
   };
 
   return (
     <>
-      {/* Card */}
       <div className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col">
         <div
           className="aspect-[4/3] overflow-hidden cursor-pointer relative group"
@@ -400,14 +416,14 @@ function ProductCard({
             {productTitle}
           </h4>
           {firstImage.price && (
-            <p className="text-[#00AEEF] font-bold text-base">₦{firstImage.price}</p>
+            <p className="text-[#00AEEF] font-bold text-base">{"\u20A6"}{firstImage.price}</p>
           )}
-{firstImage.description && (
-  <div
-    className="text-white/50 text-xs leading-relaxed line-clamp-2 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-    dangerouslySetInnerHTML={{ __html: firstImage.description }}
-  />
-)}
+          {firstImage.description && (
+            <div
+              className="text-white/50 text-xs leading-relaxed line-clamp-2 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+              dangerouslySetInnerHTML={{ __html: firstImage.description }}
+            />
+          )}
           <button
             onClick={handleOrder}
             className="mt-auto w-full bg-[#00AEEF] text-black rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
@@ -417,7 +433,6 @@ function ProductCard({
         </div>
       </div>
 
-      {/* Lightbox with carousel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -480,7 +495,7 @@ function ProductCard({
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold text-sm">{productTitle}</p>
                   {images[currentIndex].price && (
-                    <p className="text-[#00AEEF] text-sm">₦{images[currentIndex].price}</p>
+                    <p className="text-[#00AEEF] text-sm">{"\u20A6"}{images[currentIndex].price}</p>
                   )}
                 </div>
                 <button
@@ -498,7 +513,7 @@ function ProductCard({
   );
 }
 
-// ─── GALLERY VIEW (exactly like Latest – hides hero, excludes second image, shows footer) ──
+// ─── GALLERY VIEW (every image shown + footer preserved) ───────────────────
 
 function GalleryView({
   album,
@@ -510,43 +525,40 @@ function GalleryView({
   const [heroLightbox, setHeroLightbox] = useState<{ url: string; extra_text?: string } | null>(null);
   const [modalImage, setModalImage] = useState<AlbumImage | null>(null);
 
-  // Group images by title
-  const grouped = album.images.reduce((acc, img) => {
-    const key = img.title || 'untitled';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(img);
-    return acc;
-  }, {} as Record<string, AlbumImage[]>);
+  // Sort by order if present
+  const images = [...album.images].sort(
+    (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)
+  );
 
-  const productGroups = Object.entries(grouped).map(([title, images]) => ({
-    title,
-    images,
-  }));
+  // Footer extra text from first image
+  const footerExtraText = images[0]?.extra_text || null;
 
-  // Hero group (first group) – used for footer extra text only
-  const heroGroup = productGroups.length > 0 ? productGroups[0] : null;
+  const handleOrder = (
+    title: string,
+    price: string,
+    imageUrl?: string,
+    albumName?: string
+  ) => {
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `👔 *${title}*`,
+      price ? `💰 Price: \u20A6${price}` : "",
+      albumName ? `📁 Collection: ${albumName}` : "",
+      imageUrl ? `\n🖼️ Preview: ${imageUrl}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
 
-  // Exclude the second image (album.images[1]) from all rest groups
-  const secondImage = album.images[1]; // may be undefined
-  const restGroups = productGroups.slice(1).map((group) => ({
-    ...group,
-    images: group.images.length > 1 
-      ? group.images.filter((img) => img !== secondImage)
-      : group.images, // Keep the group if it only has the second image
-  })).filter((group) => group.images.length > 0);
-
-  const heroExtraText = heroGroup?.images[0]?.extra_text || null;
-
-  const handleOrder = (title: string, price: string) => {
-    const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (₦${price})` : ""}. Please let me know the details.`;
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const handleFooterExtraClick = () => {
-    if (heroGroup) {
+    if (images[0]) {
       setHeroLightbox({
-        url: heroGroup.images[0].url,
-        extra_text: heroExtraText || undefined,
+        url: images[0].url,
+        extra_text: footerExtraText || undefined,
       });
     }
   };
@@ -559,7 +571,6 @@ function GalleryView({
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="fixed inset-0 z-[150] bg-black overflow-y-auto"
     >
-      {/* Header */}
       <div className="sticky top-0 z-10 bg-black/70 backdrop-blur-xl border-b border-[#00AEEF]/10 px-5 py-4 flex items-center gap-4">
         <button
           onClick={onClose}
@@ -574,18 +585,17 @@ function GalleryView({
         <span className="ml-auto text-xs text-white/40">{album.images.length} items</span>
       </div>
 
-      {/* Product grid – all groups except those that only contained the second image */}
-      {restGroups.length > 0 && (
+      {images.length > 0 && (
         <div className="px-4 py-4 max-w-7xl mx-auto">
           <p className="text-white/40 text-xs uppercase tracking-[0.5em] mb-4">
             Collections
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {restGroups.map((group) => (
+            {images.map((img, i) => (
               <ProductCard
-                key={group.title}
-                productTitle={group.title}
-                images={group.images}
+                key={`${img.url}-${i}`}
+                productTitle={img.title || album.name}
+                images={[img]}
                 onOrder={handleOrder}
               />
             ))}
@@ -593,15 +603,14 @@ function GalleryView({
         </div>
       )}
 
-      {/* ─── FOOTER WITH EXTRA TEXT (preserved) ───────────────────────── */}
       <div className="px-4 py-6 border-t border-[#00AEEF]/10 bg-black/40">
         <div className="max-w-7xl mx-auto flex flex-col items-center gap-4">
-          {heroExtraText ? (
+          {footerExtraText ? (
             <button
               onClick={handleFooterExtraClick}
               className="inline-flex items-center gap-2 bg-[#00AEEF]/10 hover:bg-[#00AEEF]/20 text-[#00AEEF] border border-[#00AEEF]/30 rounded-full px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95"
             >
-              <span>{heroExtraText}</span>
+              <span>{footerExtraText}</span>
               <span className="text-lg">↗</span>
             </button>
           ) : (
@@ -625,7 +634,7 @@ function GalleryView({
   );
 }
 
-// ─── ALBUM CARD (UPDATED: "View Gallery" button, description spacing) ─────
+// ─── ALBUM CARD ────────────────────────────────────────────────────────────
 
 function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () => void }) {
   const [expanded, setExpanded] = useState(false);
@@ -682,7 +691,7 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
         )}
 
         {album.price && (
-          <p className="text-[#00AEEF] font-bold text-sm">From ₦{album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">From {"\u20A6"}{album.price}</p>
         )}
 
         <button
@@ -697,14 +706,25 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
   );
 }
 
-// ─── SINGLE CARD (unchanged – still "Order Now") ──────────────────────────
+// ─── SINGLE CARD ───────────────────────────────────────────────────────────
 
 function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () => void }) {
   const image = album.images[0];
   const [expanded, setExpanded] = useState(false);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${album.name}*${image?.price ? ` (₦${image.price})` : ""}. Please let me know the details.`;
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `👔 *${album.name}*`,
+      image?.price ? `💰 Price: \u20A6${image.price}` : "",
+      album.name ? `📁 Collection: ${album.name}` : "",
+      image?.url ? `\n🖼️ Preview: ${image.url}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -753,7 +773,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
         )}
 
         {album.price && (
-          <p className="text-[#00AEEF] font-bold text-sm">₦{album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">{"\u20A6"}{album.price}</p>
         )}
 
         <button
@@ -768,7 +788,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
   );
 }
 
-// ─── MAIN PAGE ───────────────────────────────────────────────────────────────
+// ─── MAIN PAGE ─────────────────────────────────────────────────────────────
 
 export default function FashionAgbada() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -776,6 +796,11 @@ export default function FashionAgbada() {
   const [loading, setLoading] = useState(true);
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
   const [singleItem, setSingleItem] = useState<AlbumImage | null>(null);
+  const heroText = useCategoryText("agbada", {
+    title: "Agbada",
+    description:
+      "The ultimate symbol of prestige. Reimagined for the modern gentleman with unmatched precision.",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -839,7 +864,6 @@ export default function FashionAgbada() {
         hideHamburger={true}
       />
 
-      {/* ─── FIXED HEADER (like PhotoWeddings) ─────────────────────────── */}
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
         <button
           onClick={() => window.history.back()}
@@ -866,7 +890,6 @@ export default function FashionAgbada() {
         </button>
       </header>
 
-      {/* ─── MAIN CONTENT ────────────────────────────────────────────────── */}
       <div
         className="transition-all duration-500 pt-[72px]"
         style={{
@@ -881,10 +904,12 @@ export default function FashionAgbada() {
         </div>
 
         <div className="relative z-10 pt-24 px-5 pb-12 border-b border-[#00AEEF]/10 bg-black/30 backdrop-blur-sm">
-          <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">Agbada</h1>
-          <p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
-            The ultimate symbol of prestige. Reimagined for the modern gentleman with unmatched precision.
-          </p>
+        <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">
+  {heroText.title}
+</h1>
+<p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
+  {heroText.description}
+</p>
         </div>
 
         <main className="relative z-10 px-4 py-8">
@@ -939,7 +964,6 @@ export default function FashionAgbada() {
         </AnimatePresence>
       </div>
 
-      {/* ─── GLOBAL STYLES FOR DESCRIPTION PARAGRAPH SPACING ─────────── */}
       <style>{`
         .album-description p {
           margin-bottom: 0.5rem;

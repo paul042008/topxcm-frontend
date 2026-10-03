@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
+import { useCategoryText } from "../hooks/useCategoryText";
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ interface Album {
 
 const API = "https://topxcm-backend-1.onrender.com";
 
-// ─── HERO LIGHTBOX (with zoom + pan, shows extra_text) ─────────────────────
+// ─── HERO LIGHTBOX ─────────────────────────────────────────────────────────
 
 function HeroLightbox({
   image,
@@ -179,7 +180,7 @@ function HeroLightbox({
   );
 }
 
-// ─── ITEM MODAL (for single items) ─────────────────────────────────────────
+// ─── ITEM MODAL ────────────────────────────────────────────────────────────
 
 function ItemModal({
   image,
@@ -201,7 +202,17 @@ function ItemModal({
   }, [onClose]);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${image.title}*${image.price ? ` (₦${image.price})` : ""}. Please let me know the details.`;
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `👟 *${image.title}*`,
+      image.price ? `💰 Price: \u20A6${image.price}` : "",
+      image.url ? `\n🖼️ Preview: ${image.url}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -326,7 +337,7 @@ function ItemModal({
           <div className="p-6 bg-black/80 backdrop-blur-sm">
             <h3 className="text-xl font-serif text-white mb-1">{image.title}</h3>
             {image.price && (
-              <p className="text-[#00AEEF] font-bold text-lg mb-3">₦{image.price}</p>
+              <p className="text-[#00AEEF] font-bold text-lg mb-3">{"\u20A6"}{image.price}</p>
             )}
             <div
               className="text-white/60 text-sm leading-relaxed mb-5 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
@@ -345,7 +356,7 @@ function ItemModal({
   );
 }
 
-// ─── PRODUCT CARD (for grouped images) ─────────────────────────────────────
+// ─── PRODUCT CARD ──────────────────────────────────────────────────────────
 
 function ProductCard({
   productTitle,
@@ -354,7 +365,7 @@ function ProductCard({
 }: {
   productTitle: string;
   images: AlbumImage[];
-  onOrder: (title: string, price: string) => void;
+  onOrder: (title: string, price: string, imageUrl?: string, albumName?: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -373,7 +384,7 @@ function ProductCard({
 
   const handleOrder = () => {
     const price = firstImage.price || '';
-    onOrder(productTitle, price);
+    onOrder(productTitle, price, firstImage.url, productTitle);
   };
 
   return (
@@ -405,7 +416,7 @@ function ProductCard({
             {productTitle}
           </h4>
           {firstImage.price && (
-            <p className="text-[#00AEEF] font-bold text-base">₦{firstImage.price}</p>
+            <p className="text-[#00AEEF] font-bold text-base">{"\u20A6"}{firstImage.price}</p>
           )}
           {firstImage.description && (
             <div
@@ -489,7 +500,7 @@ function ProductCard({
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold text-sm">{productTitle}</p>
                   {images[currentIndex].price && (
-                    <p className="text-[#00AEEF] text-sm">₦{images[currentIndex].price}</p>
+                    <p className="text-[#00AEEF] text-sm">{"\u20A6"}{images[currentIndex].price}</p>
                   )}
                 </div>
                 <button
@@ -507,7 +518,7 @@ function ProductCard({
   );
 }
 
-// ─── GALLERY VIEW (FIXED — every image is its own product) ─────────────────
+// ─── GALLERY VIEW (every image = own product) ──────────────────────────────
 
 function GalleryView({
   album,
@@ -519,17 +530,31 @@ function GalleryView({
   const [heroLightbox, setHeroLightbox] = useState<{ url: string; extra_text?: string } | null>(null);
   const [modalImage, setModalImage] = useState<AlbumImage | null>(null);
 
-  // Sort by order if the API provides it; otherwise keep as-is
   const images = [...album.images].sort(
     (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)
   );
 
-  // First image = hero banner, rest = individual product cards
   const heroImage = images[0];
   const restImages = images.slice(1);
 
-  const handleOrder = (title: string, price: string) => {
-    const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (₦${price})` : ""}. Please let me know the details.`;
+  const handleOrder = (
+    title: string,
+    price: string,
+    imageUrl?: string,
+    albumName?: string
+  ) => {
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `👟 *${title}*`,
+      price ? `💰 Price: \u20A6${price}` : "",
+      albumName ? `📁 Collection: ${albumName}` : "",
+      imageUrl ? `\n🖼️ Preview: ${imageUrl}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -564,7 +589,6 @@ function GalleryView({
         <span className="ml-auto text-xs text-white/40">{album.images.length} items</span>
       </div>
 
-      {/* ─── HERO ─── */}
       {heroImage && (
         <div className="px-4 pt-4 pb-2">
           <div
@@ -591,7 +615,6 @@ function GalleryView({
         </div>
       )}
 
-      {/* ─── REST OF IMAGES — each one is its own product card ─── */}
       {restImages.length > 0 && (
         <div className="px-4 py-4 max-w-7xl mx-auto">
           <p className="text-white/40 text-xs uppercase tracking-[0.5em] mb-4">
@@ -677,7 +700,7 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
         )}
 
         {album.price && (
-          <p className="text-[#00AEEF] font-bold text-sm">From ₦{album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">From {"\u20A6"}{album.price}</p>
         )}
 
         <button
@@ -699,7 +722,18 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
   const [expanded, setExpanded] = useState(false);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${album.name}*${image?.price ? ` (₦${image.price})` : ""}. Please let me know the details.`;
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `👟 *${album.name}*`,
+      image?.price ? `💰 Price: \u20A6${image.price}` : "",
+      album.name ? `📁 Collection: ${album.name}` : "",
+      image?.url ? `\n🖼️ Preview: ${image.url}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -748,7 +782,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
         )}
 
         {album.price && (
-          <p className="text-[#00AEEF] font-bold text-sm">₦{album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">{"\u20A6"}{album.price}</p>
         )}
 
         <button
@@ -771,6 +805,11 @@ export default function FashionShoes() {
   const [loading, setLoading] = useState(true);
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
   const [singleItem, setSingleItem] = useState<AlbumImage | null>(null);
+  const heroText = useCategoryText("shoes", {
+    title: "Shoes & Accessories",
+    description:
+      "Finishing touch. Premium footwear and accessories crafted to complete the look.",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -874,12 +913,12 @@ export default function FashionShoes() {
         </div>
 
         <div className="relative z-10 pt-24 px-5 pb-12 border-b border-[#00AEEF]/10 bg-black/30 backdrop-blur-sm">
-          <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">
-            Shoes & Accessories
-          </h1>
-          <p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
-            The finishing touch. Premium footwear and accessories crafted to complete the look.
-          </p>
+        <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">
+  {heroText.title}
+</h1>
+<p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
+  {heroText.description}
+</p>
         </div>
 
         <main className="relative z-10 px-4 py-8">

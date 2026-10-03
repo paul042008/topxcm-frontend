@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
+import { useCategoryText } from "../hooks/useCategoryText";
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ interface Album {
 
 const API = "https://topxcm-backend-1.onrender.com";
 
-// ─── HERO LIGHTBOX (with zoom + pan, shows extra_text) ─────────────────────
+// ─── HERO LIGHTBOX ─────────────────────────────────────────────────────────
 
 function HeroLightbox({
   image,
@@ -70,10 +71,7 @@ function HeroLightbox({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !isZoomed) return;
-    setPosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
+    setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
   const handleMouseUp = () => setIsDragging(false);
@@ -88,10 +86,7 @@ function HeroLightbox({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !isZoomed) return;
     const touch = e.touches[0];
-    setPosition({
-      x: touch.clientX - dragStart.x,
-      y: touch.clientY - dragStart.y,
-    });
+    setPosition({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
     e.preventDefault();
   };
 
@@ -179,7 +174,7 @@ function HeroLightbox({
   );
 }
 
-// ─── ITEM MODAL (with zoom + pan, full order flow) ─────────────────────────
+// ─── ITEM MODAL ────────────────────────────────────────────────────────────
 
 function ItemModal({
   image,
@@ -201,7 +196,17 @@ function ItemModal({
   }, [onClose]);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${image.title}*${image.price ? ` (${image.price})` : ""}. Please let me know the details.`;
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `🤵 *${image.title}*`,
+      image.price ? `💰 Price: \u20A6${image.price}` : "",
+      image.url ? `\n🖼️ Preview: ${image.url}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -225,10 +230,7 @@ function ItemModal({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !isZoomed) return;
-    setPosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
+    setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
   const handleMouseUp = () => setIsDragging(false);
@@ -243,10 +245,7 @@ function ItemModal({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !isZoomed) return;
     const touch = e.touches[0];
-    setPosition({
-      x: touch.clientX - dragStart.x,
-      y: touch.clientY - dragStart.y,
-    });
+    setPosition({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
     e.preventDefault();
   };
 
@@ -326,12 +325,12 @@ function ItemModal({
           <div className="p-6 bg-black/80 backdrop-blur-sm">
             <h3 className="text-xl font-serif text-white mb-1">{image.title}</h3>
             {image.price && (
-              <p className="text-[#00AEEF] font-bold text-lg mb-3">{image.price}</p>
+              <p className="text-[#00AEEF] font-bold text-lg mb-3">{"\u20A6"}{image.price}</p>
             )}
-<div
-  className="text-white/60 text-sm leading-relaxed mb-5 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-  dangerouslySetInnerHTML={{ __html: image.description }}
-/>
+            <div
+              className="text-white/60 text-sm leading-relaxed mb-5 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+              dangerouslySetInnerHTML={{ __html: image.description }}
+            />
             <button
               onClick={handleOrder}
               className="w-full bg-[#00AEEF] text-black rounded-xl py-3.5 text-sm font-bold uppercase tracking-widest hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
@@ -345,7 +344,7 @@ function ItemModal({
   );
 }
 
-// ─── PRODUCT CARD (for grouped images) ─────────────────────────────────────
+// ─── PRODUCT CARD ──────────────────────────────────────────────────────────
 
 function ProductCard({
   productTitle,
@@ -354,7 +353,7 @@ function ProductCard({
 }: {
   productTitle: string;
   images: AlbumImage[];
-  onOrder: (title: string, price: string) => void;
+  onOrder: (title: string, price: string, imageUrl?: string, albumName?: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -373,12 +372,11 @@ function ProductCard({
 
   const handleOrder = () => {
     const price = firstImage.price || '';
-    onOrder(productTitle, price);
+    onOrder(productTitle, price, firstImage.url, productTitle);
   };
 
   return (
     <>
-      {/* Card */}
       <div className="bg-[#111] rounded-2xl overflow-hidden border border-[#00AEEF]/10 flex flex-col">
         <div
           className="aspect-[4/3] overflow-hidden cursor-pointer relative group"
@@ -406,14 +404,14 @@ function ProductCard({
             {productTitle}
           </h4>
           {firstImage.price && (
-            <p className="text-[#00AEEF] font-bold text-base">{firstImage.price}</p>
+            <p className="text-[#00AEEF] font-bold text-base">{"\u20A6"}{firstImage.price}</p>
           )}
-{firstImage.description && (
-  <div
-    className="text-white/50 text-xs leading-relaxed line-clamp-2 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-    dangerouslySetInnerHTML={{ __html: firstImage.description }}
-  />
-)}
+          {firstImage.description && (
+            <div
+              className="text-white/50 text-xs leading-relaxed line-clamp-2 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+              dangerouslySetInnerHTML={{ __html: firstImage.description }}
+            />
+          )}
           <button
             onClick={handleOrder}
             className="mt-auto w-full bg-[#00AEEF] text-black rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-[#00AEEF]/80 active:scale-[0.98] transition"
@@ -423,7 +421,6 @@ function ProductCard({
         </div>
       </div>
 
-      {/* Lightbox with carousel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -491,7 +488,7 @@ function ProductCard({
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold text-sm">{productTitle}</p>
                   {images[currentIndex].price && (
-                    <p className="text-[#00AEEF] text-sm">{images[currentIndex].price}</p>
+                    <p className="text-[#00AEEF] text-sm">{"\u20A6"}{images[currentIndex].price}</p>
                   )}
                 </div>
                 <button
@@ -509,7 +506,7 @@ function ProductCard({
   );
 }
 
-// ─── GALLERY VIEW (UPDATED with second‑image conditional exclusion) ────────
+// ─── GALLERY VIEW (FIXED — every image is its own product) ─────────────────
 
 function GalleryView({
   album,
@@ -521,33 +518,38 @@ function GalleryView({
   const [heroLightbox, setHeroLightbox] = useState<{ url: string; extra_text?: string } | null>(null);
   const [modalImage, setModalImage] = useState<AlbumImage | null>(null);
 
-  // ─── GROUP IMAGES BY TITLE ──────────────────────────────────────────────
-  const grouped = album.images.reduce((acc, img) => {
-    const key = img.title || 'untitled';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(img);
-    return acc;
-  }, {} as Record<string, AlbumImage[]>);
+  const images = [...album.images].sort(
+    (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)
+  );
 
-  const productGroups = Object.entries(grouped).map(([title, images]) => ({
-    title,
-    images,
-  }));
+  const heroImage = images[0];
+  const restImages = images.slice(1);
 
-  const heroGroup = productGroups.length > 0 ? productGroups[0] : null;
+  const handleOrder = (
+    title: string,
+    price: string,
+    imageUrl?: string,
+    albumName?: string
+  ) => {
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `🤵 *${title}*`,
+      price ? `💰 Price: \u20A6${price}` : "",
+      albumName ? `📁 Collection: ${albumName}` : "",
+      imageUrl ? `\n🖼️ Preview: ${imageUrl}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
 
-  // ─── EXCLUDE SECOND IMAGE (conditional) ────────────────────────────────
-  const secondImage = album.images[1];
-  const restGroups = productGroups.slice(1).map((group) => ({
-    ...group,
-    images: group.images.length > 1
-      ? group.images.filter((img) => img !== secondImage)
-      : group.images, // keep the group if it only has the second image
-  })).filter((group) => group.images.length > 0);
-
-  const handleOrder = (title: string, price: string) => {
-    const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (${price})` : ""}. Please let me know the details.`;
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const handleHeroClick = () => {
+    if (heroImage) {
+      setHeroLightbox({ url: heroImage.url, extra_text: heroImage.extra_text });
+    }
   };
 
   return (
@@ -572,21 +574,21 @@ function GalleryView({
         <span className="ml-auto text-xs text-white/40">{album.images.length} items</span>
       </div>
 
-      {heroGroup && (
+      {heroImage && (
         <div className="px-4 pt-4 pb-2">
           <div
             className="relative overflow-hidden rounded-2xl border border-[#00AEEF]/10 cursor-pointer group aspect-[16/9]"
-            onClick={() => setHeroLightbox({ url: heroGroup.images[0].url, extra_text: heroGroup.images[0].extra_text })}
+            onClick={handleHeroClick}
           >
             <img
-              src={heroGroup.images[0].url}
-              alt={heroGroup.title}
+              src={heroImage.url}
+              alt={heroImage.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6">
               <div>
                 <p className="text-[#00AEEF] text-[10px] uppercase tracking-[0.4em] font-bold">Featured</p>
-                <p className="text-white text-lg font-bold">{heroGroup.title}</p>
+                <p className="text-white text-lg font-bold">{heroImage.title || album.name}</p>
               </div>
             </div>
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
@@ -609,17 +611,17 @@ function GalleryView({
         </div>
       )}
 
-      {restGroups.length > 0 && (
+      {restImages.length > 0 && (
         <div className="px-4 py-4 max-w-7xl mx-auto">
           <p className="text-white/40 text-xs uppercase tracking-[0.5em] mb-4">
             More from this collection
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {restGroups.map((group) => (
+            {restImages.map((img, i) => (
               <ProductCard
-                key={group.title}
-                productTitle={group.title}
-                images={group.images}
+                key={`${img.url}-${i}`}
+                productTitle={img.title || album.name}
+                images={[img]}
                 onOrder={handleOrder}
               />
             ))}
@@ -637,7 +639,7 @@ function GalleryView({
   );
 }
 
-// ─── ALBUM CARD (UPDATED: "View Gallery" button, description spacing) ─────
+// ─── ALBUM CARD ────────────────────────────────────────────────────────────
 
 function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () => void }) {
   const [expanded, setExpanded] = useState(false);
@@ -666,7 +668,6 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
             <span className="text-4xl opacity-20">🤵</span>
           </div>
         )}
-        {/* BADGE REMOVED */}
       </div>
 
       <div className="p-5 flex flex-col gap-3 flex-1">
@@ -695,7 +696,7 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
         )}
 
         {album.price && (
-          <p className="text-[#00AEEF] font-bold text-sm">From {album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">From {"\u20A6"}{album.price}</p>
         )}
 
         <button
@@ -710,14 +711,25 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
   );
 }
 
-// ─── SINGLE CARD (unchanged – still "Order Now") ──────────────────────────
+// ─── SINGLE CARD ───────────────────────────────────────────────────────────
 
 function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () => void }) {
   const image = album.images[0];
   const [expanded, setExpanded] = useState(false);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${album.name}*${image?.price ? ` (${image.price})` : ""}. Please let me know the details.`;
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `🤵 *${album.name}*`,
+      image?.price ? `💰 Price: \u20A6${image.price}` : "",
+      album.name ? `📁 Collection: ${album.name}` : "",
+      image?.url ? `\n🖼️ Preview: ${image.url}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -738,7 +750,6 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
           alt={album.name}
           className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
         />
-        {/* BADGE REMOVED */}
       </div>
 
       <div className="p-5 flex flex-col gap-3 flex-1">
@@ -767,7 +778,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
         )}
 
         {album.price && (
-          <p className="text-[#00AEEF] font-bold text-sm">{album.price}</p>
+          <p className="text-[#00AEEF] font-bold text-sm">{"\u20A6"}{album.price}</p>
         )}
 
         <button
@@ -782,7 +793,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
   );
 }
 
-// ─── MAIN PAGE ───────────────────────────────────────────────────────────────
+// ─── MAIN PAGE ─────────────────────────────────────────────────────────────
 
 export default function FashionSuits() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -790,6 +801,11 @@ export default function FashionSuits() {
   const [loading, setLoading] = useState(true);
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
   const [singleItem, setSingleItem] = useState<AlbumImage | null>(null);
+  const heroText = useCategoryText("suits", {
+    title: "Suits",
+    description:
+      "Bespoke craftsmanship meets modern silhouettes. Every stitch is a statement of excellence and power.",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -853,7 +869,6 @@ export default function FashionSuits() {
         hideHamburger={true}
       />
 
-      {/* ─── FIXED HEADER (like other fashion sub-pages) ──────────────── */}
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
         <button
           onClick={() => window.history.back()}
@@ -880,7 +895,6 @@ export default function FashionSuits() {
         </button>
       </header>
 
-      {/* ─── MAIN CONTENT WITH PUSH-DOWN ────────────────────────────── */}
       <div
         className="transition-all duration-500 pt-[72px]"
         style={{
@@ -895,10 +909,12 @@ export default function FashionSuits() {
         </div>
 
         <div className="relative z-10 pt-24 px-5 pb-12 border-b border-[#00AEEF]/10 bg-black/30 backdrop-blur-sm">
-          <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">Suits</h1>
-          <p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
-            Bespoke craftsmanship meets modern silhouettes. Every stitch is a statement of excellence and power.
-          </p>
+        <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">
+  {heroText.title}
+</h1>
+<p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
+  {heroText.description}
+</p>
         </div>
 
         <main className="relative z-10 px-4 py-8">
@@ -953,7 +969,6 @@ export default function FashionSuits() {
         </AnimatePresence>
       </div>
 
-      {/* ─── GLOBAL STYLES FOR DESCRIPTION PARAGRAPH SPACING ─────────── */}
       <style>{`
         .album-description p {
           margin-bottom: 0.5rem;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
+import { useCategoryText } from "../hooks/useCategoryText";
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -201,7 +202,17 @@ function ItemModal({
   }, [onClose]);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${image.title}*${image.price ? ` (₦${image.price})` : ""}. Please let me know the details.`;
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `🪡 *${image.title}*`,
+      image.price ? `💰 Price: ₦${image.price}` : "",
+      image.url ? `\n🖼️ Preview: ${image.url}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+  
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -354,7 +365,7 @@ function ProductCard({
 }: {
   productTitle: string;
   images: AlbumImage[];
-  onOrder: (title: string, price: string) => void;
+  onOrder: (title: string, price: string, imageUrl?: string, albumName?: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -373,7 +384,7 @@ function ProductCard({
 
   const handleOrder = () => {
     const price = firstImage.price || '';
-    onOrder(productTitle, price);
+    onOrder(productTitle, price, firstImage.url, productTitle);
   };
 
   return (
@@ -546,8 +557,24 @@ function GalleryView({
       : group.images, // keep the group if it only has the second image
   })).filter((group) => group.images.length > 0);
 
-  const handleOrder = (title: string, price: string) => {
-    const msg = `Hi! I'm interested in ordering: *${title}*${price ? ` (₦${price})` : ""}. Please let me know the details.`;
+  const handleOrder = (
+    title: string,
+    price: string,
+    imageUrl?: string,
+    albumName?: string
+  ) => {
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `🪡 *${title}*`,
+      price ? `💰 Price: ₦${price}` : "",
+      albumName ? `📁 Collection: ${albumName}` : "",
+      imageUrl ? `\n🖼️ Preview: ${imageUrl}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+  
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -727,7 +754,18 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
   const [expanded, setExpanded] = useState(false);
 
   const handleOrder = () => {
-    const msg = `Hi! I'm interested in ordering: *${album.name}*${image?.price ? ` (₦${image.price})` : ""}. Please let me know the details.`;
+    const lines = [
+      `Hi! I'm interested in ordering:`,
+      ``,
+      `👟 *${album.name}*`,
+      image?.price ? `💰 Price: ₦${image.price}` : "",
+      album.name ? `📁 Collection: ${album.name}` : "",
+      image?.url ? `\n🖼️ Preview: ${image.url}` : "",
+      ``,
+      `Please let me know the details.`,
+    ].filter(Boolean);
+  
+    const msg = lines.join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -800,6 +838,12 @@ export default function FashionCasuals() {
   const [loading, setLoading] = useState(true);
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
   const [singleItem, setSingleItem] = useState<AlbumImage | null>(null);
+  const heroText = useCategoryText("casuals", {
+    title: "Casuals",
+    description:
+      "Elevating the everyday. Sophisticated comfort tailored for the modern lifestyle.",
+  });
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -905,10 +949,12 @@ export default function FashionCasuals() {
         </div>
 
         <div className="relative z-10 pt-24 px-5 pb-12 border-b border-[#00AEEF]/10 bg-black/30 backdrop-blur-sm">
-          <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">Casuals</h1>
-          <p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
-            Elevating the everyday. Sophisticated comfort tailored for the modern lifestyle.
-          </p>
+        <h1 className="text-4xl md:text-6xl font-serif italic text-white mb-3 leading-[0.95]">
+  {heroText.title}
+</h1>
+<p className="text-white/60 text-sm font-light max-w-sm leading-relaxed">
+  {heroText.description}
+</p>
         </div>
 
         <main className="relative z-10 px-4 py-8">
