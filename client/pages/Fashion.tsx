@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
 import { Link, useNavigate } from "react-router-dom";
+import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
 const API = "https://topxcm-backend-1.onrender.com";
 
@@ -328,9 +329,10 @@ function ImageOnlyCard({
     >
       <div className="relative aspect-[4/5]">
         <img
-          src={item.image}
+          src={optimizeCloudinaryUrl(item.image, 800)}
           alt={item.title}
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          loading="lazy"
         />
       </div>
     </motion.button>
@@ -622,7 +624,7 @@ export default function FashionPage() {
                 ✕
               </button>
               <img
-                src={selectedItem.image}
+                src={optimizeCloudinaryUrl(selectedItem.image, 1600)}
                 alt={selectedItem.title}
                 className="max-h-[70vh] w-full rounded-[20px] object-contain"
               />
@@ -832,7 +834,7 @@ export default function FashionPage() {
                         >
                           <div className="relative h-[250px] sm:h-[240px] md:h-[280px]">
                             <img
-                              src={latestPanelItems[0].image}
+                              src={optimizeCloudinaryUrl(latestPanelItems[0].image, 1200)}
                               alt={latestPanelItems[0].title}
                               className="h-full w-full object-cover"
                             />

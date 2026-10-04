@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FashionMenu from "../components/FashionMenu";
 import { useCategoryText } from "../hooks/useCategoryText";
+import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -153,7 +154,7 @@ function HeroLightbox({
             onDoubleClick={handleDoubleClick}
           >
             <img
-              src={image.url}
+              src={optimizeCloudinaryUrl(image.url, 1600)}
               alt=""
               className="w-full h-full object-contain transition-transform duration-200 select-none"
               style={{
@@ -207,7 +208,7 @@ function ItemModal({
       ``,
       `👔 *${image.title}*`,
       image.price ? `💰 Price: \u20A6${image.price}` : "",
-      image.url ? `\n🖼️ Preview: ${image.url}` : "",
+      image.url ? `\n🖼️ Preview: ${optimizeCloudinaryUrl(image.url, 800)}` : "",
       ``,
       `Please let me know the details.`,
     ].filter(Boolean);
@@ -318,7 +319,7 @@ function ItemModal({
             onDoubleClick={handleDoubleClick}
           >
             <img
-              src={image.url}
+              src={optimizeCloudinaryUrl(image.url, 1200)}
               alt={image.title}
               className="w-full h-full object-contain transition-transform duration-200 select-none"
               style={{
@@ -395,9 +396,10 @@ function ProductCard({
           onClick={() => setIsOpen(true)}
         >
           <img
-            src={firstImage.url}
+            src={optimizeCloudinaryUrl(firstImage.url, 800)}
             alt={productTitle}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
           />
           {images.length > 1 && (
             <div className="absolute bottom-2 right-2 bg-black/70 text-white/80 text-[10px] px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
@@ -469,7 +471,7 @@ function ProductCard({
 
               <div className="relative w-full overflow-hidden bg-black/40" style={{ aspectRatio: "4/5" }}>
                 <img
-                  src={images[currentIndex].url}
+                  src={optimizeCloudinaryUrl(images[currentIndex].url, 1200)}
                   alt={productTitle}
                   className="w-full h-full object-contain"
                 />
@@ -545,7 +547,7 @@ function GalleryView({
       `👔 *${title}*`,
       price ? `💰 Price: \u20A6${price}` : "",
       albumName ? `📁 Collection: ${albumName}` : "",
-      imageUrl ? `\n🖼️ Preview: ${imageUrl}` : "",
+      imageUrl ? `\n🖼️ Preview: ${optimizeCloudinaryUrl(imageUrl, 800)}` : "",
       ``,
       `Please let me know the details.`,
     ].filter(Boolean);
@@ -654,9 +656,10 @@ function AlbumCard({ album, onViewGallery }: { album: Album; onViewGallery: () =
       >
         {displayImage ? (
           <img
-            src={displayImage}
+            src={optimizeCloudinaryUrl(displayImage, 800)}
             alt={album.name}
             className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -719,7 +722,7 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
       `👔 *${album.name}*`,
       image?.price ? `💰 Price: \u20A6${image.price}` : "",
       album.name ? `📁 Collection: ${album.name}` : "",
-      image?.url ? `\n🖼️ Preview: ${image.url}` : "",
+      image?.url ? `\n🖼️ Preview: ${optimizeCloudinaryUrl(image.url, 800)}` : "",
       ``,
       `Please let me know the details.`,
     ].filter(Boolean);
@@ -741,9 +744,10 @@ function SingleCard({ album, onViewSingle }: { album: Album; onViewSingle: () =>
         onClick={onViewSingle}
       >
         <img
-          src={image?.url}
+          src={optimizeCloudinaryUrl(image?.url, 800)}
           alt={album.name}
           className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+          loading="lazy"
         />
       </div>
 

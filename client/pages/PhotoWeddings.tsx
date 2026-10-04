@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 import LoadingState from "../components/LoadingState";
+import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
 const API = "https://topxcm-backend-1.onrender.com";
 const WA = "https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20book%20a%20session.";
@@ -69,7 +70,7 @@ function SingleImageLightbox({
           ✕
         </button>
         <img
-          src={image.url}
+          src={optimizeCloudinaryUrl(image.url, 1600)}
           alt={image.title}
           className="max-h-[90vh] max-w-[90vw] object-contain"
           onContextMenu={(e) => e.preventDefault()}
@@ -177,7 +178,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
 
       <div className="relative w-full bg-zinc-800">
         <img
-          src={coverImage}
+          src={optimizeCloudinaryUrl(coverImage, 1600)}
           alt={album.name}
           className="w-full h-auto max-h-[85vh] object-contain mx-auto"
           onContextMenu={(e) => e.preventDefault()}
@@ -223,9 +224,10 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               className="mb-3 break-inside-avoid cursor-pointer group relative"
             >
               <img
-                src={img.url}
+                src={optimizeCloudinaryUrl(img.url, 600)}
                 alt={img.title}
                 className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
                 onContextMenu={(e) => e.preventDefault()}
                 draggable={false}
               />
@@ -296,7 +298,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               {/* ─── IMAGE WITH SWIPE INSTRUCTION ─── */}
               <div className="relative max-h-[90vh] max-w-[90vw]">
                 <img
-                  src={images[selectedIndex].url}
+                  src={optimizeCloudinaryUrl(images[selectedIndex].url, 1600)}
                   alt={images[selectedIndex].title}
                   className="max-h-[90vh] max-w-[90vw] object-contain select-none"
                   onContextMenu={(e) => e.preventDefault()}
@@ -359,7 +361,7 @@ function FeaturedAlbum({ item, onClick }: { item: Album; onClick: () => void }) 
       onClick={onClick}
     >
       <img
-        src={item.cover || (item.images.length > 0 ? item.images[0].url : "")}
+        src={optimizeCloudinaryUrl(item.cover || (item.images.length > 0 ? item.images[0].url : ""), 1600)}
         alt={item.name}
         className="w-full h-auto max-h-[85vh] object-contain mx-auto transition-transform duration-[2s] ease-out group-hover:scale-105"
         onContextMenu={(e) => e.preventDefault()}
@@ -411,9 +413,10 @@ function EditorialCard({ item, index, onClick }: { item: Album; index: number; o
     >
       <div className="relative md:w-[60%] overflow-hidden bg-zinc-900 flex items-center justify-center">
         <img
-          src={item.cover || (item.images.length > 0 ? item.images[0].url : "")}
+          src={optimizeCloudinaryUrl(item.cover || (item.images.length > 0 ? item.images[0].url : ""), 1200)}
           alt={item.name}
           className="w-full h-auto max-h-[520px] object-contain transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+          loading="lazy"
           onContextMenu={(e) => e.preventDefault()}
           draggable={false}
         />
@@ -466,9 +469,10 @@ function CompactCard({ item, index, onClick }: { item: Album; index: number; onC
     >
       <div className="relative overflow-hidden bg-zinc-800">
         <img
-          src={item.cover || (item.images.length > 0 ? item.images[0].url : "")}
+          src={optimizeCloudinaryUrl(item.cover || (item.images.length > 0 ? item.images[0].url : ""), 800)}
           alt={item.name}
           className="w-full h-auto object-contain transition-transform duration-[1.2s] group-hover:scale-110"
+          loading="lazy"
           onContextMenu={(e) => e.preventDefault()}
           draggable={false}
         />

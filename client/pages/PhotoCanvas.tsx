@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
+import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
 const API = "https://topxcm-backend-1.onrender.com";
 const WA = "https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20order%20a%20frame%20or%20canvas.";
@@ -141,7 +142,7 @@ function ItemModal({
         {/* Image */}
         <div className="w-full aspect-[4/5] overflow-hidden bg-zinc-800 relative">
   <img
-    src={currentItem.image}
+    src={optimizeCloudinaryUrl(currentItem.image, 1200)}
     alt={currentItem.title}
     className="w-full h-full object-cover select-none"
     onContextMenu={(e) => e.preventDefault()}
@@ -354,10 +355,11 @@ export default function PhotoCanvas() {
                 >
                   <div className="relative aspect-square overflow-hidden bg-zinc-800">
                     <img
-                      src={product.image}
+                      src={optimizeCloudinaryUrl(product.image, 800)}
                       alt={product.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       onContextMenu={(e) => e.preventDefault()}
+                      loading="lazy"
                       draggable={false}
                     />
                     {tag && (

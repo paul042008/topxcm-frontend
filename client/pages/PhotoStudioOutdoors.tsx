@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
+import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
 const API = "https://topxcm-backend-1.onrender.com";
 const WA = "https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20book%20a%20session.";
@@ -68,7 +69,7 @@ function SingleImageLightbox({
           ✕
         </button>
         <img
-          src={image.url}
+          src={optimizeCloudinaryUrl(image.url, 1600)}
           alt={image.title}
           className="max-h-[90vh] max-w-[90vw] object-contain"
           onContextMenu={(e) => e.preventDefault()}
@@ -176,7 +177,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
 
       <div className="relative w-full bg-zinc-800">
         <img
-          src={coverImage}
+          src={optimizeCloudinaryUrl(coverImage, 1600)}
           alt={album.name}
           className="w-full h-auto max-h-[85vh] object-contain mx-auto"
           onContextMenu={(e) => e.preventDefault()}
@@ -205,9 +206,10 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               className="mb-3 break-inside-avoid cursor-pointer group relative bg-zinc-800"
             >
               <img
-                src={img.url}
+                src={optimizeCloudinaryUrl(img.url, 600)}
                 alt={img.title}
                 className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
                 onContextMenu={(e) => e.preventDefault()}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition" />
@@ -277,7 +279,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
               {/* ─── IMAGE WITH SWIPE INSTRUCTION ─── */}
               <div className="relative max-h-[90vh] max-w-[90vw]">
                 <img
-                  src={images[selectedIndex].url}
+                  src={optimizeCloudinaryUrl(images[selectedIndex].url, 1600)}
                   alt={images[selectedIndex].title}
                   className="max-h-[90vh] max-w-[90vw] object-contain select-none"
                   onContextMenu={(e) => e.preventDefault()}
@@ -345,9 +347,10 @@ function AlbumCard({ album, onClick }: { album: Album; onClick: () => void }) {
       <div className="relative w-full overflow-hidden bg-zinc-900">
         {displayImage ? (
           <img
-            src={displayImage}
+            src={optimizeCloudinaryUrl(displayImage, 800)}
             alt={album.name}
             className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
             onContextMenu={(e) => e.preventDefault()}
           />
         ) : (
@@ -396,9 +399,10 @@ function SingleCard({ item, onClick }: { item: Album; onClick: () => void }) {
       <div className="relative w-full overflow-hidden bg-zinc-900">
         {image ? (
           <img
-            src={image.url}
+            src={optimizeCloudinaryUrl(image.url, 800)}
             alt={item.name}
             className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
             onContextMenu={(e) => e.preventDefault()}
           />
         ) : (

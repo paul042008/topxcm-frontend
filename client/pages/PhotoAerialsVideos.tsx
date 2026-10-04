@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
+import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
 const API = "https://topxcm-backend-1.onrender.com";
 const WA = "https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20book%20a%20session.";
@@ -84,37 +85,53 @@ const LazyVideo = memo(({ src, className, ...props }: { src: string; className?:
 });
 LazyVideo.displayName = "LazyVideo";
 
-// ─── LAZY LOAD IMAGE ──────────────────────────────────────────────────────
+// ─── LAZY LOAD IMAGE (also auto-optimizes Cloudinary URLs) ────────────────
 
-const LazyImage = memo(({ src, alt, className, ...props }: { src: string; alt: string; className?: string; [key: string]: any }) => {
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+const LazyImage = memo(
+  ({
+    src,
+    alt,
+    className,
+    width = 800,
+    ...props
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+    width?: number;
+    [key: string]: any;
+  }) => {
+    const [loaded, setLoaded] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setLoaded(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "200px" }
+    useEffect(() => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            setLoaded(true);
+            observer.disconnect();
+          }
+        },
+        { rootMargin: "200px" }
+      );
+      if (imgRef.current) observer.observe(imgRef.current);
+      return () => observer.disconnect();
+    }, []);
+
+    const optimizedSrc = optimizeCloudinaryUrl(src, width);
+
+    return (
+      <img
+        ref={imgRef}
+        src={loaded ? optimizedSrc : undefined}
+        alt={alt}
+        className={className}
+        loading="lazy"
+        {...props}
+      />
     );
-    if (imgRef.current) observer.observe(imgRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <img
-      ref={imgRef}
-      src={loaded ? src : undefined}
-      alt={alt}
-      className={className}
-      loading="lazy"
-      {...props}
-    />
-  );
-});
+  }
+);
 LazyImage.displayName = "LazyImage";
 
 // ─── HELPER: play a lightbox video unmuted, with a muted fallback ─────────
@@ -226,7 +243,7 @@ function SingleItemLightbox({
           />
         ) : (
           <img
-            src={image.url}
+            src={optimizeCloudinaryUrl(image.url, 1600)}
             alt={image.title || item.name}
             className="max-h-[90vh] max-w-[90vw] object-contain"
             onContextMenu={(e) => e.preventDefault()}
@@ -364,7 +381,14 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
         />
       );
     }
-    return <LazyImage src={coverImage} alt={album.name} className="w-full h-full object-cover" />;
+    return (
+      <LazyImage
+        src={coverImage}
+        alt={album.name}
+        width={1600}
+        className="w-full h-full object-cover"
+      />
+    );
   };
 
   const renderThumbnail = (img: AlbumImage, idx: number) => {
@@ -392,6 +416,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
       <LazyImage
         src={img.url}
         alt={img.title}
+        width={600}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         onContextMenu={(e) => e.preventDefault()}
       />
@@ -514,7 +539,7 @@ function GalleryView({ album, onClose }: { album: Album; onClose: () => void }) 
                 />
               ) : (
                 <img
-                  src={images[selectedIndex].url}
+                  src={optimizeCloudinaryUrl(images[selectedIndex].url, 1600)}
                   alt={images[selectedIndex].title}
                   className="max-h-[90vh] max-w-[90vw] object-contain"
                   onContextMenu={(e) => e.preventDefault()}
@@ -592,6 +617,7 @@ const AlbumCard = memo(({ album, onClick }: { album: Album; onClick: () => void 
               <LazyImage
                 src={displayImage}
                 alt={album.name}
+                width={800}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onContextMenu={(e) => e.preventDefault()}
               />
@@ -676,6 +702,7 @@ const SingleCard = memo(({ item, onClick }: { item: Album; onClick: () => void }
               <LazyImage
                 src={image.url}
                 alt={item.name}
+                width={800}
                 className="w-full h-full object-cover"
                 onContextMenu={(e) => e.preventDefault()}
               />

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
+import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
 const API = "https://topxcm-backend-1.onrender.com";
 
@@ -96,12 +97,16 @@ function ProtectedImage({
   alt,
   className = "",
   onClick,
+  width = 1200,
 }: {
   src: string;
   alt: string;
   className?: string;
   onClick?: () => void;
+  width?: number;
 }) {
+  const optimizedSrc = optimizeCloudinaryUrl(src, width);
+
   return (
     <div
       role="img"
@@ -111,7 +116,7 @@ function ProtectedImage({
       onDragStart={(e) => e.preventDefault()}
       className={`relative overflow-hidden select-none ${className}`}
       style={{
-        backgroundImage: `url("${src}")`,
+        backgroundImage: `url("${optimizedSrc}")`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         WebkitTouchCallout: "none",
@@ -236,6 +241,7 @@ function AutoScrollRow({
               <ProtectedImage
                 src={item.image}
                 alt={item.title || "Showcase"}
+                width={800}
                 className="w-full h-full transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-300 flex items-center justify-center pointer-events-none">
@@ -452,6 +458,7 @@ export default function Photography() {
                 <ProtectedImage
                   src={selectedItem.image}
                   alt={selectedItem.title || "Showcase"}
+                  width={1600}
                   className="w-full rounded-xl h-[70vh]"
                 />
                 <div className="mt-4 flex justify-center gap-4">

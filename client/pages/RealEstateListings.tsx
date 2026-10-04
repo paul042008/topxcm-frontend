@@ -4,6 +4,7 @@ import RealEstateMenu from "../components/RealEstateMenu";
 import RealEstateGalleryView from "../components/RealEstateGalleryView";
 import { useNavigate } from "react-router-dom";
 import { useCategoryText } from "../hooks/useCategoryText";
+import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
 const API = "https://topxcm-backend-1.onrender.com";
 
@@ -60,9 +61,10 @@ function PropertyCard({ property, onView }: { property: Property; onView: () => 
               />
             ) : (
               <img
-                src={coverImage}
+                src={optimizeCloudinaryUrl(coverImage, 800)}
                 alt={property.name}
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                loading="lazy"
                 onContextMenu={(e) => e.preventDefault()}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
               />
