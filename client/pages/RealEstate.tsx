@@ -463,7 +463,7 @@ export default function RealEstate() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10"
+            className="fixed inset-0 z-[10000] flex items-center justify-center p-4 md:p-10"
             style={{
               backdropFilter: "blur(18px)",
               backgroundColor: "rgba(0,0,0,0.58)",
@@ -510,7 +510,7 @@ export default function RealEstate() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-10"
+            className="fixed inset-0 z-[10000] flex items-center justify-center p-4 md:p-10"
             style={{
               backdropFilter: "blur(18px)",
               backgroundColor: "rgba(0,0,0,0.88)",
@@ -527,7 +527,7 @@ export default function RealEstate() {
             >
               <button
                 onClick={() => setVideoLightboxOpen(false)}
-                className="absolute -top-12 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-[#B0D4E8]/90 text-lg font-bold text-black transition-colors hover:bg-[#B0D4E8]"
+                className="absolute -top-12 right-0 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-[#B0D4E8]/90 text-lg font-bold text-black transition-colors hover:bg-[#B0D4E8]"
               >
                 ✕
               </button>
@@ -547,11 +547,11 @@ export default function RealEstate() {
                     {homepageVideo.title}
                   </h3>
                   {homepageVideo.description && (
-  <div
-    className="text-white/50 text-sm mt-2 max-w-2xl mx-auto leading-relaxed [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-    dangerouslySetInnerHTML={{ __html: homepageVideo.description }}
-  />
-)}
+                    <div
+                      className="text-white/50 text-sm mt-2 max-w-2xl mx-auto leading-relaxed [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+                      dangerouslySetInnerHTML={{ __html: homepageVideo.description }}
+                    />
+                  )}
                 </div>
               )}
             </motion.div>
@@ -651,7 +651,7 @@ export default function RealEstate() {
           </motion.div>
         </section>
 
-        {/* ─── HOMEPAGE VIDEO (landscape) ─── */}
+        {/* ─── HOMEPAGE VIDEO (landscape) — text now BELOW the video ─── */}
         {homepageVideo && homepageVideo.image && (
           <section className="relative bg-black px-5 py-16 md:px-10 md:py-24 border-t border-white/5">
             <div className="mx-auto max-w-7xl">
@@ -662,58 +662,63 @@ export default function RealEstate() {
                 </p>
               </div>
 
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.005 }}
-                whileTap={{ scale: 0.995 }}
-                transition={{ type: "spring", stiffness: 250, damping: 22 }}
-                onClick={() => setVideoLightboxOpen(true)}
-                className="group relative block w-full overflow-hidden rounded-[28px] border border-white/10 bg-black shadow-[0_24px_60px_rgba(0,0,0,0.55)]"
-              >
-                <div className="relative aspect-video w-full overflow-hidden">
-                  <video
-                    src={homepageVideo.image}
-                    muted
-                    loop
-                    autoPlay
-                    playsInline
-                    preload="metadata"
-                    className="h-full w-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-[1.02]"
-                  />
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/25 transition-colors duration-500" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-[#B0D4E8]/95 backdrop-blur-sm shadow-[0_0_40px_rgba(176,212,232,0.5)] transition-transform duration-300 group-hover:scale-110">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="#000">
-                        <polygon points="6 4 20 12 6 20 6 4" />
-                      </svg>
+              <div className="overflow-hidden rounded-[28px] border border-white/10 bg-black shadow-[0_24px_60px_rgba(0,0,0,0.55)]">
+                {/* ─── VIDEO ─── */}
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.005 }}
+                  whileTap={{ scale: 0.995 }}
+                  transition={{ type: "spring", stiffness: 250, damping: 22 }}
+                  onClick={() => setVideoLightboxOpen(true)}
+                  className="group relative block w-full"
+                >
+                  <div className="relative aspect-video w-full overflow-hidden">
+                    <video
+                      src={homepageVideo.image}
+                      muted
+                      loop
+                      autoPlay
+                      playsInline
+                      preload="metadata"
+                      className="h-full w-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-[1.02]"
+                    />
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors duration-500" />
+
+                    {/* Play button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-[#B0D4E8]/95 backdrop-blur-sm shadow-[0_0_40px_rgba(176,212,232,0.5)] transition-transform duration-300 group-hover:scale-110">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="#000">
+                          <polygon points="6 4 20 12 6 20 6 4" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Corner badge */}
+                    <div className="absolute top-4 right-4 rounded-full border border-[#B0D4E8]/40 bg-black/50 px-3 py-1.5 backdrop-blur-sm">
+                      <span className="text-[#B0D4E8] text-[9px] uppercase tracking-[0.3em] font-bold">
+                        ▶ Play
+                      </span>
                     </div>
                   </div>
+                </motion.button>
 
-                  {/* Bottom info */}
-                  <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent text-left">
-                    <p className="text-[#B0D4E8] text-[10px] uppercase tracking-[0.5em] font-bold mb-2">
-                      Featured Film
-                    </p>
-                    <h3 className="text-white text-2xl md:text-4xl font-serif italic leading-tight">
-                      {homepageVideo.title || "Watch Our Story"}
-                    </h3>
-                    {homepageVideo.description && (
-  <div
-    className="text-white/60 text-xs md:text-sm mt-2 max-w-xl line-clamp-2 [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-    dangerouslySetInnerHTML={{ __html: homepageVideo.description }}
-  />
-)}
-                  </div>
-
-                  {/* Corner badge */}
-                  <div className="absolute top-5 right-5 rounded-full border border-[#B0D4E8]/40 bg-black/50 px-3 py-1.5 backdrop-blur-sm">
-                    <span className="text-[#B0D4E8] text-[9px] uppercase tracking-[0.3em] font-bold">
-                      ▶ Play
-                    </span>
-                  </div>
+                {/* ─── TEXT BELOW VIDEO ─── */}
+                <div className="p-5 md:p-8 border-t border-white/5 bg-[#0a0a0a]">
+                  <p className="text-[#B0D4E8] text-[10px] uppercase tracking-[0.5em] font-bold mb-2">
+                    Featured Film
+                  </p>
+                  <h3 className="text-white text-xl md:text-3xl font-serif italic leading-tight">
+                    {homepageVideo.title || "Watch Our Story"}
+                  </h3>
+                  {homepageVideo.description && (
+                    <div
+                      className="text-white/60 text-xs md:text-sm mt-2 max-w-2xl leading-relaxed [&_p]:m-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+                      dangerouslySetInnerHTML={{ __html: homepageVideo.description }}
+                    />
+                  )}
                 </div>
-              </motion.button>
+              </div>
             </div>
           </section>
         )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Hero() {
   const [showWelcome, setShowWelcome] = useState(false);
@@ -8,15 +8,7 @@ export default function Hero() {
   const [showButtons, setShowButtons] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
 
-  const navigate = useNavigate();
   const sloganText = "A Fashion - Photography\n& Real Estate Empire";
-
-  let lastTap = 0;
-  const handleDoubleTap = () => {
-    const now = Date.now();
-    if (now - lastTap < 300) navigate("/admin");
-    lastTap = now;
-  };
 
   // --- Main content animations ---
   useEffect(() => {
@@ -42,11 +34,7 @@ export default function Hero() {
   return (
     <>
       {/* ─── MAIN CONTENT ─── */}
-      <section
-        className="fixed inset-0 h-[100dvh] w-full bg-black overflow-hidden select-none flex flex-col items-center justify-between"
-        onDoubleClick={() => navigate("/admin")}
-        onTouchEnd={handleDoubleTap}
-      >
+      <section className="fixed inset-0 h-[100dvh] w-full bg-black overflow-hidden select-none flex flex-col items-center justify-between">
         <div className="absolute inset-0 bg-gradient-to-br from-black via-black to-[#D4AF37]/10" />
 
         {/* Main Content */}

@@ -2,8 +2,8 @@ import { useState, useEffect, type ReactNode } from "react";
 
 // ─── SET YOUR LAUNCH DATE HERE (UTC) ────────────────────────────────────────
 // Format: YYYY-MM-DDTHH:mm:ssZ   (Z = UTC / GMT)
-// Currently: Saturday, Oct 3, 2026 at 8:00 AM Nigeria time (UTC+1 = 07:00 UTC)
-const LAUNCH_DATE = new Date("2026-10-03T11:00:00Z").getTime();
+// Currently: Sunday, Oct 4, 2026 at 12:00 PM (noon) Nigeria time (UTC+1 = 11:00 UTC)
+const LAUNCH_DATE = new Date("2026-10-04T11:00:00Z").getTime();
 // ────────────────────────────────────────────────────────────────────────────
 
 function Countdown() {

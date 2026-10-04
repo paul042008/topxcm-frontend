@@ -113,10 +113,10 @@ export default function RealEstateGalleryView({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 30 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="fixed inset-0 z-[150] bg-black overflow-y-auto"
+      className="fixed inset-0 z-[10000] bg-black overflow-y-auto"
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-black/70 backdrop-blur-xl border-b border-[#B0D4E8]/10 px-5 py-4 flex items-center gap-4">
+      <div className="sticky top-0 z-30 bg-black/70 backdrop-blur-xl border-b border-[#B0D4E8]/10 px-5 py-4 flex items-center gap-4">
         <button
           onClick={onClose}
           className="w-9 h-9 rounded-xl border border-[#B0D4E8]/20 flex items-center justify-center text-[#B0D4E8] hover:bg-[#B0D4E8]/10 transition text-lg"
@@ -209,7 +209,7 @@ export default function RealEstateGalleryView({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[10100] bg-black/95 flex items-center justify-center p-4"
             onClick={() => setSelectedIndex(null)}
           >
             <div

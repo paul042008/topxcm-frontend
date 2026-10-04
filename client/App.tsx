@@ -5,9 +5,10 @@ import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import AboutTopxcm from "./pages/AboutTopxcm";
 import FashionLatest from "./pages/FashionLatest";
+import LaunchGate from "./components/LaunchGate";
 
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -120,6 +121,62 @@ function ProtectionOverlay() {
   );
 }
 
+// ─── LAUNCH GATE WRAPPER ─────────────────────────────────────────────
+// /admin bypasses the countdown so you can keep working.
+// Everything else is behind the countdown until launch time.
+
+function LaunchGateInner() {
+  const location = useLocation();
+
+  // Admin is always accessible during the countdown
+  if (location.pathname.startsWith("/admin")) {
+    return (
+      <Routes>
+        <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<Admin />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <LaunchGate>
+      <Routes>
+        <Route path="/" element={<Index />} />
+
+        {/* Photography Routes */}
+        <Route path="/photography" element={<Photography />} />
+        <Route path="/photography/weddings" element={<PhotoWeddings />} />
+        <Route path="/photography/studio-outdoors" element={<PhotoStudioOutdoors />} />
+        <Route path="/photography/aerials-videos" element={<PhotoAerialsVideos />} />
+        <Route path="/photography/canvas" element={<PhotoCanvas />} />
+        <Route path="/photography/contact" element={<PhotoContact />} />
+        <Route path="/about" element={<AboutTopxcm />} />
+
+        {/* Fashion Routes */}
+        <Route path="/fashion" element={<Fashion />} />
+        <Route path="/fashion/suits" element={<FashionSuits />} />
+        <Route path="/fashion/agbada" element={<FashionAgbada />} />
+        <Route path="/fashion/natives" element={<FashionNatives />} />
+        <Route path="/fashion/casuals" element={<FashionCasuals />} />
+        <Route path="/fashion/shoes" element={<FashionShoes />} />
+        <Route path="/fashion/contact" element={<FashionContact />} />
+        <Route path="/fashion/latest" element={<FashionLatest />} />
+
+        {/* Real Estate Routes */}
+        <Route path="/real-estate" element={<RealEstate />} />
+        <Route path="/real-estate/listings" element={<RealEstateListings />} />
+        <Route path="/real-estate/contact" element={<RealEstateContact />} />
+        <Route path="/real-estate/construction" element={<RealEstateConstruction />} />
+        <Route path="/real-estate/plans" element={<RealEstatePlans />} />
+
+        {/* Other Routes */}
+        <Route path="/wedding/:id" element={<WeddingAlbum />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </LaunchGate>
+  );
+}
+
 // ─── APP ──────────────────────────────────────────────────────────────
 
 const App = () => (
@@ -139,41 +196,7 @@ const App = () => (
           }}
         >
           <Suspense fallback={null}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-
-              {/* Photography Routes */}
-              <Route path="/photography" element={<Photography />} />
-              <Route path="/photography/weddings" element={<PhotoWeddings />} />
-              <Route path="/photography/studio-outdoors" element={<PhotoStudioOutdoors />} />
-              <Route path="/photography/aerials-videos" element={<PhotoAerialsVideos />} />
-              <Route path="/photography/canvas" element={<PhotoCanvas />} />
-              <Route path="/photography/contact" element={<PhotoContact />} />
-              <Route path="/about" element={<AboutTopxcm />} />
-
-              {/* Fashion Routes */}
-              <Route path="/fashion" element={<Fashion />} />
-              <Route path="/fashion/suits" element={<FashionSuits />} />
-              <Route path="/fashion/agbada" element={<FashionAgbada />} />
-              <Route path="/fashion/natives" element={<FashionNatives />} />
-              <Route path="/fashion/casuals" element={<FashionCasuals />} />
-              <Route path="/fashion/shoes" element={<FashionShoes />} />
-              <Route path="/fashion/contact" element={<FashionContact />} />
-              <Route path="/fashion/latest" element={<FashionLatest />} />
-
-              {/* Real Estate Routes */}
-              <Route path="/real-estate" element={<RealEstate />} />
-              <Route path="/real-estate/listings" element={<RealEstateListings />} />
-              <Route path="/real-estate/contact" element={<RealEstateContact />} />
-              <Route path="/real-estate/construction" element={<RealEstateConstruction />} />
-              <Route path="/real-estate/plans" element={<RealEstatePlans />} />
-
-              {/* Other Routes */}
-              <Route path="/wedding/:id" element={<WeddingAlbum />} />
-              <Route path="/admin" element={<Admin />} />
-
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <LaunchGateInner />
           </Suspense>
         </div>
       </BrowserRouter>

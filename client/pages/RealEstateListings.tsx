@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import RealEstateMenu from "../components/RealEstateMenu";
 import RealEstateGalleryView from "../components/RealEstateGalleryView";
 import { useNavigate } from "react-router-dom";
+import { useCategoryText } from "../hooks/useCategoryText";
 
 const API = "https://topxcm-backend-1.onrender.com";
 
@@ -115,6 +116,12 @@ export default function RealEstateListings() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const heroText = useCategoryText("realestate-listings", {
+    title: "Properties",
+    description:
+      "Premium homes and investment properties across Lagos, curated for your lifestyle.",
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -184,7 +191,6 @@ export default function RealEstateListings() {
         onOpenAction={() => setMenuOpen(true)}
       />
 
-      {/* ─── FIXED HEADER (like other sub‑pages) ────────────────────── */}
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
         <button
           onClick={() => navigate("/real-estate")}
@@ -211,7 +217,6 @@ export default function RealEstateListings() {
         </button>
       </header>
 
-      {/* ─── MAIN CONTENT (blurred when menu open, pushed down) ────── */}
       <div
         className="transition-all duration-500 pt-[72px]"
         style={{
@@ -220,15 +225,16 @@ export default function RealEstateListings() {
           pointerEvents: menuOpen ? "none" : "auto",
         }}
       >
-        {/* Hero strip */}
+        {/* Hero strip — editable */}
         <div className="pt-24 px-5 pb-12 border-b border-white/5 bg-black/30 backdrop-blur-sm">
-          <h1 className="text-3xl md:text-5xl font-serif italic text-white mb-2">Properties</h1>
+          <h1 className="text-3xl md:text-5xl font-serif italic text-white mb-2">
+            {heroText.title}
+          </h1>
           <p className="text-white/40 text-sm font-light max-w-sm leading-relaxed">
-            Premium homes and investment properties across Lagos, curated for your lifestyle.
+            {heroText.description}
           </p>
         </div>
 
-        {/* Projects grid */}
         <main className="px-4 py-8">
           {loading ? (
             <div className="flex items-center justify-center py-24">
@@ -258,7 +264,6 @@ export default function RealEstateListings() {
           )}
         </main>
 
-        {/* Footer */}
         <footer className="py-16 text-center border-t border-white/5">
           <div className="h-10 w-[1px] bg-gradient-to-b from-[#B0D4E8] to-transparent mx-auto mb-5" />
           <p className="text-[8px] tracking-[1em] text-white/15 uppercase">
@@ -266,7 +271,6 @@ export default function RealEstateListings() {
           </p>
         </footer>
 
-        {/* Gallery View */}
         <AnimatePresence>
           {selectedProperty && (
             <RealEstateGalleryView

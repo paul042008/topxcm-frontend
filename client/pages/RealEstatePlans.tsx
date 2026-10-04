@@ -3,10 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import RealEstateMenu from "../components/RealEstateMenu";
 import RealEstateGalleryView from "../components/RealEstateGalleryView";
 import { useNavigate } from "react-router-dom";
+import { useCategoryText } from "../hooks/useCategoryText";
 
 const API = "https://topxcm-backend-1.onrender.com";
-
-// ─── TYPES ───────────────────────────────────────────────────────────────────
 
 interface PropertyImage {
   id?: string;
@@ -29,8 +28,6 @@ interface Property {
   location?: string;
   isSingle?: boolean;
 }
-
-// ─── PROPERTY CARD ──────────────────────────────────────────────────────────
 
 function PropertyCard({ property, onView }: { property: Property; onView: () => void }) {
   const coverImage = property.cover || (property.images.length > 0 ? property.images[0].url : "");
@@ -110,14 +107,18 @@ function PropertyCard({ property, onView }: { property: Property; onView: () => 
   );
 }
 
-// ─── MAIN PAGE ──────────────────────────────────────────────────────────────
-
 export default function RealEstatePlans() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const heroText = useCategoryText("realestate-plans", {
+    title: "2D & 3D Plans",
+    description:
+      "Architectural blueprints, floor plans, and 3D visualisations for your future home or project.",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -182,14 +183,12 @@ export default function RealEstatePlans() {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
-      {/* ─── HAMBURGER MENU ── */}
       <RealEstateMenu
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
         onOpenAction={() => setMenuOpen(true)}
       />
 
-      {/* ─── FIXED HEADER (like Construction & Listings) ────────────── */}
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-10 py-5 border-b border-white/5 bg-black/80 backdrop-blur-xl">
         <button
           onClick={() => navigate("/real-estate")}
@@ -216,7 +215,6 @@ export default function RealEstatePlans() {
         </button>
       </header>
 
-      {/* ─── MAIN CONTENT (blurred when menu open, pushed down) ────── */}
       <div
         className="transition-all duration-500 pt-[72px]"
         style={{
@@ -225,15 +223,16 @@ export default function RealEstatePlans() {
           pointerEvents: menuOpen ? "none" : "auto",
         }}
       >
-        {/* Hero strip */}
+        {/* Hero strip — editable */}
         <div className="pt-24 px-5 pb-12 border-b border-white/5 bg-black/30 backdrop-blur-sm">
-          <h1 className="text-3xl md:text-5xl font-serif italic text-white mb-2">2D & 3D Plans</h1>
+          <h1 className="text-3xl md:text-5xl font-serif italic text-white mb-2">
+            {heroText.title}
+          </h1>
           <p className="text-white/40 text-sm font-light max-w-sm leading-relaxed">
-            Architectural blueprints, floor plans, and 3D visualisations for your future home or project.
+            {heroText.description}
           </p>
         </div>
 
-        {/* Plans grid */}
         <main className="px-4 py-8">
           {loading ? (
             <div className="flex items-center justify-center py-24">
@@ -263,7 +262,6 @@ export default function RealEstatePlans() {
           )}
         </main>
 
-        {/* Footer */}
         <footer className="py-16 text-center border-t border-white/5">
           <div className="h-10 w-[1px] bg-gradient-to-b from-[#B0D4E8] to-transparent mx-auto mb-5" />
           <p className="text-[8px] tracking-[1em] text-white/15 uppercase">
@@ -271,7 +269,6 @@ export default function RealEstatePlans() {
           </p>
         </footer>
 
-        {/* Gallery View */}
         <AnimatePresence>
           {selectedProperty && (
             <RealEstateGalleryView

@@ -2280,12 +2280,18 @@ function FormFooter({ msg, loading, label }: { msg: string; loading: boolean; la
 // ─── HERO TEXTS TAB ─────────────────────────────────────────────────────────
 
 const EDITABLE_CATEGORIES: { value: string; label: string; icon: string }[] = [
+  // ─── Fashion ───
   { value: "suits",  label: "Suits",               icon: "🤵" },
   { value: "agbada", label: "Agbada",              icon: "✨" },
   { value: "natives", label: "Natives",            icon: "🪡" },
   { value: "casuals", label: "Casuals",            icon: "👕" },
   { value: "shoes",  label: "Shoes & Accessories", icon: "👟" },
   { value: "latest", label: "Latest Collection",   icon: "🌟" },
+  // ─── Real Estate ───
+  { value: "realestate-main",         label: "Real Estate Home Hero Copy", icon: "🏠" },
+  { value: "realestate-construction", label: "Construction",               icon: "🏗️" },
+  { value: "realestate-listings",     label: "Properties",                 icon: "🔑" },
+  { value: "realestate-plans",        label: "2D & 3D Plans",              icon: "📐" },
 ];
 
 function CategoryTextEditor({
