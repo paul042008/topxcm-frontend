@@ -114,6 +114,7 @@ const VALID_ROUTES = [
   "/fashion/agbada",
   "/fashion/natives",
   "/fashion/casuals",
+  "/fashion/latest",
 ];
 
 function getRouteForCard(card: CollectionCard): string {
@@ -507,7 +508,7 @@ export default function FashionPage() {
       description: album.description || "Exclusive pieces",
       image: album.cover || fallbackCollections[index % fallbackCollections.length].image,
       count: `${album.images?.length || 0} Items`,
-      targetRoute: DEFAULT_ROUTE,
+      targetRoute: "/fashion/latest",
     }));
   }, [latestAlbums]);
 
