@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import AboutTopxcm from "./pages/AboutTopxcm";
 import FashionLatest from "./pages/FashionLatest";
 import LaunchGate from "./components/LaunchGate";
+import VisitTracker from "./components/VisitTracker"; // <--- ADDED IMPORT
 
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -187,6 +188,10 @@ const App = () => (
       <BrowserRouter>
         {/* Global protection layer */}
         <ProtectionOverlay />
+        
+        {/* ─── TRACKER ADDED HERE ─── */}
+        <VisitTracker /> 
+        
         <div
           className="select-none"
           style={{

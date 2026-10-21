@@ -6,7 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
-type MainTab = "fashion" | "photo" | "realestate" | "texts";
+type MainTab = "fashion" | "photo" | "realestate" | "texts" | "traffic";
 
 type FashionCategory = "casuals" | "natives" | "agbadas" | "suits" | "shoes" | "latest";
 type PhotoCategory = "weddings" | "portraits" | "videos" | "aerials" | "studio" | "outdoors" | "showcase" | "canvas" | "frames";
@@ -136,6 +136,7 @@ function RichTextEditor({
   placeholder?: string;
 }) {
   const editor = useEditor({
+    immediatelyRender: false, // 👈 Add this line
     extensions: [
       StarterKit.configure({
         bold: { HTMLAttributes: { class: "font-bold" } },
@@ -2435,11 +2436,72 @@ function HeroTextsTab() {
 // ── MAIN ADMIN ──────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// ─── TRAFFIC STATS COMPONENT ────────────────────────────────────────────────
+
+function TrafficStats() {
+  const [data, setData] = useState<{ stats: any[], recent: any[] } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API}/api/visits/stats`, {
+      headers: AUTH_HEADER
+    })
+      .then((res) => res.json())
+      .then((d) => {
+        setData(d);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p className="text-white/50 text-sm">Loading analytics...</p>;
+  if (!data) return <p className="text-red-400 text-sm">Failed to load stats.</p>;
+
+  const getCount = (cat: string) => data.stats.find(s => s.category === cat)?.count || 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 text-center">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] mb-2">👗 Fashion</p>
+          <p className="text-4xl font-bold text-white">{getCount("fashion")}</p>
+          <p className="text-xs text-white/40 mt-1">Total Visits</p>
+        </div>
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 text-center">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] mb-2">📷 Photography</p>
+          <p className="text-4xl font-bold text-white">{getCount("photography")}</p>
+          <p className="text-xs text-white/40 mt-1">Total Visits</p>
+        </div>
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 text-center">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] mb-2">🏠 Real Estate</p>
+          <p className="text-4xl font-bold text-white">{getCount("realestate")}</p>
+          <p className="text-xs text-white/40 mt-1">Total Visits</p>
+        </div>
+      </div>
+
+      <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+        <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">Recent Activity</h3>
+        <div className="space-y-2">
+          {data.recent.map((visit, i) => (
+            <div key={i} className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+              <span className="text-white/70 capitalize">{visit.category}</span>
+              <span className="text-white/30 text-xs">{new Date(visit.created_at).toLocaleString()}</span>
+            </div>
+          ))}
+          {data.recent.length === 0 && <p className="text-white/30 text-xs">No visits yet.</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 const TAB_CONFIG: { id: MainTab; label: string; icon: string }[] = [
   { id: "fashion", label: "Fashion", icon: "👗" },
   { id: "photo", label: "Photography", icon: "📷" },
   { id: "realestate", label: "Real Estate", icon: "🏠" },
   { id: "texts", label: "Hero Texts", icon: "✏️" },
+  { id: "traffic", label: "Traffic", icon: "📊" },
 ];
 
 export default function Admin() {
@@ -2548,6 +2610,7 @@ export default function Admin() {
       {tab === "photo" && <PhotoTab />}
       {tab === "realestate" && <RealEstateTab />}
       {tab === "texts" && <HeroTextsTab />}
+      {tab === "traffic" && <TrafficStats />}
       </main>
     </div>
   );
