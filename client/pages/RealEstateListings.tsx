@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useCategoryText } from "../hooks/useCategoryText";
 import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 
 interface PropertyImage {
   id?: string;

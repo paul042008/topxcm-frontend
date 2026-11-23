@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PhotoMenu from "../components/PhotoMenu";
 import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 
 interface ShowcaseItem {
   image: string;

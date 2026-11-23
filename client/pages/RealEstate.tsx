@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import RealEstateMenu from "../components/RealEstateMenu";
 import { Link, useNavigate } from "react-router-dom";
 
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 

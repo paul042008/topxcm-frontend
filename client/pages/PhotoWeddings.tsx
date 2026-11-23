@@ -5,7 +5,7 @@ import BackButton from "../components/BackButton";
 import LoadingState from "../components/LoadingState";
 import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 const WA = "https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20book%20a%20session.";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────

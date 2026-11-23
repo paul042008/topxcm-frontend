@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 
 export default function VisitTracker() {
   const location = useLocation();

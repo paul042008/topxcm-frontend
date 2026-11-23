@@ -29,7 +29,7 @@ interface Album {
   isSingle?: boolean;
 }
 
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 
 // ─── HERO LIGHTBOX (with zoom + pan, shows extra_text) ─────────────────────
 

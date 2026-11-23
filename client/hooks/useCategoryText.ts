@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 
 export interface CategoryText {
   category: string;

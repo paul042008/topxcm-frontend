@@ -49,7 +49,7 @@ interface SingleItem {
 
 const ADMIN_PASSWORD = "topxcm123";
 const AUTH_KEY = "topxcm_admin_auth";
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 const AUTH_HEADER = { Authorization: "topxcm_secure_key" };
 
 const FASHION_CATEGORIES: { value: FashionCategory; label: string; icon: string }[] = [

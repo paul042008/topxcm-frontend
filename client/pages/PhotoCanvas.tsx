@@ -4,7 +4,7 @@ import PhotoMenu from "../components/PhotoMenu";
 import BackButton from "../components/BackButton";
 import { optimizeCloudinaryUrl } from "../utils/cloudinary";
 
-const API = "https://topxcm-backend-1.onrender.com";
+const API = "https://topxcm-backend-1-awps.onrender.com";
 const WA = "https://wa.me/2348132799299?text=Hi!%20I'd%20like%20to%20order%20a%20frame%20or%20canvas.";
 
 interface Product {
